@@ -1,5 +1,5 @@
 /* Offline-Speicher. Seite und status.json: erst Netz, sonst Speicher. Rest: erst Speicher. */
-var V='sarayaltenberg-49024893d4',VOR=["./", "css/style.css?v=a7e412a1", "js/main.js?v=a1755f73", "fonts/Roboto-Slab-Bold.sub.woff", "fonts/Roboto-Slab-Regular.sub.woff", "fonts/lato-bold.sub.woff", "fonts/lato-normal.sub.woff", "img/saray-koch-kopf.svg", "img/saray-koch.svg"];
+var V='sarayaltenberg-dc428c0886',VOR=["./", "css/style.css?v=a7e412a1", "js/main.js?v=f78fa8a1", "fonts/Roboto-Slab-Bold.sub.woff", "fonts/Roboto-Slab-Regular.sub.woff", "fonts/lato-bold.sub.woff", "fonts/lato-normal.sub.woff", "img/saray-koch-kopf.svg", "img/saray-koch.svg"];
 self.addEventListener('install',function(e){e.waitUntil(caches.open(V).then(function(c){return c.addAll(VOR);}).then(function(){return self.skipWaiting();}));});
 self.addEventListener('activate',function(e){e.waitUntil(caches.keys().then(function(ks){return Promise.all(ks.filter(function(k){return k!==V&&k.indexOf('sarayaltenberg-')===0;}).map(function(k){return caches.delete(k);}));}).then(function(){return self.clients.claim();}));});
 self.addEventListener('fetch',function(e){

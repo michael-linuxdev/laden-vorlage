@@ -35,7 +35,7 @@ button,input,select,textarea{font:inherit;color:inherit}
 header{position:sticky;top:0;z-index:20;background:var(--tinte);color:#fff;padding:calc(10px + env(safe-area-inset-top)) 16px 10px;
   display:flex;align-items:center;gap:10px}
 header img{width:38px;height:38px}
-header>div{min-width:0}header h1{white-space:nowrap}header small{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+header>div{min-width:0}header h1{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}header small{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 @media (max-width:400px){.sprache-wahl button{padding:0 7px;gap:4px}.hilfe-knopf{width:38px;height:38px}}
 header h1{margin:0;font-size:1.15rem}
 .hilfe-knopf{flex:none;width:42px;height:42px;border-radius:50%;border:2px solid var(--gelb);background:none;color:var(--gelb);font:700 1.2rem/1 inherit;cursor:pointer}

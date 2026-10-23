@@ -306,7 +306,7 @@
     if(/hähnchen-?döner/.test(t)){r.push('Hähnchen-Dönerfleisch');t=t.replace(/hähnchen-?dönerfleisch/g,'');}
     PZ_WORT.forEach(function(w){if(t.indexOf(w[0])>-1&&r.indexOf(w[1])<0)r.push(w[1]);});
     if(/(^|[^a-zäöü])ei([^a-zäöü]|$)/.test(t))r.push('Ei');
-    r.push('Käse');return r;
+    if(KAESE.indexOf('Käse')>-1&&r.indexOf('Käse')<0)r.push('Käse');return r;
   }
   var BEI=['S','P','SP'],BEI_NAME={S:['Salat','Salad'],P:['Pommes','Fries'],SP:['Salat + Pommes','Salad + fries']};
   AP.varianten.forEach(function(v){VAR[v[0]]={k:v[0],form:v[1],f:v[2],sup:v[3],kae:v[4],bei:v[5]||''};});
