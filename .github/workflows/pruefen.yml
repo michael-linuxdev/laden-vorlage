@@ -1,0 +1,88 @@
+name: Seite bauen, prüfen und veröffentlichen
+
+# Läuft bei jedem Push (auch wenn die Chef-App daten/anpassungen.json speichert):
+# 1. baut die Seite mit build.py neu (inkl. Änderungen aus daten/anpassungen.json)
+# 2. testet die fertige Seite im Browser (tests/test_seite.py)
+# 3. nur auf main: schreibt docs/ zurück ins Repo und veröffentlicht docs/ auf GitHub Pages
+#    (Einstellung: Settings → Pages → Source: „GitHub Actions“)
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+concurrency:
+  group: seite-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  bauen:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Pillow (Fotos der Gerichte verkleinern)
+        run: pip install pillow==11.0.0
+
+      - name: Seite neu bauen
+        run: python3 build.py
+
+      - name: Playwright installieren
+        run: |
+          pip install playwright==1.56.0
+          python -m playwright install --with-deps chromium
+
+      - name: Abläufe testen (Standard-Seite ohne Chef-App-Änderungen)
+        run: python3 tests/test_seite.py
+
+      - name: Echte Seite lädt fehlerfrei
+        run: python3 tests/test_seite.py --echt
+
+      - name: docs/ ins Repo zurückschreiben
+        if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+        run: |
+          if git diff --quiet -I 'class="stand"' -- docs; then
+            echo "docs/ ist aktuell"
+          else
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add docs
+            git commit -m "docs/ neu gebaut (${GITHUB_SHA::7})"
+            git push
+          fi
+
+      - name: Schriften für Arabisch und Kyrillisch (Aushang in 6 Sprachen)
+        if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+        continue-on-error: true
+        run: sudo apt-get install -y -qq fonts-noto-core >/dev/null
+
+      - name: Druckvorlagen (Flyer, Aufsteller) als PDF
+        if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+        continue-on-error: true
+        run: python3 druck.py docs/druck
+
+      - name: Pages-Paket hochladen
+        if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: docs
+
+  veroeffentlichen:
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    needs: bauen
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - id: deploy
+        uses: actions/deploy-pages@v4
