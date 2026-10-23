@@ -81,6 +81,51 @@ def gericht_typ(nr, gruppe, abschnitt):
         return "B"
     return ""
 
+# ---------- „Anpassen“ im Bestellzettel ----------
+# Art der Gerichte steht oben in gericht_typ(): "D" Döner-artig (Soße, ohne …, Füllung/Käse/Beilage wechseln),
+# "P" Pizza (Zutaten abwählen, Extras), "S"/"R" Pizza mit Zutaten nach Wahl, "SA" Salat, "B" Brötchen mit Belag.
+ANPASSEN = {
+    "sossen": ["Knoblauch", "Kräuter", "Chili"],                                   # Soße nach Wahl ([] = keine Soßenwahl)
+    "ohne": ["Zwiebeln", "Tomaten", "Gurken", "Rotkohl", "Weißkohl", "Eisbergsalat"],   # „ohne …“ bei Döner-artigen Gerichten
+    "gemuese": ["Paprika", "Zwiebel", "Champignon", "Tomate", "Peperoni", "Ananas", "Oliven", "Brokkoli", "Mais"],   # Pizza-Extras (Preis unten)
+    "fleisch": ["Schinken", "Salami", "Dönerfleisch", "Hähnchen-Dönerfleisch"],    # Pizza-Extras mit Fleisch
+    "kaese": ["Käse", "Halloumikäse", "Fetakäse"],
+    "extra_gemuese": 150, "extra_fleisch": 200,                                    # Cent je Extra-Zutat (Fleisch- und Käse-Preis gleich)
+    "belag": ["Salami", "Schinken", "Dönerfleisch", "Hähnchen-Dönerfleisch", "Käse", "Halloumikäse", "Fetakäse", "Gemüse"],   # Brötchen ("B")
+    # Pizza: Wörter in Name/Beschreibung -> Zutat zum Abwählen
+    "pizza_woerter": [["thunfisch", "Thunfisch"], ["dönerfleisch", "Dönerfleisch"], ["salami", "Salami"], ["schinken", "Schinken"],
+                      ["champignon", "Champignon"], ["paprika", "Paprika"], ["brokkoli", "Brokkoli"], ["zwiebel", "Zwiebel"],
+                      ["tomate", "Tomate"], ["ananas", "Ananas"], ["oliven", "Oliven"], ["peperoni", "Peperoni"], ["mais", "Mais"],
+                      ["knoblauch", "Knoblauch"], ["feta", "Fetakäse"], ["halloumi", "Halloumikäse"], ["mozzarella", "Mozzarella"]],
+    # Gericht ohne/mit Käse (Nummern), wenn es keine Varianten-Zeile gibt
+    "kaese_paare": [["1", "2"], ["3", "4"], ["6", "7"], ["9", "10"], ["11", "12"], ["13", "14"], ["15", "16"], ["23", "25"], ["30", "31"],
+                    ["32", "33"], ["36", "37"], ["40", "41"], ["42", "43"], ["50", "51"], ["52", "53"], ["54", "55"], ["60", "61"], ["123", "124"]],
+    # Füllungen: Kennung -> (Deutsch, Englisch); Fleisch/Fisch für die Filter „Vegetarisch“/„Pescetarisch“
+    "fuellungen": {"kalb": ["Dönerfleisch", "Döner meat"], "huhn": ["Hähnchen", "Chicken"], "beide": ["Döner + Hähnchen (Saray)", "Döner + chicken (Saray)"],
+                   "veg": ["ohne Fleisch", "No meat"], "falafel": ["Falafel", "Falafel"], "halloumi": ["Halloumi", "Halloumi"],
+                   "hack": ["Hackfleisch", "Minced meat"], "schinken": ["Schinken", "Ham"], "schinkenananas": ["Schinken + Ananas", "Ham + pineapple"],
+                   "hawaii": ["Ananas", "Pineapple"], "tonno": ["Thunfisch", "Tuna"],
+                   "bauern": ["Bauernsalat (Käse, Oliven, Peperoni)", "Farmer’s (cheese, olives, hot peppers)"], "mozzarella": ["Mozzarella", "Mozzarella"]},
+    "fleisch_fuellungen": ["kalb", "huhn", "beide", "hack", "schinken", "schinkenananas"],
+    "fisch_fuellungen": ["tonno"],
+    # Varianten: [Nummer, Form, Füllung, extra viel (0/1), mit Käse (0/1), Beilage "S"/"P"/"SP"/"SPR"] –
+    # die Schalter im Zettel springen damit zum passenden Gericht der Karte
+    "varianten": [
+        ["1", "doener", "kalb", 0, 0], ["2", "doener", "kalb", 0, 1], ["6", "doener", "kalb", 1, 0], ["7", "doener", "kalb", 1, 1], ["30", "doener", "huhn", 0, 0], ["31", "doener", "huhn", 0, 1],
+        ["32", "doener", "huhn", 1, 0], ["33", "doener", "huhn", 1, 1], ["3", "doener", "veg", 0, 0], ["4", "doener", "veg", 0, 1], ["5", "doener", "halloumi", 0, 0], ["11", "doener", "falafel", 0, 0],
+        ["12", "doener", "falafel", 0, 1], ["50", "duerum", "kalb", 0, 0], ["51", "duerum", "kalb", 0, 1], ["54", "duerum", "kalb", 1, 0], ["55", "duerum", "kalb", 1, 1], ["40", "duerum", "huhn", 0, 0],
+        ["41", "duerum", "huhn", 0, 1], ["42", "duerum", "huhn", 1, 0], ["43", "duerum", "huhn", 1, 1], ["52", "duerum", "veg", 0, 0], ["53", "duerum", "veg", 0, 1], ["57", "duerum", "halloumi", 0, 0],
+        ["58", "duerum", "falafel", 0, 0], ["13", "box", "kalb", 0, 0], ["14", "box", "kalb", 0, 1], ["15", "box", "huhn", 0, 0], ["16", "box", "huhn", 0, 1], ["21", "teller", "kalb", 0, 0, "S"],
+        ["22", "teller", "kalb", 0, 0, "P"], ["23", "teller", "kalb", 0, 0, "SP"], ["25", "teller", "kalb", 0, 1, "SP"], ["34", "teller", "huhn", 0, 0, "S"], ["35", "teller", "huhn", 0, 0, "P"], ["36", "teller", "huhn", 0, 0, "SP"],
+        ["37", "teller", "huhn", 0, 1, "SP"], ["24", "teller", "veg", 0, 0, "SP"], ["26", "teller", "beide", 0, 0, "SPR"], ["28", "ueber", "kalb", 0, 0], ["38", "ueber", "huhn", 0, 0], ["18", "kinder", "kalb", 0, 0],
+        ["19", "kinder", "huhn", 0, 0], ["130", "salat", "veg", 0, 0], ["132", "salat", "veg", 0, 1], ["131", "salat", "kalb", 0, 0], ["133", "salat", "kalb", 0, 1], ["134", "salat", "huhn", 0, 0],
+        ["135", "salat", "huhn", 0, 1], ["136", "salat", "tonno", 0, 0], ["137", "salat", "hawaii", 0, 0], ["138", "salat", "schinken", 0, 0], ["139", "salat", "schinkenananas", 0, 0], ["140", "salat", "bauern", 0, 0],
+        ["141", "salat", "halloumi", 0, 0], ["142", "salat", "falafel", 0, 0], ["143", "salat", "mozzarella", 0, 0], ["121", "lahmacun", "hack", 0, 0], ["123", "lahmacun", "kalb", 0, 0], ["124", "lahmacun", "kalb", 0, 1],
+    ],
+    # „Getränk dazu?“ beim ersten Essen: Gericht (Name ohne Nummer) und Sorten zum Antippen; None = nicht fragen
+    "getraenk": {"gericht": "Cola, Fanta, Sprite oder Wasser", "sorten": [["Cola", "Cola"], ["Fanta", "Fanta"], ["Wasser", "Water"]], "pfand": True},
+}
+
 
 # ---------- Texte (Deutsch, Englisch); weitere Sprachen: laeden/<id>/sprachen/<code>.json (Englisch -> Sprache) ----------
 KURZNAME = "Saray"                    # kurz: App-Name auf dem Handy, „Saray auf den Home-Bildschirm“
