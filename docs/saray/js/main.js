@@ -17,12 +17,16 @@
     else for(var li0=0;li0<langs.length;li0++){var k0=String(langs[li0]).slice(0,2).toLowerCase();if(SPRACHEN.some(function(x){return x[0]===k0;})){SP=k0;break;}}
   }
   function T(en){
-    if(SP==='en'||SP==='de'||en==null)return en;var d=DICT[SP]||{},r=en;
-    if(d[en]!=null)r=d[en];
-    else{var z=[],k=String(en).replace(/\d+(?:[.,:]\d+)*/g,function(m){z.push(m);return '{n}';});
-      if(z.length&&d[k]!=null){var i=0;r=d[k].replace(/\{n\}/g,function(){return z[i++];});}}
-    return LTR_ZAHLEN(r);
+    if(SP==='en'||SP==='de'||en==null)return en;var d=DICT[SP]||{};
+    function such(x){if(d[x]!=null)return d[x];var z=[],k=String(x).replace(/\d+(?:[.,:]\d+)*/g,function(m){z.push(m);return '{n}';});
+      if(z.length&&d[k]!=null){var i=0;return d[k].replace(/\{n\}/g,function(){return z[i++];});}return null;}
+    var r=such(en);
+    if(r==null&&NAME_T){ /* Name des Ladens im Text: im Wörterbuch steht {name} bzw. {kurz} */
+      var k2=String(en).split(NAME_T).join('{name}');if(KURZ_T)k2=k2.split(KURZ_T).join('{kurz}');
+      if(k2!==en){r=such(k2);if(r!=null)r=r.split('{name}').join(NAME_T).split('{kurz}').join(KURZ_T);}}
+    return LTR_ZAHLEN(r==null?en:r);
   }
+  var NAME_T="Saray Döner",KURZ_T="Saray";
   /* Rechts-nach-links (Arabisch): Telefonnummern, Uhrzeiten und Preise als Block links-nach-rechts halten */
   function LTR_ZAHLEN(r){
     if(document.documentElement.dir!=='rtl'||typeof r!=='string')return r;
@@ -99,7 +103,7 @@
         document.querySelectorAll('li[data-k="'+(window.CSS&&CSS.escape?CSS.escape(k):k)+'"]').forEach(function(li){
           var ziel=li.querySelector('.name, .tipp-name');if(!ziel)return;
           var m=document.createElement('span');m.className='marke-beliebt marke-aktion';
-          var ort=a.laden?(a.laden==='freital'?' Freital':' Altenberg'):'';
+          var ort=a.laden&&LADEN_N[a.laden]?' '+LADEN_N[a.laden]:'';
           var uz=a.za!=null?' '+uhr(a.za).replace(' Uhr','')+'–'+uhr(a.zb):'';
           m.textContent=(a.m?L('Mittag ','Lunch '):L('Aktion ','Offer '))+a.p[k].map(euroK).join(' / ')+uz+(ort?(SP==='de'?' (nur'+ort+')':' '+fuell(T('({ort} only)'),{ort:ort.trim()})):'');
           ziel.appendChild(document.createTextNode(' '));ziel.appendChild(m);
@@ -163,17 +167,17 @@
     if(!bw||bw.fertig||!GOOGLE[bw.l]||!GAST||GAST.n<3)return;var alt=Date.now()-bw.t;if(alt<2*36e5||alt>14*864e5)return;
     if(!document.getElementById('hand-tipp').hidden)return;
     try{bw.fertig=1;localStorage.setItem('saray-bewertung',JSON.stringify(bw));}catch(e){return;}
-    var ort=bw.l==='freital'?'Freital':'Altenberg';
+    var ort=LADEN_N[bw.l]||'';
     /* Erst fragen: War alles gut? Ja -> Google-Bewertung. Nein -> Nachricht direkt an den Laden statt öffentlicher Kritik */
-    function google(){handTippZeigen('<b>'+L('Danke!','Thank you!')+'</b><br>'+(SP==='de'?'Über eine Google-Bewertung für Saray Döner '+ort+' freuen wir uns sehr.':fuell(T('We would love a Google review for Saray Döner {ort}.'),{ort:ort})),
+    function google(){handTippZeigen('<b>'+L('Danke!','Thank you!')+'</b><br>'+(SP==='de'?'Über eine Google-Bewertung für '+LADEN_NAME+' '+ort+' freuen wir uns sehr.':fuell(T('We would love a Google review for {name} {ort}.'),{name:LADEN_NAME,ort:ort})),
       [[L('⭐ Bewerten','⭐ Review'),function(){zaehlen('bewertung-'+bw.l);window.open('https://search.google.com/local/writereview?placeid='+GOOGLE[bw.l],'_blank','noopener');handTippZu();}],
        [L('Nein danke','No thanks'),handTippZu]],25000);}
-    function laden(){zaehlen('rueckmeldung-'+bw.l);var nr=WA[bw.l],t='Rückmeldung zu meiner Bestellung'+(bw.nr?' '+bw.nr:'')+' bei Saray Döner '+ort+': ';
+    function laden(){zaehlen('rueckmeldung-'+bw.l);var nr=WA[bw.l],t='Rückmeldung zu meiner Bestellung'+(bw.nr?' '+bw.nr:'')+' bei '+LADEN_NAME+' '+ort+': ';
       handTippZeigen('<b>'+L('Das tut uns leid.','We are sorry.')+'</b><br>'+L('Sagen Sie es uns direkt – wir kümmern uns darum.','Tell us directly – we will take care of it.'),
         [[nr?L('💬 Nachricht an den Laden','💬 Message the shop'):L('📞 Laden anrufen','📞 Call the shop'),function(){
           if(nr)window.open('https://wa.me/'+nr+'?text='+encodeURIComponent(t),'_blank','noopener');else location.href='tel:'+TEL[bw.l][1];handTippZu();}],
          [L('Schließen','Close'),handTippZu]],25000);}
-    handTippZeigen('<b>'+L('Hat alles gepasst?','Was everything okay?')+'</b><br>'+(SP==='de'?'Sie haben schon '+GAST.n+'-mal bei Saray Döner '+ort+' bestellt – danke!':fuell(T('You have already ordered {n} times at Saray Döner {ort} – thank you!'),{n:GAST.n,ort:ort})),
+    handTippZeigen('<b>'+L('Hat alles gepasst?','Was everything okay?')+'</b><br>'+(SP==='de'?'Sie haben schon '+GAST.n+'-mal bei '+LADEN_NAME+' '+ort+' bestellt – danke!':fuell(T('You have already ordered {n} times at {name} {ort} – thank you!'),{n:GAST.n,name:LADEN_NAME,ort:ort})),
       [[L('👍 Ja, lecker','👍 Yes, delicious'),google],[L('👎 Nicht ganz','👎 Not quite'),laden]],25000);
   },1500);
   /* „Inhaltsstoffe … · Allergene …“ öffnet die Liste unten */
@@ -296,7 +300,7 @@
      Die Schalter im Zettel suchen damit das passende Gericht der Karte. */
   var VAR={},FUELL=['kalb','huhn','beide','veg','falafel','halloumi','hack','schinken','schinkenananas','hawaii','tonno','bauern','mozzarella'];
   var F_NAME={kalb:['Dönerfleisch','Döner meat'],huhn:['Hähnchen','Chicken'],veg:['ohne Fleisch','No meat'],falafel:['Falafel','Falafel'],
-    halloumi:['Halloumi','Halloumi'],hack:['Hackfleisch','Minced meat'],beide:['Döner + Hähnchen (Saray)','Döner + chicken (Saray)'],
+    halloumi:['Halloumi','Halloumi'],hack:['Hackfleisch','Minced meat'],beide:['Döner + Hähnchen ('+LADEN_KURZ+')','Döner + chicken ('+LADEN_KURZ+')'],
     schinken:['Schinken','Ham'],schinkenananas:['Schinken + Ananas','Ham + pineapple'],hawaii:['Ananas','Pineapple'],tonno:['Thunfisch','Tuna'],
     bauern:['Bauernsalat (Käse, Oliven, Peperoni)','Farmer’s (cheese, olives, hot peppers)'],mozzarella:['Mozzarella','Mozzarella']};
   var FLEISCH_F=['kalb','huhn','beide','hack','schinken','schinkenananas'],FISCH_F=['tonno'];
@@ -340,7 +344,7 @@
   }
   function kaesePartner(k){return VAR[k]?variante(k,{kae:VAR[k].kae?0:1},true):(OHNE_K[k]||MIT_K[k]||null);}
   /* Verfügbarkeit: feste Regeln aus build.py + tagesaktuelle aus status.json */
-  var SPERR={"doener": {"de": "Döner", "en": "Döner", "nr": ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "30", "31", "32", "33", "34", "35", "36", "37", "38"]}, "duerum": {"de": "Dürüm", "en": "Dürüm", "nr": ["50", "51", "52", "53", "54", "55", "56", "57", "58", "40", "41", "42", "43"]}, "teller": {"de": "Box & Teller", "en": "Boxes & plates", "nr": ["13", "14", "15", "16", "21", "22", "23", "24", "25", "26", "28"]}, "pizza": {"de": "Pizza", "en": "Pizza", "nr": ["80", "81", "82", "83", "84", "85", "86", "87", "88", "89", "90", "91", "92", "93", "94", "95", "96", "97", "98", "99", "100", "101", "102", "103", "104", "105", "125"]}, "lahmacun": {"de": "Lahmacun", "en": "Lahmacun", "nr": ["120", "121", "122", "123", "124"]}, "baguette": {"de": "Baguette", "en": "Baguette", "nr": ["150", "151", "152", "153", "154", "156", "157", "158", "159", "160"]}, "salate": {"de": "Salate", "en": "Salads", "nr": ["130", "131", "132", "133", "134", "135", "136", "137", "138", "139", "140", "141", "142", "143"]}, "schnitzel": {"de": "Schnitzel & Nuggets", "en": "Schnitzel & nuggets", "nr": ["70", "71", "72", "73", "60", "61", "62", "63", "64", "65"]}, "kinder": {"de": "Für Kinder", "en": "For kids", "nr": ["17", "18", "19", "20"]}, "getraenke": {"de": "Getränke", "en": "Drinks", "nr": []}, "huhn": {"de": "Hähnchen", "en": "Chicken", "nr": ["30", "31", "32", "33", "34", "35", "36", "37", "38", "40", "41", "42", "43", "15", "16", "26", "102", "105", "134", "135", "19"]}, "nuggets": {"de": "Nuggets", "en": "Nuggets", "nr": ["60", "61", "62", "63", "64", "65", "20"]}, "falafel": {"de": "Falafel", "en": "Falafel", "nr": ["11", "12", "58", "24", "142"]}, "halloumi": {"de": "Halloumi", "en": "Halloumi", "nr": ["5", "57", "24", "26", "98", "99", "158", "141"]}, "schnitzel-fleisch": {"de": "Schnitzel", "en": "Schnitzel", "nr": ["9", "10", "159", "70"]}, "fisch": {"de": "Fisch", "en": "Fish", "nr": ["71"]}, "z:Pommes": {"de": "Pommes", "en": "Fries", "nr": ["72", "73"]}},REGELN_FEST=[],REGELN=REGELN_FEST.slice(),LADEN_N={freital:'Freital',altenberg:'Altenberg'};
+  var SPERR={"doener": {"de": "Döner", "en": "Döner", "nr": ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "30", "31", "32", "33", "34", "35", "36", "37", "38"]}, "duerum": {"de": "Dürüm", "en": "Dürüm", "nr": ["50", "51", "52", "53", "54", "55", "56", "57", "58", "40", "41", "42", "43"]}, "teller": {"de": "Box & Teller", "en": "Boxes & plates", "nr": ["13", "14", "15", "16", "21", "22", "23", "24", "25", "26", "28"]}, "pizza": {"de": "Pizza", "en": "Pizza", "nr": ["80", "81", "82", "83", "84", "85", "86", "87", "88", "89", "90", "91", "92", "93", "94", "95", "96", "97", "98", "99", "100", "101", "102", "103", "104", "105", "125"]}, "lahmacun": {"de": "Lahmacun", "en": "Lahmacun", "nr": ["120", "121", "122", "123", "124"]}, "baguette": {"de": "Baguette", "en": "Baguette", "nr": ["150", "151", "152", "153", "154", "156", "157", "158", "159", "160"]}, "salate": {"de": "Salate", "en": "Salads", "nr": ["130", "131", "132", "133", "134", "135", "136", "137", "138", "139", "140", "141", "142", "143"]}, "schnitzel": {"de": "Schnitzel & Nuggets", "en": "Schnitzel & nuggets", "nr": ["70", "71", "72", "73", "60", "61", "62", "63", "64", "65"]}, "kinder": {"de": "Für Kinder", "en": "For kids", "nr": ["17", "18", "19", "20"]}, "getraenke": {"de": "Getränke", "en": "Drinks", "nr": []}, "huhn": {"de": "Hähnchen", "en": "Chicken", "nr": ["30", "31", "32", "33", "34", "35", "36", "37", "38", "40", "41", "42", "43", "15", "16", "26", "102", "105", "134", "135", "19"]}, "nuggets": {"de": "Nuggets", "en": "Nuggets", "nr": ["60", "61", "62", "63", "64", "65", "20"]}, "falafel": {"de": "Falafel", "en": "Falafel", "nr": ["11", "12", "58", "24", "142"]}, "halloumi": {"de": "Halloumi", "en": "Halloumi", "nr": ["5", "57", "24", "26", "98", "99", "158", "141"]}, "schnitzel-fleisch": {"de": "Schnitzel", "en": "Schnitzel", "nr": ["9", "10", "159", "70"]}, "fisch": {"de": "Fisch", "en": "Fish", "nr": ["71"]}, "z:Pommes": {"de": "Pommes", "en": "Fries", "nr": ["72", "73"]}},REGELN_FEST=[],REGELN=REGELN_FEST.slice(),LADEN_N={"freital": "Freital", "altenberg": "Altenberg"},LADEN_IDS=Object.keys(LADEN_N),LADEN_NAME="Saray Döner",LADEN_KURZ="Saray";
   function datumISO(off){return new Intl.DateTimeFormat('en-CA',{timeZone:'Europe/Berlin',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date(Date.now()+off*864e5));}
   function minAus(t){var q=String(t).split(':');return (+q[0])*60+(+q[1]||0);}
   function trifft(r,k){var w=[].concat(r.was||[]);return w.some(function(v){v=String(v);return v===k||(SPERR[v]&&SPERR[v].nr.indexOf(k)>-1);});}
@@ -377,9 +381,10 @@
       if(abh.laden&&LADEN_N[abh.laden]){ /* Laden gewählt: Karte gilt für diesen Laden */
         var s1=sp[abh.laden];txt=s1?sperrText(s1)+L(' in ',' in ')+LADEN_N[abh.laden]:'';aus=!!s1&&s1.art==='aus';
       }else{
-        if(gesperrt.length===2&&sperrText(sp.freital)===sperrText(sp.altenberg))txt=sperrText(sp.freital);
+        var texte=gesperrt.map(function(l){return sperrText(sp[l]);});
+        if(gesperrt.length===LADEN_IDS.length&&texte.every(function(x){return x===texte[0];}))txt=texte[0];
         else txt=gesperrt.map(function(l){return LADEN_N[l]+': '+sperrText(sp[l]);}).join(' · ');
-        aus=gesperrt.length===2&&sp.freital.art==='aus'&&sp.altenberg.art==='aus';
+        aus=gesperrt.length===LADEN_IDS.length&&gesperrt.every(function(l){return sp[l].art==='aus';});
       }
       li.classList.toggle('nicht-da',aus);
       var pk=li.querySelector('.plus');if(pk){pk.disabled=aus;}
@@ -490,7 +495,7 @@
       FUELL.forEach(function(f){
         if(f!==va.f&&!erlaubtF(f))return;
         var ziel=f===va.f?x.k:variante(x.k,{f:f});if(!ziel)return;
-        var spF=f===va.f?null:(sperreZettel(ziel)||(function(){var nn=jetzt();var a=sperre(ziel,'freital',0,nn.min),b=sperre(ziel,'altenberg',0,nn.min);return a&&b&&a.art==='aus'&&b.art==='aus'?a:null;})());
+        var spF=f===va.f?null:(sperreZettel(ziel)||(function(){var nn=jetzt(),r=LADEN_IDS.map(function(l){return sperre(ziel,l,0,nn.min);});return r.every(function(x){return x&&x.art==='aus';})?r[0]:null;})());
         var fk=knopf(L(F_NAME[f][0],F_NAME[f][1])+(f===va.f?'':spF?' – '+sperrText(spF):preisDiff(x,ziel)),{'class':'chip','aria-pressed':String(f===va.f),'data-fuell':f,'data-u':x.u});
         if(spF)fk.disabled=true;fw.appendChild(fk);
       });
@@ -701,7 +706,7 @@
   var AK='saray-abholung',abh={laden:'',tag:'',zeit:'',name:''},VORBESTELL_TAGE=14;
   try{abh=Object.assign(abh,JSON.parse(localStorage.getItem(AK)||'{}'));}catch(e){}
   /* ?laden=freital (z. B. vom QR-Aufsteller an der Theke) wählt den Laden vor */
-  (function(){var m=/[?&]laden=(freital|altenberg)/.exec(location.search);if(m&&abh.laden!==m[1]){abh.laden=m[1];abh.zeit='';}})();
+  (function(){var m=/[?&]laden=([a-z0-9-]+)/.exec(location.search);if(m&&LADEN_N[m[1]]&&abh.laden!==m[1]){abh.laden=m[1];abh.zeit='';}})();
   function abhSpeichern(){try{localStorage.setItem(AK,JSON.stringify(abh));}catch(e){}}
   var selTag=document.getElementById('abhol-tag'),selZeit=document.getElementById('abhol-zeit'),eName=document.getElementById('abhol-name'),hinweisZ=document.getElementById('abhol-hinweis');
   function zeitText(m,en){var h=Math.floor(m/60),r=m%60;return h+':'+(r<10?'0':'')+r+(en?'':' Uhr');}
@@ -748,8 +753,8 @@
   function winterAktiv(){if(WINTER.modus==='an')return true;if(WINTER.modus==='aus')return false;var md=isoTag(0).slice(5);
     return WINTER.von<=WINTER.bis?(md>=WINTER.von&&md<=WINTER.bis):(md>=WINTER.von||md<=WINTER.bis);}
   setTimeout(function(){var w=document.getElementById('winter');if(!w)return;try{w.hidden=!winterAktiv();}catch(e){}
-    var b=document.getElementById('winter-bestellen');if(b)b.addEventListener('click',function(){abh.laden='altenberg';abhSpeichern();ladenZeigen();oeffnen();});
-    var g=document.getElementById('winter-gruppe');if(g)g.addEventListener('click',function(){abh.laden='altenberg';abhSpeichern();var s=document.querySelector('[data-sammel-start]');if(s)s.click();});},0);
+    var b=document.getElementById('winter-bestellen');if(b)b.addEventListener('click',function(){abh.laden=WINTER.laden;abhSpeichern();ladenZeigen();oeffnen();});
+    var g=document.getElementById('winter-gruppe');if(g)g.addEventListener('click',function(){abh.laden=WINTER.laden;abhSpeichern();var s=document.querySelector('[data-sammel-start]');if(s)s.click();});},0);
   var VOLL={};
   function zeitenFuellen(){
     selZeit.textContent='';selTag.textContent='';hinweisZ.hidden=true;ZINFO={};
@@ -839,12 +844,12 @@
         z=function(m){return ('0'+Math.floor(m/60)).slice(-2)+('0'+m%60).slice(-2)+'00';},
         esc=function(t){return String(t).replace(/[\\;,]/g,function(c){return '\\'+c;}).replace(/\n/g,'\\n');},
         jetztZ=new Date().toISOString().replace(/[-:]/g,'').replace(/\.\d+/,'');
-    return ['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//Saray Doener//Bestellung//DE','BEGIN:VEVENT',
+    return ['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//'+LADEN_KURZ+'//Bestellung//DE','BEGIN:VEVENT',
       'UID:'+nr+'-'+d+'-'+zi.min+'@saray-doener','DTSTAMP:'+jetztZ,
       'DTSTART;TZID=Europe/Berlin:'+d+'T'+z(zi.min),'DTEND;TZID=Europe/Berlin:'+d+'T'+z(zi.min+15),
-      'SUMMARY:'+esc('Saray Döner abholen ('+nr+')'),'LOCATION:'+esc(ADR[abh.laden]||''),
+      'SUMMARY:'+esc(LADEN_NAME+' abholen ('+nr+')'),'LOCATION:'+esc(ADR[abh.laden]||''),
       'DESCRIPTION:'+esc(zettel.map(function(x){return x.q+'× '+x.n;}).join('\n')+'\nSumme: '+euro(summe())+' (nur Barzahlung)'),
-      'BEGIN:VALARM','ACTION:DISPLAY','DESCRIPTION:'+esc('Saray Döner abholen'),'TRIGGER:-PT15M','END:VALARM',
+      'BEGIN:VALARM','ACTION:DISPLAY','DESCRIPTION:'+esc(LADEN_NAME+' abholen'),'TRIGGER:-PT15M','END:VALARM',
       'END:VEVENT','END:VCALENDAR'].join('\r\n');
   }
   function icsLaden(text,name){
@@ -964,7 +969,7 @@
     var test=document.body.classList.contains('vorschau')||TESTMODUS?[TESTMODUS?'*TEST – bitte nicht zubereiten*':'*TEST – Entwurf, keine echte Bestellung*','']:[];
     var al=zettel.filter(function(x){return x.notiz&&ALLERGIE.test(x.notiz);}).map(function(x){return x.notiz;});
     var vb=ZINFO[abh.zeit]&&ZINFO[abh.zeit].off>0;
-    var z=[(vb?'Vorbestellung':'Bestellung')+' Saray Döner'+(abh.laden?' '+(abh.laden==='freital'?'Freital':'Altenberg'):'')];
+    var z=[(vb?'Vorbestellung':'Bestellung')+' '+LADEN_NAME+(abh.laden&&LADEN_N[abh.laden]?' '+LADEN_N[abh.laden]:'')];
     z.push('Bestellnummer: '+BNR+(gastNr()>1?' · '+gastNr()+'. Bestellung von diesem Handy':''));
     if(al.length)z.push('⚠ ALLERGIE / UNVERTRÄGLICHKEIT: '+al.join(' · '));
     if(abh.zeit)z.push('Abholung: '+abh.zeit+(abh.zug&&ZUG&&abh.laden===ZUG.laden?' (Zug '+abh.zug+')':''));
@@ -986,7 +991,7 @@
       melden(ok?kopiert:L('Kopieren hat nicht geklappt. Bitte die Bestellung abschreiben.','Copying did not work. Please write the order down.'));}
     function kopieren(){if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(t).then(function(){melden(kopiert);},notfall);else notfall();}
     if(navigator.share&&(window.matchMedia&&matchMedia('(pointer:coarse)').matches)){
-      navigator.share({title:titel||'Bestellung Saray Döner',text:t}).catch(function(e){if(!e||e.name!=='AbortError')kopieren();});
+      navigator.share({title:titel||'Bestellung '+LADEN_NAME,text:t}).catch(function(e){if(!e||e.name!=='AbortError')kopieren();});
     }else kopieren();
   }
   document.getElementById('zettel-kopieren').addEventListener('click',function(){letzteMerken();teilen(zettelText());});
@@ -1025,7 +1030,7 @@
           if(!name){fehler.textContent=L('Bitte Ihren Namen eintragen.','Please enter your name.');fehler.hidden=false;nf[1].focus();return;}
           abh.name=name;eName.value=name;abhSpeichern();dialogZu();
           var link=basisUrl()+'#sammel='+kodieren({an:name,l:abh.laden||''});
-          teilen('Ich bestelle bei Saray Döner für mehrere. Such dir dein Essen aus und schick mir deinen Teil zurück:\n'+link,'Sammelbestellung Saray Döner');}],
+          teilen('Ich bestelle bei '+LADEN_NAME+' für mehrere. Such dir dein Essen aus und schick mir deinen Teil zurück:\n'+link,'Sammelbestellung '+LADEN_NAME);}],
        [L('Abbrechen','Cancel'),dialogZu]]);
   }
   document.querySelectorAll('[data-sammel-start]').forEach(function(b){b.addEventListener('click',einladen);});
@@ -1044,9 +1049,9 @@
         var ds=st.getFullYear()+('0'+(st.getMonth()+1)).slice(-2)+('0'+st.getDate()).slice(-2),link=basisUrl()+'#gemeinsam';
         var ende=('0'+((+hh)+((+mm)+15>=60?1:0))).slice(-2)+('0'+(((+mm)+15)%60)).slice(-2);
         var esc=function(t){return String(t).replace(/[\\;,]/g,function(c){return '\\'+c;}).replace(/\n/g,'\\n');};
-        var ics=['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//Saray Doener//Doener-Tag//DE','BEGIN:VEVENT','UID:doenertag-'+Date.now()+'@saray','DTSTAMP:'+new Date().toISOString().replace(/[-:]/g,'').slice(0,15)+'Z',
+        var ics=['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//'+LADEN_KURZ+'//Bestell-Tag//DE','BEGIN:VEVENT','UID:bestelltag-'+Date.now()+'@'+'saray','DTSTAMP:'+new Date().toISOString().replace(/[-:]/g,'').slice(0,15)+'Z',
           'DTSTART:'+ds+'T'+hh+mm+'00','DTEND:'+ds+'T'+ende+'00','RRULE:FREQ=WEEKLY;BYDAY='+WT.filter(function(w2){return w2[0]===tag;})[0][1],
-          'SUMMARY:'+esc(L('Döner-Tag: Bestellung bei Saray sammeln','Döner day: collect the order at Saray')),'URL:'+link,
+          'SUMMARY:'+esc(SP==='de'?'Bestell-Tag: Bestellung bei '+LADEN_KURZ+' sammeln':fuell(T('Order day: collect the order at {kurz}'),{kurz:LADEN_KURZ})),'URL:'+link,
           'DESCRIPTION:'+esc(L('Gemeinsam bestellen: ','Order as a group: ')+link),'BEGIN:VALARM','ACTION:DISPLAY','DESCRIPTION:'+esc(L('Döner-Tag','Döner day')),'TRIGGER:PT0M','END:VALARM','END:VEVENT','END:VCALENDAR'].join('\r\n');
         icsLaden(ics,'saray-erinnerung.ics');dialogZu();melden(L('Erinnerung gespeichert – im Kalender öffnen.','Reminder saved – open it in your calendar.'));}],
        [L('Abbrechen','Cancel'),dialogZu]]);
@@ -1057,9 +1062,9 @@
     if(!name){eName.focus();melden(L('Bitte zuerst Ihren Namen eintragen.','Please enter your name first.'));return;}
     if(!zettel.length)return;
     var link=basisUrl()+'#teil='+kodieren({von:name,p:zettel.map(function(x){return {k:x.k,g:x.g,q:x.q,o:x.o,notiz:x.notiz||''};})});
-    var z=['Mein Teil für die Sammelbestellung bei Saray Döner ('+name+'):'];zettel.forEach(function(x){z.push(zeileText(x));});
+    var z=['Mein Teil für die Sammelbestellung bei '+LADEN_NAME+' ('+name+'):'];zettel.forEach(function(x){z.push(zeileText(x));});
     z.push('Summe: '+euro(summe()),'','Zum Hinzufügen öffnen:',link);
-    teilen(z.join('\n'),'Mein Teil – Saray Döner');
+    teilen(z.join('\n'),'Mein Teil – '+LADEN_NAME);
   }
   sTeil.addEventListener('click',teilSchicken);
   function sammelZeigen(){

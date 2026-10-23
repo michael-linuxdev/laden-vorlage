@@ -193,7 +193,7 @@ def regeln(liste, warnen):
                     sauber[feld] = r[feld]
                 else:
                     warnen(f"Verfügbarkeit: {feld} {r[feld]!r} ungültig")
-        if r.get("laden") in ("freital", "altenberg"):
+        if r.get("laden") in LAEDEN:
             sauber["laden"] = r["laden"]
         if "datum" in r:
             d = r["datum"]

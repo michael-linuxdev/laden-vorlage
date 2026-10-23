@@ -1,9 +1,6 @@
 <!doctype html>
 <!--
-  Saray Döner – neue Website (Stand: 16.10.2026)
-  Vor dem Livegang: Impressum und Datenschutz unten ausfüllen (gelb markiert),
-  Adresse/Öffnungszeiten Altenberg und Preise mit dem Inhaber gegenprüfen.
-  Keine externen Dienste: Schriften und Fotos sind in dieser Datei eingebettet.
+  Saray Döner – gebaut aus der Laden-Vorlage. Vor dem Livegang: Impressum und Datenschutz (gelb markiert) ausfüllen.
 -->
 <html lang="de">
 <head>
@@ -38,7 +35,7 @@
 <script type="application/ld+json">{"@context": "https://schema.org", "@graph": [{"@type": "Restaurant", "@id": "https://xn--saraydner-57a.de/#ort-freital", "name": "Saray Döner Freital", "url": "https://xn--saraydner-57a.de/", "telephone": "+49 351 27676660", "servesCuisine": ["Döner", "Pizza", "Türkisch"], "priceRange": "€", "paymentAccepted": "Cash", "currenciesAccepted": "EUR", "hasMenu": "https://xn--saraydner-57a.de/#speisekarte", "image": "https://xn--saraydner-57a.de/img/og-bild.jpg", "address": {"@type": "PostalAddress", "streetAddress": "Dresdner Str. 87", "postalCode": "01705", "addressLocality": "Freital", "addressCountry": "DE"}, "openingHoursSpecification": [{"@type": "OpeningHoursSpecification", "dayOfWeek": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"], "opens": "10:00", "closes": "22:00"}, {"@type": "OpeningHoursSpecification", "dayOfWeek": ["Saturday", "Sunday"], "opens": "11:00", "closes": "22:00"}]}, {"@type": "Restaurant", "@id": "https://xn--saraydner-57a.de/#ort-altenberg", "name": "Saray Döner Altenberg", "url": "https://xn--saraydner-57a.de/", "telephone": "+49 35056 23674", "servesCuisine": ["Döner", "Pizza", "Türkisch"], "priceRange": "€", "paymentAccepted": "Cash", "currenciesAccepted": "EUR", "hasMenu": "https://xn--saraydner-57a.de/#speisekarte", "image": "https://xn--saraydner-57a.de/img/og-bild.jpg", "address": {"@type": "PostalAddress", "streetAddress": "Dresdner Str. 23", "postalCode": "01773", "addressLocality": "Altenberg", "addressCountry": "DE"}, "openingHoursSpecification": [{"@type": "OpeningHoursSpecification", "dayOfWeek": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"], "opens": "10:00", "closes": "21:00"}, {"@type": "OpeningHoursSpecification", "dayOfWeek": ["Sunday"], "opens": "11:00", "closes": "21:00"}]}]}</script>
 </head>
 <body class="vorschau">
-<div class="vorschau-band" role="note"><strong data-en="DRAFT">ENTWURF</strong> <span data-en="Not yet the official website of Saray Döner. Orders go to a test number.">Noch nicht die offizielle Seite von Saray Döner. Bestellungen gehen an eine Testnummer.</span> <small class="stand">Stand 23.10. 15:01</small></div>
+<div class="vorschau-band" role="note"><strong data-en="DRAFT">ENTWURF</strong> <span data-en="Not yet the official website of Saray Döner. Orders go to a test number.">Noch nicht die offizielle Seite von Saray Döner. Bestellungen gehen an eine Testnummer.</span> <small class="stand">Stand 23.10. 15:27</small></div>
 <a class="skip" href="#speisekarte" data-en="Skip to menu">Zur Speisekarte springen</a>
 
 <header class="kopf-band" id="oben">
@@ -77,7 +74,7 @@
   <a class="schild-tel" href="tel:+493505623674" aria-label="Altenberg anrufen: 035056 23674" title="035056 23674"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.36 1.9.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.91.34 1.85.57 2.81.7A2 2 0 0 1 22 16.92z"/></svg></a>
 </li>
       </ul>
-      <aside class="winter" id="winter" hidden aria-label="Wintersaison Altenberg">
+      <aside class="winter" id="winter" hidden aria-label="Wintersaison">
         <p class="winter-titel"><span aria-hidden="true">❄️ </span><span data-en="After the slopes in Altenberg">Nach der Piste in Altenberg</span></p>
         <p data-en="Pre-order and pick up hot – right by the station. Taking the train back? We time your pickup to the departure.">Vorbestellen und warm abholen – direkt am Bahnhof. Mit dem Zug zurück? Wir richten die Abholung nach der Abfahrt.</p>
         <div class="winter-knoepfe"><button type="button" class="knopf knopf-dunkel" id="winter-bestellen" data-en="Pre-order in Altenberg">In Altenberg vorbestellen</button>
@@ -85,10 +82,12 @@
       </aside>
     </div>
     <div class="bilder">
+    <div class="bilder">
       <figure class="foto"><img src="img/laden_web.webp" srcset="img/laden_480.webp 480w, img/laden_web.webp 894w" sizes="(min-width: 900px) 440px, 100vw" width="894" height="700" decoding="async"
         alt="Der Laden von außen: Eckhaus mit grünen Schildern, davor Tische und bunte Stühle."></figure>
       <img class="koch" src="img/saray-koch.svg" width="430" height="470" alt="">
       <p class="sticker" aria-hidden="true"><small>Döner Kebap</small><b><span class="sticker-preis">7<span class="sr-only">,</span><span class="ct">00</span><span class="sr-only"> Euro</span></span></b></p>
+    </div>
     </div>
   </section>
 </div>
@@ -605,6 +604,6 @@
     </div>
   </section>
 </div>
-<script src="js/main.js?v=7936dc4c"></script>
+<script src="js/main.js?v=8ad41587"></script>
 </body>
 </html>

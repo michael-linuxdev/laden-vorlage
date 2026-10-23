@@ -12,6 +12,7 @@ Jeder Laden hat einen Ordner laeden/<id>/ mit
 import importlib.util
 import os
 import pathlib
+import re
 
 HIER = pathlib.Path(__file__).parent
 ID = os.environ.get("LADEN", "saray")
@@ -44,3 +45,29 @@ def alle():
     """Alle Läden (Ordner mit laden.py), Referenz-Laden zuerst."""
     ids = sorted(p.parent.name for p in (HIER / "laeden").glob("*/laden.py"))
     return sorted(ids, key=lambda i: (i != "saray", i))
+
+
+# Farben: Code und Vorlagen benutzen die Saray-Farben; ein Laden mit FARBEN = {...} bekommt sie beim Bauen ersetzt
+STANDARD_FARBEN = {"gelb": "#FFD21F", "gelb-blass": "#FFF3C2", "tinte": "#3A1531", "tinte-weich": "#6B4A62",
+                   "tinte-tief": "#2A0E23", "paprika": "#C8371A", "gruen": "#1E7B3C"}
+
+
+def _rgb(h):
+    h = h.lstrip("#")
+    return ",".join(str(int(h[i:i + 2], 16)) for i in (0, 2, 4))
+
+
+def farben(text):
+    """Ersetzt die Standardfarben (#RRGGBB, %23RRGGBB in data:-Adressen, rgba(r,g,b,…)) durch die des Ladens."""
+    eigene = getattr(K, "FARBEN", None) or {}
+    paare = {}
+    for name, alt in STANDARD_FARBEN.items():
+        neu = eigene.get(name)
+        if neu and neu.lower() != alt.lower():
+            paare[alt.lower()] = neu
+            paare["%23" + alt[1:].lower()] = "%23" + neu[1:]
+            paare["rgba(" + _rgb(alt) + ","] = "rgba(" + _rgb(neu) + ","
+    if not paare:
+        return text
+    muster = re.compile("|".join(re.escape(k) for k in sorted(paare, key=len, reverse=True)), re.I)
+    return muster.sub(lambda m: paare[m.group(0).lower()], text)

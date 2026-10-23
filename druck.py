@@ -27,9 +27,32 @@ from qr import qr_svg
 
 HIER = pathlib.Path(__file__).parent
 e = html.escape
-INNEN = [["doener", "duerum"], ["teller", "schnitzel", "kinder"], ["pizza", "lahmacun"]]
-KLAPPE = ["salate", "baguette"]
-RUECKSEITE = ["getraenke"]
+K = build.K
+
+
+def _flyer_aufteilung():
+    """Gruppen der Karte auf den Wickelfalz-Flyer verteilen: innen 3 Spalten, Klappe, Rückseite.
+    Ein Laden kann das festlegen (FLYER in laden.py), sonst wird nach Anzahl der Gerichte verteilt."""
+    f = getattr(K, "FLYER", None)
+    if f:
+        return f["innen"], f["klappe"], f["rueck"]
+    gr = [(g["id"], sum(len(a["gerichte"]) for a in g["abschnitte"])) for g in build.GRUPPEN]
+    getraenke = [i for i, _ in gr if "getr" in i]
+    rest = [x for x in gr if x[0] not in getraenke]
+    ziel = sum(n for _, n in rest) / 4 or 1
+    spalten, akt, summe = [], [], 0
+    for i, n in rest:
+        if akt and summe + n > ziel * 1.15 and len(spalten) < 3:
+            spalten.append(akt); akt, summe = [], 0
+        akt.append(i); summe += n
+    spalten.append(akt)
+    while len(spalten) < 4:
+        spalten.append([])
+    return spalten[:3], sum(spalten[3:], []), getraenke
+
+
+INNEN, KLAPPE, RUECKSEITE = _flyer_aufteilung()
+NAME = e(build.NAME)
 
 
 def uri(*teile):
@@ -134,8 +157,8 @@ li{{display:flex;gap:1.5mm;padding:.45mm 0;border-bottom:.15mm dotted #d9cbd4;br
     <div class="klein"><p><b>Allergene:</b> {leg}</p><p><b>Inhaltsstoffe:</b> {zut}</p>
     <p><b>Soßen</b> ({e(SOSSEN[0])}): {SOSSEN[1]} · {SOSSEN[2].replace(",", ", ")}</p>
     <p>Genaue Angaben zu Zutaten und Allergenen erhalten Sie an der Theke und auf unserer Website. Preise in Euro inkl. MwSt.</p></div></div></div>
-  <div class="panel titel"><div><div class="seit">seit 1997</div><img src="{uri("maskottchen", "saray-koch.svg")}" alt="">
-    <h1>Saray Döner</h1><div class="unter">Döner · Pizza · Lahmacun</div><div class="orte">{" · ".join(e(s["name"]) for s in build.STANDORTE)}</div></div>
+  <div class="panel titel"><div>{f'<div class="seit">seit {e(K.SEIT)}</div>' if getattr(K, "SEIT", "") else ""}<img src="{uri("maskottchen", getattr(K, "FIGUR", None) or K.LOGO)}" alt="">
+    <h1>{NAME}</h1><div class="unter">{e(getattr(K, "DRUCK_UNTERZEILE", ""))}</div><div class="orte">{" · ".join(e(s["name"]) for s in build.STANDORTE)}</div></div>
     <div class="qr">{qr}<div><b>Speisekarte &amp; vorbestellen</b><span>Code scannen und per WhatsApp vorbestellen – ohne Warten an der Theke.<br>{e(build.SEITE_ANZEIGE)}</span></div></div>
     <div class="gueltig">Preise gültig ab {heute}</div></div>
 </div>
@@ -218,7 +241,7 @@ li{{display:flex;align-items:baseline;gap:5mm;background:#fff;border:1mm solid #
 {"body{height:210mm}.kopf{margin-top:8mm}.stoerer{margin-top:5mm;font-size:18mm}h1{margin-top:6mm}ul{margin-top:6mm}.fuss{margin:4mm 0 8mm}.fuss svg{width:26mm;height:26mm}" if quadrat else ""}
 {"body{height:373.3mm}.kopf{margin-top:34mm}.kopf img{width:30mm}.kopf b{font-size:15mm}.stoerer{margin-top:16mm;font-size:22mm}h1{margin-top:16mm;font-size:16mm}ul{margin-top:14mm}main{justify-content:flex-start}.fuss{margin:8mm 0 30mm}" if status else ""}
 </style></head><body>{"" if quadrat or status else muster}
-<main><div class="kopf"><img src="{uri("maskottchen", "saray-koch-kopf.svg")}" alt=""><b>Saray Döner</b></div>
+<main><div class="kopf"><img src="{uri("maskottchen", K.LOGO)}" alt=""><b>{NAME}</b></div>
 <div class="stoerer">{"MITTAGSTISCH" if a.get("art") == "mittag" else "AKTION"}</div>
 <h1>{e(a["name"]).replace(" €", "&nbsp;€")}</h1>
 <ul>{"".join(zeilen)}</ul>
@@ -230,7 +253,7 @@ var m=document.querySelector('main'),z=1;while(m.scrollHeight>m.clientHeight+1&&
 
 
 def status_empfehlung_html():
-    """1080 × 1920 für den WhatsApp-Status: „Heute bei Saray“ mit den Empfehlungen und QR-Code zum Vorbestellen."""
+    """1080 × 1920 für den WhatsApp-Status: „Heute bei …“ mit den Empfehlungen und QR-Code zum Vorbestellen."""
     gerichte = {(g[0] or g[1]): g for gr in build.GRUPPEN for ab in gr["abschnitte"] for g in ab["gerichte"]}
     zeilen = "".join(f'<li><span class="nm">{e(gerichte[n][1])}<small>{e(gerichte[n][2])}</small></span><span class="neu">{gerichte[n][3][0]} €</span></li>'
                      for n in [x for x in build.EMPFEHLUNG if x in gerichte and x not in build.NUR_DIAET][:4])
@@ -251,10 +274,10 @@ li{{display:flex;align-items:center;gap:5mm;background:#fff;border:1mm solid #3A
 .fuss{{margin:auto 0 30mm;display:flex;align-items:center;gap:6mm;background:#fff;border-radius:4mm;padding:5mm 7mm;width:176mm}}
 .fuss svg{{width:34mm;height:34mm;flex:none}}.fuss b{{font:700 7mm/1.2 Slab;display:block}}.fuss p{{margin:1mm 0 0;font-size:4.6mm;line-height:1.35}}
 </style></head><body>
-<div class="kopf"><img src="{uri("maskottchen", "saray-koch-kopf.svg")}" alt=""><b>Saray Döner</b></div>
+<div class="kopf"><img src="{uri("maskottchen", K.LOGO)}" alt=""><b>{NAME}</b></div>
 <h1>Frisch vom Spieß.<br>Heute bei uns:</h1>
 <ul>{zeilen}</ul>
-<img class="koch" src="{uri("maskottchen", "saray-koch.svg")}" alt="">
+<img class="koch" src="{uri("maskottchen", getattr(K, "FIGUR", None) or K.LOGO)}" alt="">
 <div class="fuss">{qr}<div><b>Jetzt vorbestellen</b><p>Code scannen, wählen, per WhatsApp schicken – ohne Warten abholen. Nur Barzahlung.<br>{e(build.SEITE_ANZEIGE)}</p></div></div>
 </body></html>"""
 
@@ -287,9 +310,9 @@ ul{{list-style:none;margin:0;padding:0}}li{{display:flex;gap:1.6mm;padding:.7mm 
 .fuss svg{{width:26mm;height:26mm;flex:none}}.fuss b{{font-family:Slab}}
 .muster{{position:absolute;left:0;right:0;top:0;background:#3A1531;color:#fff;text-align:center;font:700 3.6mm Text;padding:1.4mm}}
 </style></head><body>{muster}
-<div class="kopf"><img src="{uri("maskottchen", "saray-koch-kopf.svg")}" alt=""><h1>Saray Döner · Speisekarte</h1><span>Nur Barzahlung · Preise in Euro inkl. MwSt.<br>Stand {heute}</span></div>
+<div class="kopf"><img src="{uri("maskottchen", K.LOGO)}" alt=""><h1>{NAME} · Speisekarte</h1><span>{"Nur Barzahlung · " if all(s.get("bar") for s in build.STANDORTE) else ""}Preise in Euro inkl. MwSt.<br>Stand {heute}</span></div>
 <div class="spalten">{spalten}</div>
-<div class="fuss">{qr}<div><b>Vorbestellen per WhatsApp: {e(build.SEITE_ANZEIGE)}</b><br>{orte}<br>Alle Gerichte mit Soße nach Wahl: Knoblauch, Kräuter, Chili. Allergene und Inhaltsstoffe: Mappe an der Theke.</div></div>
+<div class="fuss">{qr}<div><b>Vorbestellen per WhatsApp: {e(build.SEITE_ANZEIGE)}</b><br>{orte}<br>{e(getattr(K, "DRUCK_FUSS", ""))} Allergene und Inhaltsstoffe: Mappe an der Theke.</div></div>
 <script>/* passt alles auf das Blatt? sonst Schrift verkleinern */
 var sp=document.querySelector('.spalten'),f=3.1;
 function zuViel(){{var r=sp.getBoundingClientRect();return [].some.call(sp.querySelectorAll('li,h3'),function(x){{var q=x.getBoundingClientRect();return q.right>r.right+1||q.bottom>r.bottom+1;}});}}
@@ -297,30 +320,31 @@ document.fonts.ready.then(function(){{while(zuViel()&&f>1.9){{f-=.05;sp.style.fo
 </body></html>"""
 
 
-VORBESTELLEN = [  # (Sprache, Überschrift, Schritte, Zusatz) – für den Aushang „Hier vorbestellen“
-    ("de", "Hier vorbestellen –<br>ohne Warten abholen", ["Code scannen", "Essen wählen", "per WhatsApp schicken", "abholen und bar bezahlen"], "Döner, Dürüm, Pizza und Salate"),
-    ("en", "Order ahead here –<br>pick up without waiting", ["Scan the code", "Choose your food", "Send via WhatsApp", "Pick up and pay cash"], "Döner, dürüm, pizza and salads"),
-    ("cs", "Objednejte předem –<br>vyzvedněte bez čekání", ["Naskenujte kód", "Vyberte jídlo", "Pošlete přes WhatsApp", "Vyzvedněte a zaplaťte hotově"], "Döner, dürüm, pizza a saláty"),
-    ("tr", "Önceden sipariş verin –<br>beklemeden alın", ["Kodu tarayın", "Yemeğinizi seçin", "WhatsApp ile gönderin", "Teslim alın, nakit ödeyin"], "Döner, dürüm, pizza ve salatalar"),
-    ("ru", "Закажите заранее –<br>заберите без ожидания", ["Сканируйте код", "Выберите еду", "Отправьте через WhatsApp", "Заберите и оплатите наличными"], "Дёнер, дюрюм, пицца и салаты"),
-    ("ar", "اطلب مسبقًا هنا –<br>واستلم دون انتظار", ["امسح الرمز", "اختر طعامك", "أرسل عبر واتساب", "استلم وادفع نقدًا"], "دونر، دوروم، بيتزا وسلطات"),
+VORBESTELLEN = [  # (Sprache, Überschrift, Schritte); Zusatz je Sprache: ANGEBOT in laden.py – für den Aushang „Hier vorbestellen“
+    ("de", "Hier vorbestellen –<br>ohne Warten abholen", ["Code scannen", "Essen wählen", "per WhatsApp schicken", "abholen und bar bezahlen"]),
+    ("en", "Order ahead here –<br>pick up without waiting", ["Scan the code", "Choose your food", "Send via WhatsApp", "Pick up and pay cash"]),
+    ("cs", "Objednejte předem –<br>vyzvedněte bez čekání", ["Naskenujte kód", "Vyberte jídlo", "Pošlete přes WhatsApp", "Vyzvedněte a zaplaťte hotově"]),
+    ("tr", "Önceden sipariş verin –<br>beklemeden alın", ["Kodu tarayın", "Yemeğinizi seçin", "WhatsApp ile gönderin", "Teslim alın, nakit ödeyin"]),
+    ("ru", "Закажите заранее –<br>заберите без ожидания", ["Сканируйте код", "Выберите еду", "Отправьте через WhatsApp", "Заберите и оплатите наличными"]),
+    ("ar", "اطلب مسبقًا هنا –<br>واستلم دون انتظار", ["امسح الرمز", "اختر طعامك", "أرسل عبر واتساب", "استلم وادفع نقدًا"]),
 ]
 
 
 def vorbestellen_html():
     """A5-Aushang „Hier vorbestellen“ für Fenster, Bushaltestelle und Bahnhof: Seite 1 alle Sprachen, danach je Sprache eine Seite
     mit eigenem QR-Code (öffnet die Seite gleich in dieser Sprache)."""
-    kopf = uri("maskottchen", "saray-koch-kopf.svg")
+    kopf = uri("maskottchen", K.LOGO)
     orte = " · ".join(f'{e(st["name"])}: {e(st["strasse"])}' for st in build.STANDORTE)
     seiten = []
     qr_alle = qr_svg(f"{build.SEITE_URL}#speisekarte", "M", "#3A1531")
-    zeilen = "".join(f'<li lang="{c}" dir="{"rtl" if c == "ar" else "ltr"}"><b>{u.replace("<br>", " ")}</b></li>' for c, u, _, _ in VORBESTELLEN[1:])
-    seiten.append(f'<section class="s alle"><div class="k"><img src="{kopf}" alt=""><b>Saray Döner</b></div><h1>{VORBESTELLEN[0][1]}</h1>'
+    zeilen = "".join(f'<li lang="{c}" dir="{"rtl" if c == "ar" else "ltr"}"><b>{u.replace("<br>", " ")}</b></li>' for c, u, _ in VORBESTELLEN[1:])
+    seiten.append(f'<section class="s alle"><div class="k"><img src="{kopf}" alt=""><b>{NAME}</b></div><h1>{VORBESTELLEN[0][1]}</h1>'
                   f'<div class="qr">{qr_alle}</div><ul>{zeilen}</ul><p class="f">{e(build.SEITE_ANZEIGE)} · {orte}</p></section>')
-    for c, ueber, schritte, zusatz in VORBESTELLEN:
+    for c, ueber, schritte in VORBESTELLEN:
+        zusatz = getattr(K, "ANGEBOT", {}).get(c, "")
         qr = qr_svg(f"{build.SEITE_URL}?sp={c}#speisekarte", "M", "#3A1531")
         liste = "".join(f"<li><span>{i + 1}</span>{e(x)}</li>" for i, x in enumerate(schritte))
-        seiten.append(f'<section class="s" lang="{c}" dir="{"rtl" if c == "ar" else "ltr"}"><div class="k" dir="ltr"><img src="{kopf}" alt=""><b>Saray Döner</b></div>'
+        seiten.append(f'<section class="s" lang="{c}" dir="{"rtl" if c == "ar" else "ltr"}"><div class="k" dir="ltr"><img src="{kopf}" alt=""><b>{NAME}</b></div>'
                       f'<h1>{ueber}</h1><p class="z">{e(zusatz)}</p><div class="qr">{qr}</div><ol>{liste}</ol>'
                       f'<p class="f" dir="ltr">{e(build.SEITE_ANZEIGE)} · {orte}</p></section>')
     return f"""<!doctype html><html lang="de"><head><meta charset="utf-8"><style>
@@ -346,11 +370,11 @@ ol li span{{flex:none;width:8mm;height:8mm;border-radius:50%;background:#3A1531;
 def fenster_html():
     """A4 quer fürs Schaufenster: sehr großer QR-Code (15 cm, von draußen aus 1–2 m scannbar), kurz in 6 Sprachen.
     Mit der bedruckten Seite nach außen von innen an die Scheibe kleben."""
-    kopf = uri("maskottchen", "saray-koch-kopf.svg")
+    kopf = uri("maskottchen", K.LOGO)
     qr = qr_svg(f"{build.SEITE_URL}#speisekarte", "Q", "#3A1531", rand=2)
     de = VORBESTELLEN[0]
     schritte = "".join(f"<li><span>{i + 1}</span>{e(x)}</li>" for i, x in enumerate(de[2]))
-    zeilen = "".join(f'<li lang="{c}" dir="{"rtl" if c == "ar" else "ltr"}">{u.replace("<br>", " ")}</li>' for c, u, _, _ in VORBESTELLEN[1:])
+    zeilen = "".join(f'<li lang="{c}" dir="{"rtl" if c == "ar" else "ltr"}">{u.replace("<br>", " ")}</li>' for c, u, _ in VORBESTELLEN[1:])
     return f"""<!doctype html><html lang="de"><head><meta charset="utf-8"><style>
 @font-face{{font-family:Slab;src:url({uri("assets", "Roboto-Slab-Bold.sub.woff")});font-weight:700}}
 @font-face{{font-family:Text;src:url({uri("assets", "lato-normal.sub.woff")});font-weight:400}}
@@ -370,7 +394,7 @@ ul{{list-style:none;padding:0;margin:4mm 0 0;font:700 3.9mm/1.35 Text,"Noto Sans
 ul li{{margin-bottom:.8mm}}
 .f{{margin-top:auto;font:700 5mm Text}}
 </style></head><body><section class="s"><div class="qr">{qr}</div><div class="r">
-<div class="k"><img src="{kopf}" alt=""><b>Saray Döner</b></div>
+<div class="k"><img src="{kopf}" alt=""><b>{NAME}</b></div>
 <h1>{de[1]}</h1><p class="pfeil">← Mit der Handykamera scannen</p><ol>{schritte}</ol><ul>{zeilen}</ul>
 <p class="f">{e(build.SEITE_ANZEIGE)}</p></div></section></body></html>"""
 
@@ -410,7 +434,7 @@ td small{{display:block;color:#6b5566;font-size:8pt}}td.nr{{width:10mm;font-weig
 .hinweis{{margin-top:6mm;font-size:8.5pt;color:#6b5566}}
 .muster{{background:#3A1531;color:#fff;text-align:center;font:700 8pt Text;padding:1mm;margin:-2mm 0 4mm}}
 </style></head><body>{muster}
-<h1>Allergene und Inhaltsstoffe</h1><p class="stand">Saray Döner Freital und Altenberg · Stand {heute}</p>
+<h1>Allergene und Inhaltsstoffe</h1><p class="stand">{NAME} {" und ".join(e(s["name"]) for s in build.STANDORTE)} · Stand {heute}</p>
 <div class="kasten"><div><h2>Allergene</h2><table class="leg">{leg}</table>
 <p>Soßen ({e(SOSSEN[0])}): Inhaltsstoff {SOSSEN[1]} · Allergene {SOSSEN[2].replace(",", ", ")}</p></div>
 <div><h2>Inhaltsstoffe</h2><table class="leg">{zut}</table></div></div>
@@ -423,7 +447,7 @@ Bei Fragen sprechen Sie uns bitte an.</p>
 def preisschilder_html():
     """Preisschilder für Theke und Kühlschrank: alle Getränke, 8 Schilder je A4 (105 × 74 mm), mit Schnittlinien.
     Preise und Kennzeichnung immer aktuell (inkl. Änderungen aus der Chef-App)."""
-    kopf = uri("maskottchen", "saray-koch-kopf.svg")
+    kopf = uri("maskottchen", K.LOGO)
     schilder = []
     for gr in build.GRUPPEN:
         if gr["id"] != "getraenke":
@@ -465,8 +489,8 @@ body{{width:210mm;display:grid;grid-template-columns:repeat(2,105mm);grid-auto-r
 def aufkleber_html():
     """A4-Bogen mit 24 Etiketten 70 × 37 mm (z. B. Zweckform 3474) für Tüten: QR-Code zur Speisekarte."""
     qr = qr_svg(f"{build.SEITE_URL}#speisekarte", "M", "#3A1531")
-    kopf = uri("maskottchen", "saray-koch-kopf.svg")
-    eins = (f'<div class="et"><div>{qr}</div><div class="t"><div class="k"><img src="{kopf}" alt=""><b>Saray Döner</b></div>'
+    kopf = uri("maskottchen", K.LOGO)
+    eins = (f'<div class="et"><div>{qr}</div><div class="t"><div class="k"><img src="{kopf}" alt=""><b>{NAME}</b></div>'
             f'<p>Nächstes Mal online vorbestellen – ohne Warten.</p><small>{e(build.SEITE_ANZEIGE)}</small></div></div>')
     return f"""<!doctype html><html lang="de"><head><meta charset="utf-8"><style>
 @font-face{{font-family:Slab;src:url({uri("assets", "Roboto-Slab-Bold.sub.woff")});font-weight:700}}
@@ -509,7 +533,7 @@ li b{{font-family:Slab}}
 .laden{{display:flex;flex-direction:column;gap:.6mm}}.laden b{{font:700 4mm Slab}}
 .muster{{background:#3A1531;color:#fff;text-align:center;font:700 3mm Text;padding:1mm}}
 </style></head><body>{muster}
-<div class="kopf"><div class="marke"><img src="{uri("maskottchen", "saray-koch-kopf.svg")}" alt="">Saray Döner</div>
+<div class="kopf"><div class="marke"><img src="{uri("maskottchen", K.LOGO)}" alt="">{NAME}</div>
 <h1>Mittagspause fürs Team? Feier am Abend?</h1><p>Für Firmen, Vereine und Feiern: alle bestellen gemeinsam, einer holt ab.</p></div>
 <div class="inhalt"><ol>
 <li><span><b>Starten:</b> Code scannen, „Gemeinsam bestellen“ antippen und den Link an die Gruppe schicken.</span></li>
@@ -527,7 +551,7 @@ async def main(ziel):
     async with async_playwright() as p:
         b = await p.chromium.launch()
         tmp = HIER / "_flyer.html"
-        tmp.write_text(flyer_html(), encoding="utf-8")
+        tmp.write_text(build.konfig.farben(flyer_html()), encoding="utf-8")
         pg = await b.new_page(viewport={"width": 1123, "height": 794})
         await pg.goto(tmp.as_uri())
         await pg.wait_for_selector("body[data-fertig]")
@@ -540,7 +564,7 @@ async def main(ziel):
         tmp.unlink()
         for st in build.STANDORTE:
             tmp = HIER / f"_aufsteller-{st['id']}.html"
-            tmp.write_text(aufsteller.vorlage(st), encoding="utf-8")
+            tmp.write_text(build.konfig.farben(aufsteller.vorlage(st)), encoding="utf-8")
             pg = await b.new_page(viewport={"width": 559, "height": 794})
             await pg.goto(tmp.as_uri())
             await pg.wait_for_timeout(400)
@@ -548,7 +572,7 @@ async def main(ziel):
             await pg.close()
             tmp.unlink()
         tmp = HIER / "_gruppen.html"
-        tmp.write_text(gruppen_flyer_html(), encoding="utf-8")
+        tmp.write_text(build.konfig.farben(gruppen_flyer_html()), encoding="utf-8")
         pg = await b.new_page(viewport={"width": 559, "height": 794})
         await pg.goto(tmp.as_uri())
         await pg.wait_for_timeout(400)
@@ -559,7 +583,7 @@ async def main(ziel):
         tmp.unlink()
         for name, inhalt in (("allergenmappe", allergenmappe_html()), ("aufkleber", aufkleber_html()), ("preisschilder", preisschilder_html())):
             tmp = HIER / f"_{name}.html"
-            tmp.write_text(inhalt, encoding="utf-8")
+            tmp.write_text(build.konfig.farben(inhalt), encoding="utf-8")
             pg = await b.new_page(viewport={"width": 794, "height": 1123})
             await pg.goto(tmp.as_uri())
             await pg.wait_for_timeout(400)
@@ -571,7 +595,7 @@ async def main(ziel):
             tmp.unlink()
         # A5 „Hier vorbestellen“ in allen Sprachen
         tmp = HIER / "_vorbestellen.html"
-        tmp.write_text(vorbestellen_html(), encoding="utf-8")
+        tmp.write_text(build.konfig.farben(vorbestellen_html()), encoding="utf-8")
         pg = await b.new_page(viewport={"width": 559, "height": 794})
         await pg.goto(tmp.as_uri())
         await pg.wait_for_timeout(500)
@@ -582,7 +606,7 @@ async def main(ziel):
         tmp.unlink()
         # Fenster-Aushang A4 quer mit großem QR-Code
         tmp = HIER / "_fenster.html"
-        tmp.write_text(fenster_html(), encoding="utf-8")
+        tmp.write_text(build.konfig.farben(fenster_html()), encoding="utf-8")
         pg = await b.new_page(viewport={"width": 1123, "height": 794})
         await pg.goto(tmp.as_uri())
         await pg.wait_for_timeout(500)
@@ -593,7 +617,7 @@ async def main(ziel):
         tmp.unlink()
         # Aushang A3 mit der ganzen Karte
         tmp = HIER / "_aushang.html"
-        tmp.write_text(aushang_html(), encoding="utf-8")
+        tmp.write_text(build.konfig.farben(aushang_html()), encoding="utf-8")
         pg = await b.new_page(viewport={"width": 1123, "height": 1587})
         await pg.goto(tmp.as_uri())
         await pg.wait_for_selector("body[data-fertig]")
@@ -607,7 +631,7 @@ async def main(ziel):
         status = [("status-empfehlung.png", status_empfehlung_html())] + [(f"status-{slug(a['name'], a['von'])}.png", plakat_html(a, status=True)) for a in build.AKTIONEN]
         for name, inhalt in status:
             tmp = HIER / "_status.html"
-            tmp.write_text(inhalt, encoding="utf-8")
+            tmp.write_text(build.konfig.farben(inhalt), encoding="utf-8")
             pg = await b.new_page(viewport={"width": 794, "height": 1411}, device_scale_factor=1080 / 794)
             await pg.goto(tmp.as_uri())
             await pg.wait_for_timeout(400)
@@ -617,7 +641,7 @@ async def main(ziel):
         for a in build.AKTIONEN:
             # quadratisches Bild zum Posten (1080 × 1080)
             tmp = HIER / "_bild.html"
-            tmp.write_text(plakat_html(a, quadrat=True), encoding="utf-8")
+            tmp.write_text(build.konfig.farben(plakat_html(a, quadrat=True)), encoding="utf-8")
             pg = await b.new_page(viewport={"width": 794, "height": 794}, device_scale_factor=1080 / 794)
             await pg.goto(tmp.as_uri())
             await pg.wait_for_timeout(400)
@@ -625,7 +649,7 @@ async def main(ziel):
             await pg.close()
             tmp.unlink()
             tmp = HIER / "_plakat.html"
-            tmp.write_text(plakat_html(a), encoding="utf-8")
+            tmp.write_text(build.konfig.farben(plakat_html(a)), encoding="utf-8")
             pg = await b.new_page(viewport={"width": 794, "height": 1123})
             await pg.goto(tmp.as_uri())
             await pg.wait_for_timeout(400)

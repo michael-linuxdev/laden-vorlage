@@ -8,6 +8,7 @@ Zugang: ein GitHub-Token (fine-grained, nur dieses Repo, „Contents: Read and w
 „Actions: Read“ für die Fortschrittsanzeige). Einrichten über  …/chef/#token=<TOKEN>  – der Token
 wird nur auf dem Gerät gespeichert (localStorage) und sofort aus der Adresse entfernt.
 """
+import html
 import json
 import pathlib
 
@@ -17,11 +18,11 @@ SEITE = r"""<!doctype html>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="robots" content="noindex, nofollow">
-<title>Saray Chef</title>
+<title>%%KURZ%% Chef</title>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="../img/favicon-96.png" type="image/png">
 <link rel="apple-touch-icon" href="../img/app-180.png">
-<meta name="apple-mobile-web-app-title" content="Saray Chef">
+<meta name="apple-mobile-web-app-title" content="%%KURZ%% Chef">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#3A1531">
 <style>
@@ -167,7 +168,7 @@ a.knopf{color:inherit}
 </style>
 </head>
 <body>
-<header><img src="../img/saray-koch-kopf.svg" alt=""><div style="flex:1"><h1>Saray Chef</h1><small id="stand">Lädt …</small></div><button class="hilfe-knopf" id="hilfe" type="button" aria-label="Einführung starten" title="Einführung">?</button><div class="sprache-wahl" id="sprache" role="group" aria-label="Sprache / Dil" data-kein-ue><button type="button" data-ue-sp="de" title="Deutsch"><svg viewBox="0 0 30 20" aria-hidden="true"><rect width="30" height="7" fill="#000"/><rect y="6.67" width="30" height="6.67" fill="#DD0000"/><rect y="13.33" width="30" height="6.67" fill="#FFCE00"/></svg><span>DE</span></button><button type="button" data-ue-sp="tr" title="Türkçe"><svg viewBox="0 0 30 20" aria-hidden="true"><rect width="30" height="20" fill="#E30A17"/><circle cx="11" cy="10" r="5" fill="#fff"/><circle cx="12.25" cy="10" r="4" fill="#E30A17"/><polygon fill="#fff" points="14.20,10.00 15.83,9.44 15.86,7.72 16.89,9.10 18.54,8.59 17.55,10.00 18.54,11.41 16.89,10.90 15.86,12.28 15.83,10.56"/></svg><span>TR</span></button></div></header>
+<header><img src="../img/%%LOGO%%" alt=""><div style="flex:1"><h1>%%KURZ%% Chef</h1><small id="stand">Lädt …</small></div><button class="hilfe-knopf" id="hilfe" type="button" aria-label="Einführung starten" title="Einführung">?</button><div class="sprache-wahl" id="sprache" role="group" aria-label="Sprache / Dil" data-kein-ue><button type="button" data-ue-sp="de" title="Deutsch"><svg viewBox="0 0 30 20" aria-hidden="true"><rect width="30" height="7" fill="#000"/><rect y="6.67" width="30" height="6.67" fill="#DD0000"/><rect y="13.33" width="30" height="6.67" fill="#FFCE00"/></svg><span>DE</span></button><button type="button" data-ue-sp="tr" title="Türkçe"><svg viewBox="0 0 30 20" aria-hidden="true"><rect width="30" height="20" fill="#E30A17"/><circle cx="11" cy="10" r="5" fill="#fff"/><circle cx="12.25" cy="10" r="4" fill="#E30A17"/><polygon fill="#fff" points="14.20,10.00 15.83,9.44 15.86,7.72 16.89,9.10 18.54,8.59 17.55,10.00 18.54,11.41 16.89,10.90 15.86,12.28 15.83,10.56"/></svg><span>TR</span></button></div></header>
 <main id="app"></main>
 <div class="speichern" id="speichern" hidden><p id="speichern-text"></p>
   <button class="knopf klein" id="verwerfen">Verwerfen</button><button class="knopf voll" id="speichern-knopf">Speichern</button></div>
@@ -223,6 +224,9 @@ function el(tag,attrs,kinder){var e=document.createElement(tag);attrs=attrs||{};
   Object.keys(attrs).forEach(function(k){var v=attrs[k];if(v==null||v===false)return;
     if(k==='text')e.textContent=v;else if(k.slice(0,2)==='on')e.addEventListener(k.slice(2),v);else if(k==='class')e.className=v;else e.setAttribute(k,v===true?'':v);});
   (kinder||[]).forEach(function(c){if(c!=null)e.appendChild(typeof c==='string'?document.createTextNode(c):c);});return e;}
+/* Läden aus der Konfiguration: Name je Kennung, Auswahl „Beide/Alle + Läden“ (bei nur einem Laden keine Auswahl) */
+function LN(id){var l=STD.laeden.filter(function(x){return x.id===id;})[0];return l?l.name:id;}
+function LW(leer,alleText){if(STD.laeden.length<2)return [];return [[leer,alleText||(STD.laeden.length===2?'Beide':'Alle')]].concat(STD.laeden.map(function(l){return [l.id,l.name];}));}
 function heute(off){return new Intl.DateTimeFormat('en-CA',{timeZone:'Europe/Berlin',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date(Date.now()+(off||0)*864e5));}
 function datumDE(iso){var p=iso.split('-');return p[2]+'.'+p[1]+'.';}
 function kopie(o){return JSON.parse(JSON.stringify(o));}
@@ -390,14 +394,14 @@ var ZIELE=[
   ['Öffnungszeiten','öffnungszeiten zeiten offen uhrzeit çalışma saatleri','zeiten','','a-oeffnung'],
   ['Besondere Tage und Feiertage','besondere tage feiertag heiligabend silvester ostern özel gün bayram tatil günü','zeiten','','a-sonder'],
   ['Urlaub / Betriebsferien','urlaub ferien betriebsurlaub zu geschlossen tatil izin','zeiten','','a-urlaub'],
-  ['Wintersaison Altenberg','winter saison ski altenberg kış sezon','zeiten','','a-winter'],
+  ['Wintersaison','winter saison ski kış sezon','zeiten','','a-winter'],
   ['Vorbestellungen je Viertelstunde','viertelstunde slot slots ausgebucht voll vorbestellung grenze dolu ön sipariş','zeiten','','a-slots']];
 MEHR.forEach(function(g){g[1].forEach(function(x){ZIELE.push([x[2],x[2].toLowerCase()+' '+x[3].toLowerCase()+' '+({drucken:'flyer plakat aushang aufsteller status pdf yazdır afiş',google:'google maps profil harita',laden:'tv fernseher bildschirm schaufenster küche bon test ekran mutfak vitrin',
   zahlen:'zahlen statistik besucher umsatz istatistik ziyaretçi',checkliste:'checkliste fragen offen freischalten liste kontrol',einfuehrung:'einführung tutorial hilfe anleitung erklärung tur yardım eğitim',antworten:'whatsapp business antwort begrüßung abwesenheit kurzantwort schnellantwort mesaj cevap karşılama',website:'website seite ansehen web site',rueckgaengig:'rückgängig zurück fehler geri al',gefahr:'standard zurücksetzen abmelden token sıfırla çıkış'}[x[0]]||''),'mehr',x[0],'']);});});
 function sucheMehr(){
   var q=el('input',{type:'search',id:'mehr-suche',placeholder:'Suchen: Urlaub, Preis, Gutschein …','aria-label':'Was möchten Sie tun?',autocomplete:'off'}),erg=el('div',{class:'such-treffer'});
   function zeigen(){erg.textContent='';var w=q.value.trim().toLowerCase().split(/\s+/).filter(Boolean);if(!w.length)return;
-    var t=ZIELE.filter(function(z){var h=(z[0]+' '+z[1]+' '+ue(z[0])).toLowerCase();return w.every(function(x){return h.indexOf(x)>-1;});}).slice(0,8);
+    var t=ZIELE.filter(function(z){if(z[4]==='a-winter'&&!STD.winter)return false;var h=(z[0]+' '+z[1]+' '+ue(z[0])).toLowerCase();return w.every(function(x){return h.indexOf(x)>-1;});}).slice(0,8);
     if(!t.length){erg.appendChild(el('p',{class:'hinweis',text:'Nichts gefunden. Anderes Wort versuchen.'}));return;}
     t.forEach(function(z){erg.appendChild(el('button',{class:'menue-punkt','data-ziel':z[3]||z[4],onclick:function(){zuTab(z[2],z[3],z[4]);}},
       [el('span',{class:'mp-text'},[el('b',{text:z[0]}),el('small',{text:{heute:'Heute',karte:'Karte',preise:'Preise',zeiten:'Zeiten',mehr:'Mehr'}[z[2]]})]),el('span',{class:'mp-pfeil',text:'›'})]));});}
@@ -458,26 +462,26 @@ function tourAutomatisch(){var g='';try{g=localStorage.getItem(TOUR_K)||'';}catc
 var ANTW_LADEN='',ANTW_SP='de';
 var ANTW={
   de:{tage:['So','Mo','Di','Mi','Do','Fr','Sa'],zu:'geschlossen',
-    gruss:['Begrüßungsnachricht','Hallo und willkommen bei Saray Döner {ort}! 🥙 Am schnellsten bestellen Sie über unsere Seite: {url} – dort Essen wählen und die Bestellung hier per WhatsApp schicken. Wir bestätigen sie kurz.'],
-    weg:['Abwesenheitsnachricht','Danke für Ihre Nachricht! Gerade haben wir geschlossen. Unsere Öffnungszeiten: {zeiten}. Vorbestellen geht jederzeit über {url} – wir bestätigen, sobald wir wieder da sind. Ihr Saray Döner {ort}'],
+    gruss:['Begrüßungsnachricht','Hallo und willkommen bei {name} {ort}! 🥙 Am schnellsten bestellen Sie über unsere Seite: {url} – dort Essen wählen und die Bestellung hier per WhatsApp schicken. Wir bestätigen sie kurz.'],
+    weg:['Abwesenheitsnachricht','Danke für Ihre Nachricht! Gerade haben wir geschlossen. Unsere Öffnungszeiten: {zeiten}. Vorbestellen geht jederzeit über {url} – wir bestätigen, sobald wir wieder da sind. Ihr {name} {ort}'],
     kurz:[['danke','Bestellung angenommen','Danke, Ihre Bestellung ist angenommen! Wir sagen Bescheid, wenn sie fertig ist. Bitte bar bezahlen.'],
       ['fertig','Bestellung fertig','Ihre Bestellung ist fertig und liegt für Sie bereit. Bis gleich!'],
       ['aus','Ausverkauft','Das ist heute leider aus. Möchten Sie etwas anderes dafür? Zum Beispiel: '],
       ['warten','Viel los','Gerade ist viel los – Ihre Bestellung ist in ca. 30 Minuten fertig. Passt das für Sie?'],
       ['zu','Heute geschlossen','Heute haben wir leider geschlossen. Morgen sind wir gern wieder für Sie da! Vorbestellen: {url}'],
-      ['adresse','Adresse','Saray Döner {ort}: {adresse}. Route: {maps}'],
+      ['adresse','Adresse','{name} {ort}: {adresse}. Route: {maps}'],
       ['zeiten','Öffnungszeiten','Unsere Öffnungszeiten in {ort}: {zeiten}'],
       ['karte','Speisekarte','Unsere Speisekarte mit allen Preisen: {url}'],
       ['gruppe','Große Bestellung','Sehr gern! Für größere Bestellungen bitte etwas Vorlauf – schicken Sie uns Uhrzeit und Anzahl, wir melden uns.']]},
   tr:{tage:['Paz','Pzt','Sal','Çar','Per','Cum','Cmt'],zu:'kapalı',
-    gruss:['Karşılama mesajı','Merhaba, Saray Döner {ort} şubemize hoş geldiniz! 🥙 En hızlı sipariş sayfamızdan: {url} – yemeğinizi seçin ve siparişi buradan WhatsApp ile gönderin. Kısa sürede onaylıyoruz.'],
-    weg:['Uzakta mesajı','Mesajınız için teşekkürler! Şu anda kapalıyız. Çalışma saatlerimiz: {zeiten}. {url} üzerinden her zaman ön sipariş verebilirsiniz – açılır açılmaz onaylıyoruz. Saray Döner {ort}'],
+    gruss:['Karşılama mesajı','Merhaba, {name} {ort} şubemize hoş geldiniz! 🥙 En hızlı sipariş sayfamızdan: {url} – yemeğinizi seçin ve siparişi buradan WhatsApp ile gönderin. Kısa sürede onaylıyoruz.'],
+    weg:['Uzakta mesajı','Mesajınız için teşekkürler! Şu anda kapalıyız. Çalışma saatlerimiz: {zeiten}. {url} üzerinden her zaman ön sipariş verebilirsiniz – açılır açılmaz onaylıyoruz. {name} {ort}'],
     kurz:[['danke','Sipariş alındı','Teşekkürler, siparişiniz alındı! Hazır olunca haber veriyoruz. Lütfen nakit ödeyin.'],
       ['fertig','Sipariş hazır','Siparişiniz hazır, sizi bekliyor. Görüşmek üzere!'],
       ['aus','Tükendi','Bu ürün bugün maalesef tükendi. Yerine başka bir şey ister misiniz? Örneğin: '],
       ['warten','Çok yoğun','Şu an çok yoğunuz – siparişiniz yaklaşık 30 dakika içinde hazır olur. Sizin için uygun mu?'],
       ['zu','Bugün kapalı','Bugün maalesef kapalıyız. Yarın yine hizmetinizdeyiz! Ön sipariş: {url}'],
-      ['adresse','Adres','Saray Döner {ort}: {adresse}. Yol tarifi: {maps}'],
+      ['adresse','Adres','{name} {ort}: {adresse}. Yol tarifi: {maps}'],
       ['zeiten','Çalışma saatleri','{ort} şubemizin çalışma saatleri: {zeiten}'],
       ['karte','Menü','Tüm fiyatlarıyla menümüz: {url}'],
       ['gruppe','Büyük sipariş','Memnuniyetle! Büyük siparişler için lütfen biraz önceden haber verin – saati ve kişi sayısını yazın, size dönüş yapalım.']]}};
@@ -490,7 +494,7 @@ function kopieren(t,knopf){function ok(){var alt=knopf.textContent;knopf.textCon
   if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(t).then(ok,function(){window.prompt('Kopieren:',t);});else{window.prompt('Kopieren:',t);}}
 function antwortenKarte(){
   if(!ANTW_LADEN)ANTW_LADEN=STD.laeden[0].id;var l=STD.laeden.filter(function(x){return x.id===ANTW_LADEN;})[0]||STD.laeden[0],A=ANTW[ANTW_SP];
-  var url=STD.seite+'#speisekarte',adr=l.strasse+', '+l.plz+' '+l.ort,w={ort:l.name,url:url,zeiten:antwZeiten(l,ANTW_SP),adresse:adr,maps:'https://maps.google.com/?q='+encodeURIComponent('Saray Döner, '+adr)};
+  var url=STD.seite+'#speisekarte',adr=l.strasse+', '+l.plz+' '+l.ort,w={name:STD.name,ort:l.name,url:url,zeiten:antwZeiten(l,ANTW_SP),adresse:adr,maps:'https://maps.google.com/?q='+encodeURIComponent(STD.name+', '+adr)};
   function f(t){return t.replace(/\{(\w+)\}/g,function(_,k){return w[k]!=null?w[k]:'';});}
   var k=el('div',{class:'karte',id:'antw-karte'},[el('h3',{text:'💬 WhatsApp-Antworten'}),
     el('p',{class:'hinweis',text:'Fertige Texte für WhatsApp Business auf dem Laden-Handy. Einrichten unter WhatsApp Business → Einstellungen → Unternehmenstools: Begrüßungsnachricht, Abwesenheitsnachricht (Zeitplan: „Außerhalb der Geschäftszeiten“) und Schnellantworten. Bei Schnellantworten das Kürzel eintragen – im Chat dann „/“ tippen.'})]);
@@ -515,7 +519,7 @@ function preiseTab(){
 
 function regelText(r){var t=r.ab?'ab '+r.ab+' Uhr':r.bis?'bis '+r.bis+' Uhr':(r.datum?'aus':'dauerhaft aus');
   t+=r.datum?(r.datum===heute()?' (heute)':' ('+datumDE(r.datum)+')'):(r.ab||r.bis?' (jeden Tag)':'');
-  if(r.laden)t+=' · '+(r.laden==='freital'?'Freital':'Altenberg');return t;}
+  if(r.laden&&STD.laeden.length>1)t+=' · '+LN(r.laden);return t;}
 function regelNeu(was,art,zeit,immer){var r={was:was};if(art==='ab')r.ab=zeit;if(!immer)r.datum=heute();if(LADEN!=='alle')r.laden=LADEN;
   ANP.verfuegbarkeit=(ANP.verfuegbarkeit||[]).filter(function(x){return !(x.was===was&&(x.laden||'alle')===LADEN);});
   ANP.verfuegbarkeit.push(r);zeichnen();}
@@ -559,7 +563,7 @@ function zuKarte(){
       ANP.sonderzeiten=ANP.sonderzeiten||{};ANP.hinweise=ANP.hinweise||[];
       if(zu){delete ANP.sonderzeiten[t][l.id];ANP.hinweise=ANP.hinweise.filter(function(h){return !(h.spontan===l.id&&h.von===t);});}
       else{(ANP.sonderzeiten[t]=ANP.sonderzeiten[t]||{})[l.id]=null;
-        ANP.hinweise.push({text:'Saray Döner '+l.name+' ist heute leider geschlossen. Wir sind bald wieder für Sie da.',en:'Saray Döner '+l.name+' is unfortunately closed today. We will be back soon.',von:t,bis:t,spontan:l.id});}
+        ANP.hinweise.push({text:STD.name+(STD.laeden.length>1?' '+l.name:'')+' ist heute leider geschlossen. Wir sind bald wieder für Sie da.',en:STD.name+(STD.laeden.length>1?' '+l.name:'')+' is unfortunately closed today. We will be back soon.',von:t,bis:t,spontan:l.id});}
       zeichnen();}}));});
   k.appendChild(reihe);return k;
 }
@@ -573,7 +577,7 @@ function heuteTab(){
   anker('a-hinweis');hinweisKarte();
   anker('a-nicht');app.appendChild(el('h2',{text:'Was gibt es heute nicht?'}));
   app.appendChild(el('div',{class:'karte'},[el('h3',{text:'Für welchen Laden?'}),
-    el('div',{class:'wahl'},[['alle','Beide'],['freital','Freital'],['altenberg','Altenberg']].map(function(x){
+    el('div',{class:'wahl'},LW('alle').map(function(x){
       return el('button',{'aria-pressed':String(LADEN===x[0]),text:x[1],onclick:function(){LADEN=x[0];zeichnen();}});}))]));
   var t=heute();
   STD.sperren.forEach(function(g){
@@ -606,7 +610,7 @@ function hinweisKarte(){ /* Hinweis-Band */
 }
 function zutatenKarte(){ /* einzelne Zutaten ausschalten – auf der Seite dann nicht wählbar */
   var t=heute();app.appendChild(el('h2',{text:'Zutaten'}));
-  var k=el('div',{class:'karte'},[el('p',{class:'hinweis',style:'margin:0 0 8px',text:'Antippen = aus '+(LADEN==='alle'?'(beide Läden)':'in '+(LADEN==='freital'?'Freital':'Altenberg'))+', bis Sie es wieder einschalten. Ausgeschaltetes kann auf der Seite nicht gewählt werden. Pommes/Reis aus: Gerichte gibt es ohne diese Beilage, je 0,50 € günstiger. Noch einmal antippen = wieder da.'})]);
+  var k=el('div',{class:'karte'},[el('p',{class:'hinweis',style:'margin:0 0 8px',text:'Antippen = aus '+(STD.laeden.length<2?'':LADEN==='alle'?(STD.laeden.length===2?'(beide Läden)':'(alle Läden)'):'in '+LN(LADEN))+', bis Sie es wieder einschalten. Ausgeschaltetes kann auf der Seite nicht gewählt werden. Pommes/Reis aus: Gerichte gibt es ohne diese Beilage, je 0,50 € günstiger. Noch einmal antippen = wieder da.'})]);
   STD.zutaten.forEach(function(gr){
     k.appendChild(el('p',{class:'abschnitt',style:'margin:10px 0 6px',text:gr[0]}));
     k.appendChild(el('div',{class:'reihe'},gr[1].map(function(z){
@@ -635,7 +639,7 @@ function slug(name,von){ /* gleiche Regel wie druck.py */
 function aktionText(a){var t=a.name+' · '+datumDE(a.von)+'–'+datumDE(a.bis);
   if(a.tage&&a.tage.length)t+=' · '+a.tage.map(function(d){return TAGE[d];}).join(', ');
   if(a.zeit_ab)t+=' · '+a.zeit_ab+'–'+a.zeit_bis+' Uhr';
-  if(a.laden)t+=' · nur '+(a.laden==='freital'?'Freital':'Altenberg');if(a.art==='mittag')t='🍽 '+t;return t;}
+  if(a.laden&&STD.laeden.length>1)t+=' · nur '+LN(a.laden);if(a.art==='mittag')t='🍽 '+t;return t;}
 function karteTab(){
   sprung([['Aktionen','a-aktionen'],['Boxen','a-boxen'],['Speisekarte','a-karte']]);
   anker('a-aktionen');app.appendChild(el('h2',{text:'Sonderaktionen'}));
@@ -768,7 +772,7 @@ function aktionBearbeiten(index,vorlage){
   var artBox=el('div',{class:'wahl'});
   function artZeichnen(){artBox.textContent='';[['','Als Aktion'],['mittag','Als Mittagstisch (eigener Kasten oben)']].forEach(function(o){
     artBox.appendChild(el('button',{'aria-pressed':String((a.art||'')===o[0]),text:o[1],onclick:function(){if(o[0])a.art=o[0];else delete a.art;artZeichnen();}}));});}
-  function ladenZeichnen(){ladenBox.textContent='';[['','Beide'],['freital','Freital'],['altenberg','Altenberg']].forEach(function(o){
+  function ladenZeichnen(){ladenBox.textContent='';LW('').forEach(function(o){
     ladenBox.appendChild(el('button',{'aria-pressed':String((a.laden||'')===o[0]),text:o[1],onclick:function(){if(o[0])a.laden=o[0];else delete a.laden;ladenZeichnen();}}));});}
   function listeZeichnen(){liste.textContent='';Object.keys(a.preise).forEach(function(k){var x=nach[k];if(!x)return;
     var felder=x.preise.map(function(p,i){return el('input',{type:'text',inputmode:'decimal',value:a.preise[k][i]||'','aria-label':'Aktionspreis '+x.name+(x.a.groessen.length?' '+x.a.groessen[i]:''),
@@ -809,8 +813,8 @@ function wasKommtKarte(){
     if(a.bis!==a.von||a.von<t)dazu(a.bis,'■ '+n+' letzter Tag');});
   (ANP.pakete||[]).forEach(function(p){if(p.von&&p.von>=t)dazu(p.von,'📦 Box „'+p.name+'“ ab heute');if(p.bis)dazu(p.bis,'📦 Box „'+p.name+'“ letzter Tag');});
   (ANP.hinweise||[]).forEach(function(h){if(h.von>=t)dazu(h.von,'📣 Hinweis: '+h.text);});
-  if((ANP.winter||'auto')==='auto'){[j,j+1].forEach(function(y){dazu(y+'-12-01','❄️ Wintersaison Altenberg beginnt');dazu(y+'-03-15','❄️ Wintersaison Altenberg endet');});}
-  if(STD.zug_bis){dazu(STD.zug_bis,'🚆 Zugzeiten Altenberg laufen aus – neuen Fahrplan eintragen lassen','zu');}
+  if(STD.winter&&(ANP.winter||'auto')==='auto'){[j,j+1].forEach(function(y){dazu(y+'-12-01','❄️ Wintersaison '+LN(STD.winter)+' beginnt');dazu(y+'-03-15','❄️ Wintersaison '+LN(STD.winter)+' endet');});}
+  if(STD.zug_bis){dazu(STD.zug_bis,'🚆 Zugzeiten '+LN(STD.zug_laden)+' laufen aus – neuen Fahrplan eintragen lassen','zu');}
   var ds=Object.keys(tage).sort();
   if(!ds.length)k.appendChild(el('p',{class:'hinweis',text:'Nichts Besonderes geplant.'}));
   ds.forEach(function(d){var wt=TAGE[new Date(d+'T12:00:00Z').getUTCDay()];
@@ -819,7 +823,7 @@ function wasKommtKarte(){
   app.appendChild(k);
 }
 function zeitenTab(){
-  sprung([['Was kommt','a-kommt'],['Öffnungszeiten','a-oeffnung'],['Besondere Tage','a-sonder'],['Urlaub','a-urlaub'],['Winter','a-winter'],['Viertelstunde','a-slots']]);
+  sprung([['Was kommt','a-kommt'],['Öffnungszeiten','a-oeffnung'],['Besondere Tage','a-sonder'],['Urlaub','a-urlaub']].concat(STD.winter?[['Winter','a-winter']]:[],[['Viertelstunde','a-slots']]));
   anker('a-kommt');wasKommtKarte();
   anker('a-oeffnung');app.appendChild(el('h2',{text:'Öffnungszeiten'}));
   var zeiten=zeitListe(6*60,24*60-30,30);
@@ -845,7 +849,7 @@ function zeitenTab(){
   app.appendChild(el('p',{class:'hinweis',text:'Gelb markierte Tage weichen vom Standard ab.'}));
   anker('a-sonder');sonderKarte();
   anker('a-urlaub');urlaubKarte();
-  anker('a-winter');winterKarte();
+  if(STD.winter){anker('a-winter');winterKarte();}
   anker('a-slots');slotKarte();
 }
 /* Höchstzahl Vorbestellungen je Viertelstunde; ausgebuchte Zeiten (meldet die Küche) wieder freigeben */
@@ -911,7 +915,7 @@ function sonderKarte(){
   var bis=el('select',{id:'s-bis','aria-label':'bis'},zeiten.concat(['24:00']).map(function(z){return el('option',{value:z,text:z});}));
   von.value='10:00';bis.value='16:00';var zeitReihe=el('div',{class:'reihe',hidden:true},[von,'–',bis]);
   function wahl(box,opts,akt,setz){box.textContent='';opts.forEach(function(o){box.appendChild(el('button',{'aria-pressed':String(akt()===o[0]),text:o[1],onclick:function(){setz(o[0]);wahl(box,opts,akt,setz);}}));});}
-  wahl(wahlL,[['alle','Beide'],['freital','Freital'],['altenberg','Altenberg']],function(){return laden;},function(v){laden=v;});
+  wahl(wahlL,LW('alle'),function(){return laden;},function(v){laden=v;});
   wahl(wahlA,[[false,'Geschlossen'],[true,'Andere Zeiten']],function(){return auf;},function(v){auf=v;zeitReihe.hidden=!v;});
   [el('label',{for:'s-datum',text:'Datum'}),datum,el('label',{text:'Laden'}),wahlL,el('label',{text:'An diesem Tag'}),wahlA,zeitReihe,
    el('div',{class:'reihe'},[el('button',{class:'knopf voll',text:'Tag hinzufügen',onclick:function(){
@@ -958,9 +962,9 @@ function zahlenKarte(){
       return (i?warten(1200):Promise.resolve()).then(function(){return holenGeduldig(sp[1]);}).then(function(d){return liste.concat([d]);});});},Promise.resolve([]))
       .then(function(x){zahlenKarte.cache={t:Date.now(),x:x,schl:schl};return x;});
   cache.then(function(x){var w=x.map(werte);box.textContent='';
-    var z=[['Besucher',['besuche']],['WhatsApp Freital',['whatsapp-freital']],['WhatsApp Altenberg',['whatsapp-altenberg']],
-      ['Anrufe Freital',['anrufen-freital']],['Anrufe Altenberg',['anrufen-altenberg']],['Bestellung geteilt',['bestellung-teilen']],
-      ['Gemeinsam bestellt',['gemeinsam-bestellen']],['Zur Google-Bewertung',['bewertung-freital','bewertung-altenberg']]];
+    var z=[['Besucher',['besuche']]].concat(STD.laeden.map(function(l){return ['WhatsApp '+l.name,['whatsapp-'+l.id]];}),
+      STD.laeden.map(function(l){return ['Anrufe '+l.name,['anrufen-'+l.id]];}),[['Bestellung geteilt',['bestellung-teilen']],
+      ['Gemeinsam bestellt',['gemeinsam-bestellen']],['Zur Google-Bewertung',STD.laeden.map(function(l){return 'bewertung-'+l.id;})]]);
     var sum=function(w,ks){return ks.reduce(function(s,k){return s+(w[k]||0);},0);};
     var t=el('table',{class:'zahlen'},[el('tr',{},[el('th',{text:''})].concat(spalten.map(function(sp){return el('th',{scope:'col',text:sp[0]});})))]);
     z.forEach(function(r){t.appendChild(el('tr',{},[el('th',{scope:'row',text:r[0]})].concat(w.map(function(x){return el('td',{text:String(sum(x,r[1]))});}))));});
@@ -991,13 +995,12 @@ function googleKarte(){ /* Angaben fürs Google-Unternehmensprofil – zum Abgle
   STD.laeden.forEach(function(l){
     var z=Object.assign({},l.zeiten,(ANP.zeiten||{})[l.id]||{}),zeilen=[];
     W.forEach(function(t){var w=z[String(t)];zeilen.push(T[t]+': '+(w?w[0]+'–'+w[1]:'geschlossen'));});
-    d.appendChild(el('p',{class:'abschnitt',text:'Saray Döner '+l.name}));
-    [['Name','Saray Döner '+l.name],['Adresse',l.strasse+', '+l.plz+' '+l.ort],['Telefon',l.tel],
+    d.appendChild(el('p',{class:'abschnitt',text:STD.name+' '+l.name}));
+    [['Name',STD.name+' '+l.name],['Adresse',l.strasse+', '+l.plz+' '+l.ort],['Telefon',l.tel],
      ['Website',STD.seite],['Link zum Bestellen (Speisekarte)',STD.seite+'?laden='+l.id+'#speisekarte'],
      ['Öffnungszeiten',zeilen.join('\n'),1],
      ['Zahlungsarten',l.bar?'Nur Barzahlung (bei Google unter „Zahlungen“: nur Bargeld)':'Bar'],
-     ['Beschreibung (max. 750 Zeichen)','Saray Döner in '+l.ort+' – seit 1997 Döner, Dürüm, Pizza, Lahmacun, Salate und Teller. '+
-       'Dönerfleisch aus Kalb und Pute, Hähnchen-Döner, viele vegetarische Gerichte mit Falafel und Halloumi. '+
+     ['Beschreibung (max. 750 Zeichen)',STD.name+' in '+l.ort+' – '+STD.google_text+' '+
        'Online vorbestellen: Gerichte auf der Website zusammenstellen und per WhatsApp schicken, dann ohne Warten abholen. '+
        (l.extra?l.extra+' ':'')+'Bezahlung nur bar.',1],
      ['Merkmale','Abholung: ja · Lieferung: nein · Vegetarische Gerichte: ja · Zahlungen: nur Bargeld'+(l.extra&&/draußen/.test(l.extra)?' · Sitzplätze im Freien: ja':'')],
@@ -1058,7 +1061,7 @@ function urlaubKarte(){
   var k=el('div',{class:'karte'},[el('h3',{text:'🏖 Urlaub / Betriebsferien'}),
     el('p',{class:'hinweis',text:'Einmal von–bis eintragen: an allen Tagen geschlossen, auf der Seite steht ein Hinweis, Vorbestellungen sind dann nicht möglich.'})]);
   var laden='alle',lb=el('div',{class:'wahl'}),von=el('input',{type:'date',id:'u-von',value:heute(1)}),bis=el('input',{type:'date',id:'u-bis',value:heute(7)}),fehler=el('p',{class:'fehler',hidden:true});
-  function z(){lb.textContent='';[['alle','Beide'],['freital','Freital'],['altenberg','Altenberg']].forEach(function(o){lb.appendChild(el('button',{'aria-pressed':String(laden===o[0]),text:o[1],onclick:function(){laden=o[0];z();}}));});}
+  function z(){lb.textContent='';LW('alle').forEach(function(o){lb.appendChild(el('button',{'aria-pressed':String(laden===o[0]),text:o[1],onclick:function(){laden=o[0];z();}}));});}
   z();
   [el('label',{text:'Welcher Laden?'}),lb,el('div',{class:'reihe'},[el('div',{style:'flex:1'},[el('label',{for:'u-von',text:'von'}),von]),el('div',{style:'flex:1'},[el('label',{for:'u-bis',text:'bis'}),bis])]),fehler,
    el('div',{class:'reihe',style:'margin-top:10px'},[el('button',{class:'knopf voll',id:'u-eintragen',text:'Urlaub eintragen',onclick:function(){
@@ -1068,12 +1071,12 @@ function urlaubKarte(){
      ANP.sonderzeiten=ANP.sonderzeiten||{};var ls=laden==='alle'?STD.laeden.map(function(l){return l.id;}):[laden];
      tage.forEach(function(t){var x=ANP.sonderzeiten[t]=ANP.sonderzeiten[t]||{};ls.forEach(function(l){x[l]=null;});});
      var ort=laden==='alle'?'':' '+STD.laeden.filter(function(l){return l.id===laden;})[0].name,vh=new Date(new Date(a+'T12:00:00Z').getTime()-14*864e5).toISOString().slice(0,10);
-     ANP.hinweise=(ANP.hinweise||[]).concat([{text:'Betriebsferien: Saray Döner'+ort+' ist vom '+gsDatum(a)+' bis '+gsDatum(e2)+' geschlossen.',en:'Holiday closure: Saray Döner'+ort+' is closed from '+gsDatum(a)+' to '+gsDatum(e2)+'.',von:vh<heute()?heute():vh,bis:e2}]);
+     ANP.hinweise=(ANP.hinweise||[]).concat([{text:'Betriebsferien: '+STD.name+ort+' ist vom '+gsDatum(a)+' bis '+gsDatum(e2)+' geschlossen.',en:'Holiday closure: '+STD.name+ort+' is closed from '+gsDatum(a)+' to '+gsDatum(e2)+'.',von:vh<heute()?heute():vh,bis:e2}]);
      zeichnen();status(tage.length+' Tage eingetragen – bitte speichern.','ok',4000);}})])].forEach(function(n){k.appendChild(n);});
   app.appendChild(k);
 }
 function winterKarte(){
-  var k=el('div',{class:'karte'},[el('h3',{text:'❄️ Wintersaison Altenberg'}),
+  var k=el('div',{class:'karte'},[el('h3',{text:'❄️ Wintersaison '+LN(STD.winter)}),
     el('p',{class:'hinweis',text:'Kasten oben auf der Seite: „Nach der Piste – vorbestellen und warm abholen“, mit Knopf für Skikurse und Gruppen. Automatisch vom 1. Dezember bis 15. März.'})]),w=el('div',{class:'wahl'});
   [['auto','Automatisch'],['an','Jetzt an'],['aus','Aus']].forEach(function(o){w.appendChild(el('button',{'aria-pressed':String((ANP.winter||'auto')===o[0]),'data-winter':o[0],text:o[1],
     onclick:function(){if(o[0]==='auto')delete ANP.winter;else ANP.winter=o[0];zeichnen();}}));});
@@ -1105,7 +1108,7 @@ function gsEuro(c){return (c/100).toFixed(2).replace('.',',').replace(',00','')+
 function gsDrucken(liste){
   var alt=document.getElementById('gs-druck');if(alt)alt.remove();
   var d=el('div',{id:'gs-druck',lang:'de'});
-  liste.forEach(function(g){var ort=g.laden?'Saray Döner '+(g.laden==='freital'?'Freital':'Altenberg'):'Saray Döner Freital und Altenberg';
+  liste.forEach(function(g){var ort=STD.name+' '+(g.laden?LN(g.laden):STD.laeden.map(function(l){return l.name;}).join(' und '));
     d.appendChild(el('div',{class:'gs'},[el('img',{src:'../img/saray-koch.svg',alt:''}),el('p',{class:'gs-titel',text:'Geschenkgutschein'}),el('p',{class:'gs-wert',text:gsEuro(g.wert)}),
       el('p',{class:'gs-ort',text:ort}),el('p',{class:'gs-nr',text:'Nr. '+g.nr+' · Code '+g.code}),
       el('p',{class:'gs-klein',text:'Gültig bis '+gsDatum(g.bis)+'. Einlösbar bei Abholung, nicht in bar auszahlbar. Ausgestellt am '+gsDatum(g.am)+'.'})]));});
@@ -1122,7 +1125,7 @@ function gutscheinKarte(){
   function z(){wb.textContent='';ab.textContent='';lb.textContent='';
     [1000,1500,2000,2500,5000].forEach(function(w){wb.appendChild(el('button',{'aria-pressed':String(wert===w),'data-gs-wert':w,text:gsEuro(w),onclick:function(){wert=w;z();}}));});
     [1,2,4,8].forEach(function(n){ab.appendChild(el('button',{'aria-pressed':String(anzahl===n),'data-gs-anzahl':n,text:n+' Stück',onclick:function(){anzahl=n;z();}}));});
-    [['','Beide Läden'],['freital','Freital'],['altenberg','Altenberg']].forEach(function(o){lb.appendChild(el('button',{'aria-pressed':String(laden===o[0]),text:o[1],onclick:function(){laden=o[0];z();}}));});}
+    LW('',STD.laeden.length===2?'Beide Läden':'Alle Läden').forEach(function(o){lb.appendChild(el('button',{'aria-pressed':String(laden===o[0]),text:o[1],onclick:function(){laden=o[0];z();}}));});}
   z();
   k.appendChild(el('label',{text:'Wert'}));k.appendChild(wb);k.appendChild(el('label',{text:'Anzahl'}));k.appendChild(ab);k.appendChild(el('label',{text:'Gültig in'}));k.appendChild(lb);
   k.appendChild(el('div',{class:'reihe',style:'margin-top:12px'},[el('button',{class:'knopf voll',id:'gs-erstellen',text:'Erstellen und drucken',onclick:function(){
@@ -1142,7 +1145,7 @@ function gutscheinKarte(){
       if(h!==g.h){erg.appendChild(el('p',{class:'fehler',text:'✗ Code passt nicht zur Nummer.'}));return;}
       if(g.eingeloest){erg.appendChild(el('p',{class:'fehler',text:'✗ Schon eingelöst am '+gsDatum(g.eingeloest)+'.'}));return;}
       if(g.bis<heute()){erg.appendChild(el('p',{class:'fehler',text:'✗ Abgelaufen am '+gsDatum(g.bis)+'.'}));return;}
-      erg.appendChild(el('p',{class:'ok',text:'✓ Gültig: '+gsEuro(g.wert)+(g.laden?' (nur '+(g.laden==='freital'?'Freital':'Altenberg')+')':'')+', bis '+gsDatum(g.bis)}));
+      erg.appendChild(el('p',{class:'ok',text:'✓ Gültig: '+gsEuro(g.wert)+(g.laden&&STD.laeden.length>1?' (nur '+LN(g.laden)+')':'')+', bis '+gsDatum(g.bis)}));
       erg.appendChild(el('button',{class:'knopf voll',id:'gs-einloesen',text:'Als eingelöst markieren',onclick:function(){g.eingeloest=heute();zeichnen();status('Eingelöst – bitte speichern.','ok',4000);}}));});}})]));
   k.appendChild(erg);
   app.appendChild(k);
@@ -1154,7 +1157,7 @@ function codeKarte(){
   var k=el('div',{class:'karte'},[el('h3',{text:'🏢 Firmen-Codes'}),
     el('p',{class:'hinweis',text:'Rabatt für Betriebe in der Nähe, z. B. 10 % beim Mittagessen. Der Gast gibt den Code beim Bestellen ein; der Rabatt gilt nicht auf Aktionspreise und steht in der WhatsApp-Nachricht. Den Code nach dem Anlegen notieren – er wird nicht gespeichert.'})]);
   (ANP.codes||[]).forEach(function(c,i){
-    var t=c.name+' · '+c.prozent+' %'+(c.hinweis?' · '+c.hinweis:'')+(c.zeit_ab?' · '+c.zeit_ab+'–'+c.zeit_bis+' Uhr':'')+(c.laden?' · nur '+(c.laden==='freital'?'Freital':'Altenberg'):'')+(c.bis?' · bis '+gsDatum(c.bis):'');
+    var t=c.name+' · '+c.prozent+' %'+(c.hinweis?' · '+c.hinweis:'')+(c.zeit_ab?' · '+c.zeit_ab+'–'+c.zeit_bis+' Uhr':'')+(c.laden&&STD.laeden.length>1?' · nur '+LN(c.laden):'')+(c.bis?' · bis '+gsDatum(c.bis):'');
     k.appendChild(el('div',{class:'tag'},[el('span',{style:'flex:1;font-weight:700',text:t}),el('button',{class:'knopf klein rot',text:'Löschen',onclick:function(){
       frage('Code für „'+c.name+'“ löschen?','Löschen').then(function(j){if(j){ANP.codes.splice(i,1);zeichnen();}});}})]));});
   var firma=el('input',{type:'text',id:'c-firma',maxlength:'60',placeholder:'Firma, z. B. Elbtal GmbH'}),code=el('input',{type:'text',id:'c-code',maxlength:'16',placeholder:'Code, z. B. ELBTAL10',autocapitalize:'characters'});
@@ -1164,7 +1167,7 @@ function codeKarte(){
   function z(){pb.textContent='';mb.textContent='';lb.textContent='';
     [5,10,15,20].forEach(function(p){pb.appendChild(el('button',{'aria-pressed':String(prozent===p),'data-c-prozent':p,text:p+' %',onclick:function(){prozent=p;if(!code.dataset.selbst&&firma.value)code.value=firma.value.toUpperCase().replace(/[^A-Z]/g,'').slice(0,8)+p;z();}}));});
     [[true,'Nur mittags 11–14 Uhr'],[false,'Ganztags']].forEach(function(o){mb.appendChild(el('button',{'aria-pressed':String(mittag===o[0]),text:o[1],onclick:function(){mittag=o[0];z();}}));});
-    [['','Beide Läden'],['freital','Freital'],['altenberg','Altenberg']].forEach(function(o){lb.appendChild(el('button',{'aria-pressed':String(laden===o[0]),text:o[1],onclick:function(){laden=o[0];z();}}));});}
+    LW('',STD.laeden.length===2?'Beide Läden':'Alle Läden').forEach(function(o){lb.appendChild(el('button',{'aria-pressed':String(laden===o[0]),text:o[1],onclick:function(){laden=o[0];z();}}));});}
   z();
   [el('label',{for:'c-firma',text:'Neuer Code: Firma'}),firma,el('label',{for:'c-code',text:'Code (Buchstaben und Ziffern)'}),code,el('label',{text:'Rabatt'}),pb,el('label',{text:'Wann?'}),mb,el('label',{text:'Wo?'}),lb,fehler,
    el('div',{class:'reihe',style:'margin-top:12px'},[el('button',{class:'knopf voll',id:'c-anlegen',text:'Code anlegen',onclick:function(){
@@ -1347,76 +1350,37 @@ start();
 """
 
 
-# Zutaten, die der Inhaber einzeln ausschalten kann (Namen wie auf der Seite; „Zwiebel“ gilt auch für „Zwiebeln“).
-# Pommes/Reis: Gerichte gibt es dann ohne diese Beilage, je 0,50 € günstiger (BEILAGEN in build.py)
-ZUTATEN_SCHALTER = [
-    ["Soßen", ["Knoblauch", "Kräuter", "Chili"]],
-    ["Salat und Gemüse", ["Eisbergsalat", "Tomate", "Gurken", "Zwiebel", "Rotkohl", "Weißkohl", "Paprika", "Champignon",
-                          "Peperoni", "Ananas", "Oliven", "Brokkoli", "Mais"]],
-    ["Beilagen", ["Pommes", "Reis"]],
-    ["Käse", ["Käse", "Halloumikäse", "Fetakäse", "Mozzarella"]],
-    ["Fleisch, Fisch, Ei", ["Dönerfleisch", "Hähnchen-Dönerfleisch", "Schinken", "Salami", "Thunfisch", "Ei"]],
-]
-
-
-# Offene Punkte vor dem Freischalten: [Gruppe, [[id, Text, Hinweis, muss]]]
-CHECKLISTE = [
+# Allgemeine Checkliste für neue Läden; ein Laden kann eine eigene haben (CHECKLISTE in laeden/<id>/laden.py).
+# Je Punkt: [Kennung, Titel, Erklärung, 1 = muss vor dem Freischalten erledigt sein]
+STANDARD_CHECKLISTE = [
     ["Freischalten", [
-        ["domain", "Domain saraydöner.de", "Wer hat Zugang zu Domain und DNS? Wo liegt die alte Seite?", 1],
-        ["wa-freital", "WhatsApp Freital", "Vorerst gehen Bestellungen an Khans privates Handy (01573 3729521). Später durch das Laden-Handy ersetzen – welche Nummer?", 1],
-        ["wa-altenberg", "WhatsApp Altenberg", "Welche Nummer nimmt Bestellungen an?", 1],
-        ["wa-wer", "Wer bestätigt die Bestellungen?", "Wer schaut während der Öffnungszeiten aufs Handy und antwortet?", 1],
-        ["impressum", "Impressum Altenberg (Ahmet)", "Anschrift (Bahnhof 3 oder Dresdner Str. 23?), Firmenform, USt-IdNr. (falls vorhanden), E-Mail. Mehr als 10 Beschäftigte? Dann Hinweis zur Verbraucherschlichtung (§ 36 VSBG) nötig.", 1],
-        ["impressum-freital", "Impressum Freital (Khan)", "Vollständiger Name, Anschrift, E-Mail, Firmenform, USt-IdNr. (falls vorhanden), Beschäftigtenzahl (§ 36 VSBG).", 1],
-        ["betreiber", "Wer betreibt die Website?", "Beide gemeinsam (dann Vereinbarung als gemeinsam Verantwortliche, Art. 26 DSGVO) oder jeder für seinen Laden?", 1],
-        ["eine-oder-zwei", "Eine Website oder zwei?", "Eine gemeinsame Seite für Freital und Altenberg (so wie jetzt) oder je Laden eine eigene Seite mit eigener Adresse, eigenem Impressum und eigener Chef-App?", 1],
-        ["uebersetzungen", "Übersetzungen gegenlesen lassen", "Tschechisch, Türkisch, Russisch und Arabisch sind maschinennah übersetzt. Je eine Person mit der Muttersprache kurz drüberschauen lassen (Seite → Sprache wählen).", 0],
-        ["allergene", "Allergene ergänzen und bestätigen", "Neu: h = Fisch (Nr. 71, 87, 97, 136, 154) und i = Ei in der Soße. Es fehlen noch Angaben für Extra-Portion, Fladenbrot und die Milchgetränke (Kaffee mit Milch, Kakao).", 1],
-        ["goatcounter-av", "Besucherzählung: Auftragsverarbeitung", "Mit GoatCounter einen Vertrag zur Auftragsverarbeitung klären (oder Zählung abschalten).", 0],
-        ["zeiten-altenberg", "Öffnungszeiten Altenberg samstags", "Ab 10 oder ab 11 Uhr? Google zeigt 11 Uhr.", 0],
-        ["feiertage", "Feiertage", "Freital 11–22 Uhr, Altenberg? Reformationstag 31.10., Buß- und Bettag 18.11.", 0],
-        ["preise", "Preise der Karte", "Gilt die Karte vom 01.02.2024 noch? In beiden Läden gleich?", 0],
-        ["datenschutz", "Datenschutzerklärung vom Anwalt prüfen lassen", "Entwurf steht. Vor dem Freischalten von einem Anwalt prüfen lassen – mit Impressum und gemeinsamer Verantwortung beider Inhaber.", 1],
-        ["logo", "Echtes Logo", "Original-Logo von Saray Döner als Datei (am besten SVG oder PDF, sonst großes PNG) – auch für Flyer und Aufsteller", 1],
-        ["maskottchen", "Original-Maskottchen", "Den echten Saray-Koch als Datei; ersetzt die nachgezeichnete Figur auf Seite, App-Symbol und Druck", 1],
+        ["domain", "Domain", "Welche Adresse soll die Seite haben? Wer hat Zugang zu Domain und DNS?", 1],
+        ["whatsapp", "WhatsApp-Nummer", "Welche Nummer nimmt Bestellungen an (am besten ein Laden-Handy mit WhatsApp Business)?", 1],
+        ["wer-antwortet", "Wer bestätigt die Bestellungen?", "Wer schaut während der Öffnungszeiten aufs Handy und antwortet?", 1],
+        ["impressum", "Impressum", "Vollständiger Name, Anschrift, E-Mail, Firmenform, USt-IdNr. (falls vorhanden).", 1],
+        ["datenschutz", "Datenschutzerklärung vom Anwalt prüfen lassen", "Entwurf steht. Vor dem Freischalten rechtlich prüfen lassen.", 1],
+        ["allergene", "Allergene und Zusatzstoffe", "Kennzeichnung der Speisekarte vom Inhaber bestätigen lassen.", 1],
+        ["preise", "Preise und Speisekarte", "Stimmt alles mit der gedruckten Karte überein?", 1],
+        ["logo", "Logo", "Original-Logo als Datei (am besten SVG oder PDF, sonst großes PNG).", 0],
+        ["zeiten", "Öffnungszeiten und Feiertage", "Stimmen die Zeiten? Was gilt an Feiertagen?", 0],
     ]],
     ["Chef-App und Abläufe", [
         ["einweisung", "Einweisung", "Heute aus, Zutaten, Wartezeit, besondere Tage, Aktionen, Hinweis, Drucken, Rückgängig", 0],
-        ["gruppen-vorlauf", "Größere Bestellungen", "Ab wie vielen Portionen wie viel Vorlauf? Zum Beispiel „ab 10 Portionen am Vortag bestellen“. Kommt auf die Seite und den Gruppen-Flyer.", 0],
-        ["vorbestellung", "Vorbestellung", "Bis 14 Tage im Voraus, frühestens 20 Minuten nach der Bestellung – passt das?", 0],
-        ["beilage", "Pommes oder Reis aus = 0,50 € weniger", "So in Ordnung?", 0],
-        ["zahlung", "Nur Barzahlung", "Kommt irgendwann Kartenzahlung dazu?", 0],
-        ["aktion", "Erste Sonderaktion", "Zum Beispiel Mittagsangebot oder „Döner 5 €“", 0],
+        ["whatsapp-business", "WhatsApp Business einrichten", "Begrüßung, Abwesenheitsnachricht und Schnellantworten – fertige Texte unter Mehr → WhatsApp-Antworten.", 0],
+        ["kueche", "Küchenansicht", "Auf welchem Gerät im Laden öffnen wir die Bestellungen?", 0],
+        ["slots", "Vorbestellungen je Viertelstunde", "Wie viele Vorbestellungen schafft die Küche pro Viertelstunde? Eingestellt sind 5.", 0],
         ["druck", "Flyer und Aufsteller", "Probedruck ansehen, Anzahl, selbst drucken oder Druckerei?", 0],
-        ["bildschirm", "Bildschirm im Laden", "Fernseher mit HDMI und Fire-TV-Stick (ca. 40 €), Adresse unter Mehr → Bildschirm im Laden als Startseite einstellen.", 0],
-        ["kueche", "Küchenansicht", "Auf welchem Gerät im Laden öffnen wir die Bestellungen? Bondrucker gewünscht (ca. 40 €)?", 0],
-        ["gutscheine", "Geschenkgutscheine", "Welche Werte? Restbetrag als neuer Gutschein? Gültig 3 Jahre bis Jahresende (gesetzlich).", 0],
-        ["whatsapp-business", "WhatsApp Business einrichten", "Begrüßung, Abwesenheitsnachricht und Schnellantworten auf dem Laden-Handy – fertige Texte (Deutsch und Türkisch) unter Mehr → WhatsApp-Antworten zum Kopieren.", 0],
-        ["slots", "Vorbestellungen je Viertelstunde", "Wie viele Vorbestellungen schafft die Küche pro Viertelstunde? Eingestellt sind 5 je Laden (Zeiten → Vorbestellungen je Viertelstunde). Ist die Zahl erreicht, sperrt die Küchenansicht die Zeit online – dafür braucht das Küchen-Gerät den Chef-App-Zugang.", 0],
-        ["ton", "„Abholbereit per Ton“", "Drückt die Küche „Fertig ✓“, hört der Gast einen Ton, wenn die Seite offen ist. Läuft über den Dienst ntfy.sh – mit in die Prüfung der Datenschutzerklärung nehmen. Später auch auf eigenem Server möglich.", 0],
-        ["fahrplan", "Zugzeiten Altenberg", "Die Abfahrten gelten bis 12.12.2026. Danach trägt Michael den neuen Fahrplan ein.", 0],
     ]],
     ["Google und Fotos", [
-        ["google", "Google-Unternehmensprofil", "Verwaltungszugriff, Link zur Seite, Zeiten angleichen, Barzahlung eintragen", 0],
+        ["google", "Google-Unternehmensprofil", "Verwaltungszugriff, Link zur Seite, Zeiten angleichen", 0],
         ["fotos", "Fotos der Gerichte", "Dürfen wir Fotos machen? Wann passt es?", 0],
     ]],
-    ["Ideen für später", [
-        ["stammkarte", "Stammkarte digital", "Nach 10 Bestellungen über die Seite ein Getränk gratis – ohne Konto, gezählt auf dem Handy des Gastes; die Küchenansicht zeigt „10. Bestellung – Getränk gratis“. Machen wir das?", 0],
-        ["gericht-des-tages", "Gericht des Tages automatisch", "Jeden Tag ein anderes Gericht aus einer festen Liste oben auf der Seite, mit kleinem Rabatt – ohne tägliches Einstellen.", 0],
-        ["ohne-besteck", "Ohne Besteck, ohne Tüte", "Zwei Häkchen im Bestellzettel; spart Material, die Küche sieht es auf dem Bon.", 0],
-        ["vorlauf-auto", "Vorlauf bei großen Bestellungen automatisch", "Ab z. B. 10 Gerichten bietet der Bestellzettel nur Abholzeiten mit genug Vorlauf an (z. B. 1 Stunde).", 0],
-        ["firmen-codes", "Firmen-Rabattcodes", "Vorerst abgeschaltet. Falls sie wiederkommen: als fester Firmenpreis pro Gericht (z. B. Döner 6 €, Dürüm 7 €) statt Prozent – für Barzahlung am einfachsten. Nur mit Kontrolle an der Theke (Bestellung auf Firmennamen oder Firmenausweis).", 0],
-    ]],
-    ["Laufende Kosten", [
-        ["domain-kosten", "Domain", "Wer zahlt die Domain, auf wen läuft sie?", 0],
-        ["github-pro", "GitHub Pro", "Rund 4 US-$ im Monat. Nötig, damit Seite und Chef-Daten in einem privaten Repository liegen können. Wer zahlt?", 0],
-    ]],
 ]
-
 
 def schreiben(aus, gruppen, standorte, sperrgruppen, repo, zaehler="", seite_url="", fotos=(), firmen_codes=False, zug_bis=""):
     """Schreibt docs/chef/: index.html, standard.json, manifest.webmanifest."""
     import anpassungen as ANP
+    import konfig
     from konfig import menu
     GRUNDSTAND = menu.GRUNDSTAND
     ordner = aus / "chef"
@@ -1428,7 +1392,11 @@ def schreiben(aus, gruppen, standorte, sperrgruppen, repo, zaehler="", seite_url
             "gerichte": [{"k": ANP.schluessel(g["id"], a["titel"], x), "nr": x[0], "name": x[1], "desc": x[2], "preise": list(x[3])}
                          for x in a["gerichte"]]} for a in g["abschnitte"]]} for g in gruppen],
         "grundstand": GRUNDSTAND,
-        "zutaten": ZUTATEN_SCHALTER,
+        "zutaten": getattr(konfig.K, "ZUTATEN_SCHALTER", []),
+        "name": konfig.K.NAME,
+        "winter": (getattr(konfig.K, "WINTER", None) or {}).get("laden", ""),
+        "zug_laden": (getattr(konfig.K, "ZUG", None) or {}).get("laden", ""),
+        "google_text": getattr(konfig.K, "GOOGLE_TEXT", ""),
         "zaehler": zaehler,
         "seite": seite_url,
         "fotos": sorted(fotos),
@@ -1440,18 +1408,17 @@ def schreiben(aus, gruppen, standorte, sperrgruppen, repo, zaehler="", seite_url
                     "zeiten": {str(t): [zeit(v[0]), zeit(v[1])] for t, v in s["zeiten_standard"].items()}} for s in standorte],
         # Reihenfolge der Kärtchen unter „Heute“
         "sperren": [{"id": k, "name": sperrgruppen[k]["de"]} for k in
-                    ["huhn", "nuggets", "falafel", "halloumi", "schnitzel-fleisch", "fisch",
-                     "doener", "duerum", "teller", "pizza", "lahmacun", "baguette", "salate", "kinder"] if k in sperrgruppen],
+                    (getattr(konfig.K, "SPERR_REIHENFOLGE", None) or [k for k in sperrgruppen if not k.startswith("z:")]) if k in sperrgruppen],
     }
     (ordner / "standard.json").write_text(json.dumps(standard, ensure_ascii=False) + "\n", encoding="utf-8")
-    import konfig
-    (ordner / "index.html").write_text(SEITE.replace("%%REPO%%", json.dumps(repo))
+    kurz = getattr(konfig.K, "KURZNAME", konfig.K.NAME)
+    (ordner / "index.html").write_text(SEITE.replace("%%REPO%%", json.dumps(repo)).replace("%%KURZ%%", html.escape(kurz)).replace("%%LOGO%%", konfig.K.LOGO)
                                         .replace("%%DATEI%%", json.dumps(konfig.rel(konfig.DATEN / "anpassungen.json")))
                                         .replace("%%FOTOS%%", json.dumps(konfig.rel(konfig.DATEN / "fotos") + "/"))
-                                        .replace("%%CHECKLISTE%%", json.dumps(CHECKLISTE, ensure_ascii=False))
+                                        .replace("%%CHECKLISTE%%", json.dumps(getattr(konfig.K, "CHECKLISTE", STANDARD_CHECKLISTE), ensure_ascii=False))
                                         .replace("%%CHEF_TR%%", (pathlib.Path(__file__).parent / "sprachen" / "chef_tr.json").read_text(encoding="utf-8")), encoding="utf-8")
     (ordner / "manifest.webmanifest").write_text(json.dumps({
-        "name": "Saray Chef", "short_name": "Chef", "lang": "de", "start_url": "./", "scope": "./", "display": "standalone",
+        "name": f"{kurz} Chef", "short_name": "Chef", "lang": "de", "start_url": "./", "scope": "./", "display": "standalone",
         "background_color": "#3A1531", "theme_color": "#3A1531",
         "icons": [{"src": f"../img/app-{g}.png", "sizes": f"{g}x{g}", "type": "image/png"} for g in (192, 512)],
     }, ensure_ascii=False, indent=2) + "\n")

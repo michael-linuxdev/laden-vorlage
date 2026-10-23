@@ -35,7 +35,7 @@ button{font:inherit}
 """
 
 # ---------------------------------------------------------------- Bildschirm (TV)
-TV = KOPF.replace("%%TITEL%%", "Saray Döner – Bildschirm") + r"""
+TV = KOPF.replace("%%TITEL%%", "%%NAME%% – Bildschirm") + r"""
 html,body{height:100%;overflow:hidden}
 body{display:grid;grid-template-rows:auto 1fr auto;background:var(--gelb)}
 .kopf{display:flex;align-items:center;gap:1.4vw;padding:1.2vh 2vw;background:var(--tinte);color:var(--gelb)}
@@ -101,7 +101,7 @@ main{position:relative;overflow:hidden;padding:2vh 2vw 1vh}
 </style>
 </head>
 <body>
-<header class="kopf"><img src="../img/saray-koch-kopf.svg" alt=""><h1>Saray Döner <small id="ort"></small></h1>
+<header class="kopf"><img src="../img/%%LOGO%%" alt=""><h1>%%NAME%% <small id="ort"></small></h1>
 <span class="status" id="status"></span><span class="uhr" id="uhr"></span></header>
 <main id="main"><div class="baender" id="baender"></div></main>
 <footer class="fuss"><span class="qr">%%QR%%</span><span class="text">Vorbestellen per WhatsApp: %%ADRESSE%%<small>Handy-Kamera auf den Code halten · Nur Barzahlung · Alle Preise in Euro inkl. MwSt.</small></span><span class="punkte" id="punkte"></span></footer>
@@ -154,7 +154,7 @@ function gruppeEl(g,n){
   return box;}
 function zeilen(g){return g.abschnitte.reduce(function(s,a){return s+1.2+a.gerichte.length;},2);}
 function heuteSeite(n){
-  var s=el('div','seite'),h=el('div','heute');h.appendChild(el('h2',null,'Heute bei Saray'));var karten=FENSTER?2:0;
+  var s=el('div','seite'),h=el('div','heute');h.appendChild(el('h2',null,'Heute bei '+%%KURZ_JS%%));var karten=FENSTER?2:0;
   if(FENSTER){var qk=el('div','karte qr-gross');qk.appendChild(el('span','kl','Jetzt vorbestellen'));
     var qb=el('div','qr-bild');qb.innerHTML=document.querySelector('.fuss .qr').innerHTML;qk.appendChild(qb);
     qk.appendChild(el('b',null,'Handy-Kamera drauf'));qk.appendChild(el('span',null,'Per WhatsApp bestellen, ohne Warten abholen. Nur Barzahlung.'));h.appendChild(qk);}
@@ -219,7 +219,7 @@ window.TV={aufbauen:aufbauen,weiter:weiter,seiten:function(){return seiten.lengt
 """
 
 # ---------------------------------------------------------------- Küche
-KUECHE = KOPF.replace("%%TITEL%%", "Saray Döner – Küche") + r"""
+KUECHE = KOPF.replace("%%TITEL%%", "%%NAME%% – Küche") + r"""
 body{padding:0 0 40px}
 .kopf{position:sticky;top:0;z-index:5;display:flex;flex-wrap:wrap;align-items:center;gap:10px;padding:12px 16px;background:var(--tinte);color:var(--gelb)}
 .kopf h1{font-size:1.4rem;flex:1}
@@ -307,7 +307,7 @@ details.erledigt .bon{opacity:.6}
 </style>
 </head>
 <body>
-<header class="kopf"><h1>Küche · Saray Döner</h1><button class="chip" type="button" id="tel-neu">📞 Telefonbestellung</button><button class="chip" type="button" id="plan-knopf">🖨 Tagesplan</button><button class="chip" type="button" id="sync-knopf">📲 An anderes Gerät</button><div class="chips" id="filter"></div></header>
+<header class="kopf"><h1>Küche · %%NAME%%</h1><button class="chip" type="button" id="tel-neu">📞 Telefonbestellung</button><button class="chip" type="button" id="plan-knopf">🖨 Tagesplan</button><button class="chip" type="button" id="sync-knopf">📲 An anderes Gerät</button><div class="chips" id="filter"></div></header>
 <section class="tel" id="tel" hidden aria-label="Telefonbestellung"><h2>📞 Telefonbestellung</h2>
 <div class="chips hell" id="tel-laden"></div>
 <div class="tel-reihe"><label>Name<input id="tel-name" type="text" maxlength="40" autocomplete="off"></label><label>Abholung<input id="tel-zeit" type="time" step="300"></label></div>
@@ -369,18 +369,18 @@ var syncN=syncLesen();
 liste=liste.filter(function(x){return x&&Array.isArray(x.p)&&Date.now()-x.a<7*864e5;});speichern();
 /* Antworten an den Gast in seiner Sprache (Sprache der Website beim Bestellen) */
 var TEXTE={
-  de:{nochmal:'Nächstes Mal mit einem Tipp genau so bestellen:',hallo:'Hallo',heute:'heute um {z} Uhr',tag:'am {d} um {z} Uhr',ok:'{hallo}, danke für Ihre Bestellung {nr}! Sie ist {wann} in {ort} abholbereit. Bitte bar bezahlen: {summe}. Ihr Saray Döner',fertig:'Ihre Bestellung {nr} ist fertig und liegt in {ort} für Sie bereit. Bis gleich! Ihr Saray Döner'},
-  en:{nochmal:'Order exactly the same again next time:',hallo:'Hello',heute:'today at {z}',tag:'on {d} at {z}',ok:'{hallo}, thank you for your order {nr}! It will be ready for pickup {wann} in {ort}. Please pay in cash: {summe}. Saray Döner',fertig:'Your order {nr} is ready for you in {ort}. See you soon! Saray Döner'},
-  tr:{nochmal:'Bir dahaki sefere tek dokunuşla aynısını sipariş edin:',hallo:'Merhaba',heute:'bugün saat {z}',tag:'{d} saat {z}',ok:'{hallo}, {nr} numaralı siparişiniz için teşekkürler! Siparişiniz {wann} {ort} şubemizde hazır olacak. Lütfen nakit ödeyin: {summe}. Saray Döner',fertig:'{nr} numaralı siparişiniz {ort} şubemizde hazır. Görüşmek üzere! Saray Döner'},
-  cs:{nochmal:'Příště objednáte totéž jedním klepnutím:',hallo:'Dobrý den',heute:'dnes v {z}',tag:'{d} v {z}',ok:'{hallo}, děkujeme za objednávku {nr}! Bude připravena k vyzvednutí {wann} v provozovně {ort}. Platba v hotovosti: {summe}. Saray Döner',fertig:'Vaše objednávka {nr} je hotová a čeká na vás v provozovně {ort}. Brzy na viděnou! Saray Döner'},
-  ru:{nochmal:'В следующий раз закажите то же самое одним нажатием:',hallo:'Здравствуйте',heute:'сегодня в {z}',tag:'{d} в {z}',ok:'{hallo}! Спасибо за заказ {nr}! Его можно забрать {wann} в кафе {ort}. Оплата наличными: {summe}. Saray Döner',fertig:'Ваш заказ {nr} готов и ждёт вас в кафе {ort}. До встречи! Saray Döner'},
-  ar:{nochmal:'في المرة القادمة اطلب الطلب نفسه بلمسة واحدة:',hallo:'مرحبًا',heute:'اليوم الساعة {z}',tag:'يوم {d} الساعة {z}',ok:'{hallo}، شكرًا لطلبك {nr}! سيكون جاهزًا للاستلام {wann} في فرع {ort}. الدفع نقدًا: {summe}. Saray Döner',fertig:'طلبك {nr} جاهز وبانتظارك في فرع {ort}. نراك قريبًا! Saray Döner'}};
+  de:{nochmal:'Nächstes Mal mit einem Tipp genau so bestellen:',hallo:'Hallo',heute:'heute um {z} Uhr',tag:'am {d} um {z} Uhr',ok:'{hallo}, danke für Ihre Bestellung {nr}! Sie ist {wann} in {ort} abholbereit. Bitte bar bezahlen: {summe}. Ihr {name}',fertig:'Ihre Bestellung {nr} ist fertig und liegt in {ort} für Sie bereit. Bis gleich! Ihr {name}'},
+  en:{nochmal:'Order exactly the same again next time:',hallo:'Hello',heute:'today at {z}',tag:'on {d} at {z}',ok:'{hallo}, thank you for your order {nr}! It will be ready for pickup {wann} in {ort}. Please pay in cash: {summe}. {name}',fertig:'Your order {nr} is ready for you in {ort}. See you soon! {name}'},
+  tr:{nochmal:'Bir dahaki sefere tek dokunuşla aynısını sipariş edin:',hallo:'Merhaba',heute:'bugün saat {z}',tag:'{d} saat {z}',ok:'{hallo}, {nr} numaralı siparişiniz için teşekkürler! Siparişiniz {wann} {ort} şubemizde hazır olacak. Lütfen nakit ödeyin: {summe}. {name}',fertig:'{nr} numaralı siparişiniz {ort} şubemizde hazır. Görüşmek üzere! {name}'},
+  cs:{nochmal:'Příště objednáte totéž jedním klepnutím:',hallo:'Dobrý den',heute:'dnes v {z}',tag:'{d} v {z}',ok:'{hallo}, děkujeme za objednávku {nr}! Bude připravena k vyzvednutí {wann} v provozovně {ort}. Platba v hotovosti: {summe}. {name}',fertig:'Vaše objednávka {nr} je hotová a čeká na vás v provozovně {ort}. Brzy na viděnou! {name}'},
+  ru:{nochmal:'В следующий раз закажите то же самое одним нажатием:',hallo:'Здравствуйте',heute:'сегодня в {z}',tag:'{d} в {z}',ok:'{hallo}! Спасибо за заказ {nr}! Его можно забрать {wann} в кафе {ort}. Оплата наличными: {summe}. {name}',fertig:'Ваш заказ {nr} готов и ждёт вас в кафе {ort}. До встречи! {name}'},
+  ar:{nochmal:'في المرة القادمة اطلب الطلب نفسه بلمسة واحدة:',hallo:'مرحبًا',heute:'اليوم الساعة {z}',tag:'يوم {d} الساعة {z}',ok:'{hallo}، شكرًا لطلبك {nr}! سيكون جاهزًا للاستلام {wann} في فرع {ort}. الدفع نقدًا: {summe}. {name}',fertig:'طلبك {nr} جاهز وبانتظارك في فرع {ort}. نراك قريبًا! {name}'}};
 var SP_NAME={de:'Deutsch',en:'Englisch',tr:'Türkisch',cs:'Tschechisch',ru:'Russisch',ar:'Arabisch'};
 function fuell(t,w){return t.replace(/\{(\w+)\}/g,function(_,k){return w[k]!=null?w[k]:'';});}
 function heuteISO(){var d=new Date();return d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2);}
 function antwort(x,art){var T=TEXTE[x.sp]||TEXTE.de,wann='';
   if(x.t){var d=x.t.slice(0,10),z=x.t.slice(11);wann=d===heuteISO()?fuell(T.heute,{z:z}):fuell(T.tag,{z:z,d:d.slice(8)+'.'+d.slice(5,7)+'.'});}
-  var t=fuell(T[art],{hallo:T.hallo+(x.m?' '+x.m:''),nr:x.nr,wann:wann,ort:LAEDEN[x.l]||'',summe:euro(x.s)});
+  var t=fuell(T[art],{name:%%NAME_JS%%,hallo:T.hallo+(x.m?' '+x.m:''),nr:x.nr,wann:wann,ort:LAEDEN[x.l]||'',summe:euro(x.s)});
   if(art==='ok'&&x.w&&x.w.length)t+='\n\n'+T.nochmal+' '+nochmalLink(x);
   return t;}
 function b64url(t){return btoa(unescape(encodeURIComponent(t))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');}
@@ -436,7 +436,7 @@ function zeichnen(){
   document.getElementById('leer').hidden=offen.length>0;
   var e=document.getElementById('erledigt');e.textContent='';fertig.forEach(function(x){e.appendChild(bon(x));});
   document.getElementById('erledigt-box').hidden=!fertig.length;document.getElementById('erledigt-titel').textContent='Erledigt ('+fertig.length+')';
-  document.title=(offen.length?'('+offen.length+') ':'')+'Küche · Saray Döner';
+  document.title=(offen.length?'('+offen.length+') ':'')+'Küche · '+%%NAME_JS%%;
   abschluss(sicht);bedarf(offen);jahrZeigen();monatZeigen();warteVorschlag();slotsPruefen();}
 /* ---------- Telefonbestellung erfassen: landet in derselben Liste, im Tagesabschluss und im Jahresrückblick ---------- */
 var KARTE=%%KARTE%%,telPos=[],telLaden='';
@@ -476,7 +476,7 @@ function monatDaten(m){var r={n:0,s:0,tel:0,g:{},wt:{},sp:{}};Object.keys(JAHR).
 var MONATE=['Januar','Februar','März','April','Mai','Juni','Juli','August','September','Oktober','November','Dezember'],WTAG=['Sonntag','Montag','Dienstag','Mittwoch','Donnerstag','Freitag','Samstag'];
 function monatName(m){return MONATE[+m.slice(5)-1]+' '+m.slice(0,4);}
 function monatText(m){var r=monatDaten(m),top=Object.keys(r.g).sort(function(a,b){return r.g[b]-r.g[a];}).slice(0,5),wt=Object.keys(r.wt).sort(function(a,b){return r.wt[b]-r.wt[a];})[0];
-  var z=['Saray Döner – Monatsbericht '+monatName(m),'','Bestellungen: '+r.n+' (davon '+r.tel+' per Telefon, '+(r.n-r.tel)+' online)','Summe (bar): '+euro(r.s)+(r.n?' · pro Bestellung '+euro(Math.round(r.s/r.n)):'')];
+  var z=[%%NAME_JS%%+' – Monatsbericht '+monatName(m),'','Bestellungen: '+r.n+' (davon '+r.tel+' per Telefon, '+(r.n-r.tel)+' online)','Summe (bar): '+euro(r.s)+(r.n?' · pro Bestellung '+euro(Math.round(r.s/r.n)):'')];
   if(besucher[m]!=null)z.push('Besuche auf der Website: '+besucher[m]);
   if(wt!=null)z.push('Stärkster Tag: '+WTAG[wt]);
   if(top.length){z.push('','Am meisten bestellt:');top.forEach(function(k,i){z.push((i+1)+'. '+k.replace(/^Nr\. \S+ /,'')+' – '+r.g[k]+'×');});}
@@ -581,7 +581,7 @@ function jahrZeigen(){
   var tage=Object.keys(JAHR).filter(function(d){return d.slice(0,4)===jahrWahl;}),n=0,sum=0,g={},h={},sp={},l={},mon={},wt={};
   tage.forEach(function(d){var j=JAHR[d];n+=j.n;sum+=j.s;mon[d.slice(5,7)]=(mon[d.slice(5,7)]||0)+j.n;var w2=new Date(d+'T12:00:00').getDay();wt[w2]=(wt[w2]||0)+j.n;
     [[g,j.g],[h,j.h],[sp,j.sp],[l,j.l]].forEach(function(q){Object.keys(q[1]).forEach(function(k){q[0][k]=(q[0][k]||0)+q[1][k];});});});
-  inh.appendChild(el('h3',null,'Saray Döner '+jahrWahl));
+  inh.appendChild(el('h3',null,%%NAME_JS%%+' '+jahrWahl));
   if(!n){inh.appendChild(el('p','klein','Für '+jahrWahl+' noch keine Bestellungen auf diesem Gerät.'));return;}
   var gerichte=Object.keys(g).reduce(function(s,k){return s+g[k];},0),zahlen=el('div','zahlen');
   [[n,'Bestellungen'],[euro(sum),'Summe (bar)'],[gerichte,'Gerichte'],[euro(Math.round(sum/n)),'pro Bestellung']].forEach(function(z){var d=el('div');d.appendChild(el('b',null,String(z[0])));d.appendChild(el('span',null,z[1]));zahlen.appendChild(d);});
@@ -657,14 +657,24 @@ document.getElementById('plan-knopf').addEventListener('click',function(){
 """
 
 
+def _namen(t):
+    """Name, Kurzname und Logo des Ladens einsetzen."""
+    import html
+    import konfig
+    k = konfig.K
+    kurz = getattr(k, "KURZNAME", k.NAME)
+    return (t.replace("%%NAME_JS%%", json.dumps(k.NAME, ensure_ascii=False)).replace("%%KURZ_JS%%", json.dumps(kurz, ensure_ascii=False))
+             .replace("%%NAME%%", html.escape(k.NAME)).replace("%%LOGO%%", k.LOGO))
+
+
 def schreiben(aus, daten, laeden, seite_url, version, repo="", karte=(), zaehler="", ntfy="", slots=None):
     """daten: dict für den Bildschirm (siehe build.py); laeden: {id: name}; seite_url: Adresse für den QR-Code."""
     anzeige = seite_url.rstrip("/").replace("https://", "")
     (aus / "tv").mkdir(exist_ok=True)
     (aus / "tv" / "index.html").write_text(
-        TV.replace("%%DATEN%%", json.dumps(daten, ensure_ascii=False, separators=(",", ":")))
+        _namen(TV).replace("%%DATEN%%", json.dumps(daten, ensure_ascii=False, separators=(",", ":")))
           .replace("%%QR%%", qr_svg(seite_url, ecl="M", farbe="#3A1531", rand=1))
           .replace("%%ADRESSE%%", anzeige), encoding="utf-8")
     (aus / "kueche").mkdir(exist_ok=True)
-    (aus / "kueche" / "index.html").write_text(KUECHE.replace("%%LAEDEN%%", json.dumps(laeden, ensure_ascii=False)).replace("%%REPO%%", json.dumps(repo)).replace("%%DATEI%%", json.dumps(__import__("konfig").rel(__import__("konfig").DATEN / "anpassungen.json"))).replace("%%KARTE%%", json.dumps(list(karte), ensure_ascii=False)).replace("%%ZAEHLER%%", json.dumps(zaehler)).replace("%%ALLERGIE%%", json.dumps(ALLERGIE_RE)).replace("%%NTFY%%", json.dumps(ntfy)).replace("%%SLOTS%%", json.dumps(slots or {"max": {}, "voll": {}})), encoding="utf-8")
+    (aus / "kueche" / "index.html").write_text(_namen(KUECHE).replace("%%LAEDEN%%", json.dumps(laeden, ensure_ascii=False)).replace("%%REPO%%", json.dumps(repo)).replace("%%DATEI%%", json.dumps(__import__("konfig").rel(__import__("konfig").DATEN / "anpassungen.json"))).replace("%%KARTE%%", json.dumps(list(karte), ensure_ascii=False)).replace("%%ZAEHLER%%", json.dumps(zaehler)).replace("%%ALLERGIE%%", json.dumps(ALLERGIE_RE)).replace("%%NTFY%%", json.dumps(ntfy)).replace("%%SLOTS%%", json.dumps(slots or {"max": {}, "voll": {}})), encoding="utf-8")
     (aus / "version.json").write_text(json.dumps({"v": version}) + "\n")

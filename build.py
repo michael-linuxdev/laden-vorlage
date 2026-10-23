@@ -30,6 +30,9 @@ SEITE_ANZEIGE = SEITE_URL.split("://", 1)[-1].rstrip("/")   # für Druck: ohne h
 REPO = K.REPO
 ZAEHLER = os.environ.get("LADEN_ZAEHLER", K.ZAEHLER)   # Tests setzen ein Kürzel, damit Zählen geprüft wird
 STANDORTE = [dict(s) for s in K.STANDORTE]
+KURZ = getattr(K, "KURZNAME", K.NAME)
+MEHRERE = len(STANDORTE) > 1
+WINTER_K = getattr(K, "WINTER", None)
 ZUG = getattr(K, "ZUG", None)
 ANP.LAEDEN = tuple(s["id"] for s in STANDORTE)
 
@@ -64,7 +67,8 @@ CODE_BOX = '      <details class="code-box" id="code-box" hidden><summary data-e
 # Firmen-Rabattcodes: vorerst abgeschaltet (Missbrauch lässt sich ohne Server nicht verhindern). Einschalten: True
 FIRMEN_CODES = os.environ.get("LADEN_FIRMEN_CODES") == "1"
 CODES = ANP.codes(ANPASSUNGEN.get("codes"), WARNUNGEN.append, HEUTE_ISO) if FIRMEN_CODES else []
-WINTER = {"modus": ANP.winter(ANPASSUNGEN.get("winter"), WARNUNGEN.append), "von": ANP.WINTER_STANDARD[0], "bis": ANP.WINTER_STANDARD[1]}
+WINTER = {"modus": ANP.winter(ANPASSUNGEN.get("winter"), WARNUNGEN.append), "von": ANP.WINTER_STANDARD[0], "bis": ANP.WINTER_STANDARD[1],
+          "laden": (getattr(K, "WINTER", None) or {}).get("laden") or STANDORTE[0]["id"]}
 
 for s in STANDORTE:
     std = {}
@@ -77,7 +81,7 @@ for s in STANDORTE:
     s["kurz"] = ", ".join(f'{z["kurz"]} {z["zeit"]}' for z in s["zeilen_neu"])
     s["sonder"] = [(tag, laeden[s["id"]]) for tag, laeden in SONDER.items() if s["id"] in laeden]
     s["maps"] = "https://www.google.com/maps/search/?api=1&query=" + urllib.parse.quote_plus(
-        f"Saray Döner, {s['strasse']}, {s['plz']} {s['ort']}")
+        f"{NAME}, {s['strasse']}, {s['plz']} {s['ort']}")
 
 e = html.escape
 
@@ -328,7 +332,7 @@ def beliebt_karte(nr, gross=False, koch=True):
             f'<span class="tipp-nr"><span data-en="No.">Nr.</span> {e(anz(nr))}</span><b class="tipp-name" data-en="{e(EN.name(name))}">{e(name)}</b>'
             f'<span class="tipp-info" data-en="{e(EN.text(desc))}">{e(desc)}</span>'
             f'<span class="tipp-preis">{t("ab ", "from ") if zusatz else ""}{preis(preise[0])}</span>'
-            + (f'<img class="tipp-koch" src="{maskottchen("saray-koch.svg", "image/svg+xml")}" width="430" height="470" alt="">' if gross and koch else "")
+            + (f'<img class="tipp-koch" src="{maskottchen(K.FIGUR, "image/svg+xml")}" width="430" height="470" alt="">' if gross and koch and getattr(K, "FIGUR", None) else "")
             + '</a>' + plus_knopf(name) + '</li>')
 
 
@@ -342,7 +346,41 @@ BELIEBT_HTML = ('<section class="beliebt" aria-label="Empfehlungen">'
                 '<ul class="tipps">' + "".join(beliebt_karte(n) for n in BELIEBT) + '</ul></section>')
 NAV = "".join(f'<li><a href="#{g["id"]}" data-en="{e(EN.titel(g["titel"]))}">{e(g["titel"])}</a></li>' for g in GRUPPEN)
 ANZAHL = sum(len(ab["gerichte"]) for g in GRUPPEN for ab in g["abschnitte"])
-DOENER_PREIS = next((g[3][0] for gr in GRUPPEN for ab in gr["abschnitte"] for g in ab["gerichte"] if g[0] == "1"), None)
+STICKER = getattr(K, "STICKER", None)   # (Beschriftung, Nummer des Gerichts)
+DOENER_PREIS = next((g[3][0] for gr in GRUPPEN for ab in gr["abschnitte"] for g in ab["gerichte"] if STICKER and g[0] == STICKER[1]), None)
+
+
+def de_en(paar, tag="p", cls=""):
+    """(Deutsch, Englisch) aus der Konfiguration als Absatz mit Sprachumschaltung; None = nichts."""
+    return t(paar[0], paar[1], tag, cls) if paar else ""
+
+
+def bilder_html():
+    teile = []
+    foto = getattr(K, "FOTO", None)
+    if foto:
+        gross, klein, alt = foto
+        teile.append(f'<figure class="foto"><img src="{b64(gross, "image/webp")}" srcset="{b64(klein, "image/webp")} 480w, {b64(gross, "image/webp")} 894w" '
+                     f'sizes="(min-width: 900px) 440px, 100vw" width="894" height="700" decoding="async"\n        alt="{e(alt)}"></figure>')
+    if getattr(K, "FIGUR", None):
+        teile.append(f'<img class="koch" src="{maskottchen(K.FIGUR, "image/svg+xml")}" width="430" height="470" alt="">')
+    if STICKER and DOENER_PREIS:
+        teile.append(f'<p class="sticker" aria-hidden="true"><small>{e(STICKER[0])}</small><b>{preis(DOENER_PREIS, "sticker-preis")}</b></p>')
+    if not teile:
+        return ""
+    return '    <div class="bilder">\n      ' + "\n      ".join(teile) + "\n    </div>"
+
+
+def winter_box():
+    if not WINTER_K:
+        return ""
+    w = WINTER_K
+    return (f'      <aside class="winter" id="winter" hidden aria-label="Wintersaison">\n'
+            f'        <p class="winter-titel"><span aria-hidden="true">❄️ </span>{t(w["titel"][0], w["titel"][1])}</p>\n'
+            f'        <p data-en="{e(w["text"][1])}">{e(w["text"][0])}</p>\n'
+            f'        <div class="winter-knoepfe"><button type="button" class="knopf knopf-dunkel" id="winter-bestellen" data-en="{e(w["knopf"][1])}">{e(w["knopf"][0])}</button>\n'
+            f'        <button type="button" class="knopf knopf-linie" id="winter-gruppe" data-en="👥 Ski class or group">👥 Skikurs oder Gruppe</button></div>\n'
+            f'      </aside>')
 
 # ---------- Standorte ----------
 TEL_ICON = ('<svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 '
@@ -370,9 +408,10 @@ STATUS_KARTEN = "\n".join(
 </li>''' for s in STANDORTE)
 
 def karte_html(s):
-    alt = {"freital": "Stadtplan Freital-Potschappel: Saray Döner an der Dresdner Straße, Ecke Turnerstraße",
-           "altenberg": "Stadtplan Altenberg: Saray Döner an der Dresdner Straße am Bahnhof"}[s["id"]]
-    return (f'<figure class="karte-bild"><a href="{e(s["maps"])}" target="_blank" rel="noopener" aria-label="Route zu Saray Döner {e(s["name"])} planen">'
+    if not (konfig.BILDER / f"karte_{s['id']}.webp").exists():   # Kartenausschnitt ist freiwillig
+        return ""
+    alt = e(s.get("karte_alt") or f"Stadtplan {s['ort']}: {NAME}, {s['strasse']}")
+    return (f'<figure class="karte-bild"><a href="{e(s["maps"])}" target="_blank" rel="noopener" aria-label="Route zu {e(NAME)} {e(s["name"])} planen">'
             f'<img src="{b64("karte_" + s["id"] + ".webp", "image/webp")}" srcset="{b64("karte_" + s["id"] + "_480.webp", "image/webp")} 480w, {b64("karte_" + s["id"] + ".webp", "image/webp")} 940w" sizes="(min-width: 900px) 460px, 100vw" width="940" height="680" loading="lazy" decoding="async" alt="{alt}">'
             f'<svg class="pin" viewBox="0 0 40 52" aria-hidden="true"><path d="M20 50 C20 50 4 31 4 19 a16 16 0 0 1 32 0 C36 31 20 50 20 50 Z" fill="#C8371A" stroke="#3A1531" stroke-width="3"/><circle cx="20" cy="19" r="6.5" fill="#fff"/></svg></a>'
             f'<figcaption>{t("Karte", "Map")}: © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a>{t("-Mitwirkende", " contributors")}</figcaption></figure>')
@@ -395,7 +434,7 @@ ORTE = "\n".join(
     f'''<article class="ort" id="ort-{s["id"]}" aria-labelledby="h-{s["id"]}">
   <h3 id="h-{s["id"]}">{e(s["name"])}</h3>
   {status_html(s)}
-  <address>Saray Döner<br>{e(s["strasse"])}<br>{e(s["plz"])} {e(s["ort"])}<br>
+  <address>{e(NAME)}<br>{e(s["strasse"])}<br>{e(s["plz"])} {e(s["ort"])}<br>
   {t("Telefon", "Phone")} <a href="tel:{s["tel_href"]}">{e(s["tel"])}</a></address>
   {('<p class="bar">' + BAR_ICON + t("Nur Barzahlung", "Cash only") + '</p>') if s.get("bar") else ""}
   {karte_html(s)}
@@ -421,7 +460,7 @@ LD = {
     "@graph": [{
         "@type": "Restaurant",
         "@id": DOMAIN + "#ort-" + s["id"],
-        "name": "Saray Döner " + s["name"],
+        "name": NAME + " " + s["name"],
         "url": DOMAIN,
         "telephone": s["tel_ld"],
         "servesCuisine": ["Döner", "Pizza", "Türkisch"],
@@ -993,7 +1032,7 @@ ZETTEL_JS = r'''
      Die Schalter im Zettel suchen damit das passende Gericht der Karte. */
   var VAR={},FUELL=['kalb','huhn','beide','veg','falafel','halloumi','hack','schinken','schinkenananas','hawaii','tonno','bauern','mozzarella'];
   var F_NAME={kalb:['Dönerfleisch','Döner meat'],huhn:['Hähnchen','Chicken'],veg:['ohne Fleisch','No meat'],falafel:['Falafel','Falafel'],
-    halloumi:['Halloumi','Halloumi'],hack:['Hackfleisch','Minced meat'],beide:['Döner + Hähnchen (Saray)','Döner + chicken (Saray)'],
+    halloumi:['Halloumi','Halloumi'],hack:['Hackfleisch','Minced meat'],beide:['Döner + Hähnchen ('+LADEN_KURZ+')','Döner + chicken ('+LADEN_KURZ+')'],
     schinken:['Schinken','Ham'],schinkenananas:['Schinken + Ananas','Ham + pineapple'],hawaii:['Ananas','Pineapple'],tonno:['Thunfisch','Tuna'],
     bauern:['Bauernsalat (Käse, Oliven, Peperoni)','Farmer’s (cheese, olives, hot peppers)'],mozzarella:['Mozzarella','Mozzarella']};
   var FLEISCH_F=['kalb','huhn','beide','hack','schinken','schinkenananas'],FISCH_F=['tonno'];
@@ -1037,7 +1076,7 @@ ZETTEL_JS = r'''
   }
   function kaesePartner(k){return VAR[k]?variante(k,{kae:VAR[k].kae?0:1},true):(OHNE_K[k]||MIT_K[k]||null);}
   /* Verfügbarkeit: feste Regeln aus build.py + tagesaktuelle aus status.json */
-  var SPERR=%%SPERR%%,REGELN_FEST=%%REGELN%%,REGELN=REGELN_FEST.slice(),LADEN_N={freital:'Freital',altenberg:'Altenberg'};
+  var SPERR=%%SPERR%%,REGELN_FEST=%%REGELN%%,REGELN=REGELN_FEST.slice(),LADEN_N=%%LADEN_N%%,LADEN_IDS=Object.keys(LADEN_N),LADEN_NAME=%%NAME_JS%%,LADEN_KURZ=%%KURZ_JS%%;
   function datumISO(off){return new Intl.DateTimeFormat('en-CA',{timeZone:'Europe/Berlin',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date(Date.now()+off*864e5));}
   function minAus(t){var q=String(t).split(':');return (+q[0])*60+(+q[1]||0);}
   function trifft(r,k){var w=[].concat(r.was||[]);return w.some(function(v){v=String(v);return v===k||(SPERR[v]&&SPERR[v].nr.indexOf(k)>-1);});}
@@ -1074,9 +1113,10 @@ ZETTEL_JS = r'''
       if(abh.laden&&LADEN_N[abh.laden]){ /* Laden gewählt: Karte gilt für diesen Laden */
         var s1=sp[abh.laden];txt=s1?sperrText(s1)+L(' in ',' in ')+LADEN_N[abh.laden]:'';aus=!!s1&&s1.art==='aus';
       }else{
-        if(gesperrt.length===2&&sperrText(sp.freital)===sperrText(sp.altenberg))txt=sperrText(sp.freital);
+        var texte=gesperrt.map(function(l){return sperrText(sp[l]);});
+        if(gesperrt.length===LADEN_IDS.length&&texte.every(function(x){return x===texte[0];}))txt=texte[0];
         else txt=gesperrt.map(function(l){return LADEN_N[l]+': '+sperrText(sp[l]);}).join(' · ');
-        aus=gesperrt.length===2&&sp.freital.art==='aus'&&sp.altenberg.art==='aus';
+        aus=gesperrt.length===LADEN_IDS.length&&gesperrt.every(function(l){return sp[l].art==='aus';});
       }
       li.classList.toggle('nicht-da',aus);
       var pk=li.querySelector('.plus');if(pk){pk.disabled=aus;}
@@ -1187,7 +1227,7 @@ ZETTEL_JS = r'''
       FUELL.forEach(function(f){
         if(f!==va.f&&!erlaubtF(f))return;
         var ziel=f===va.f?x.k:variante(x.k,{f:f});if(!ziel)return;
-        var spF=f===va.f?null:(sperreZettel(ziel)||(function(){var nn=jetzt();var a=sperre(ziel,'freital',0,nn.min),b=sperre(ziel,'altenberg',0,nn.min);return a&&b&&a.art==='aus'&&b.art==='aus'?a:null;})());
+        var spF=f===va.f?null:(sperreZettel(ziel)||(function(){var nn=jetzt(),r=LADEN_IDS.map(function(l){return sperre(ziel,l,0,nn.min);});return r.every(function(x){return x&&x.art==='aus';})?r[0]:null;})());
         var fk=knopf(L(F_NAME[f][0],F_NAME[f][1])+(f===va.f?'':spF?' – '+sperrText(spF):preisDiff(x,ziel)),{'class':'chip','aria-pressed':String(f===va.f),'data-fuell':f,'data-u':x.u});
         if(spF)fk.disabled=true;fw.appendChild(fk);
       });
@@ -1398,7 +1438,7 @@ ZETTEL_JS = r'''
   var AK='%%PFX%%-abholung',abh={laden:'',tag:'',zeit:'',name:''},VORBESTELL_TAGE=%%VORBESTELL_TAGE%%;
   try{abh=Object.assign(abh,JSON.parse(localStorage.getItem(AK)||'{}'));}catch(e){}
   /* ?laden=freital (z. B. vom QR-Aufsteller an der Theke) wählt den Laden vor */
-  (function(){var m=/[?&]laden=(freital|altenberg)/.exec(location.search);if(m&&abh.laden!==m[1]){abh.laden=m[1];abh.zeit='';}})();
+  (function(){var m=/[?&]laden=([a-z0-9-]+)/.exec(location.search);if(m&&LADEN_N[m[1]]&&abh.laden!==m[1]){abh.laden=m[1];abh.zeit='';}})();
   function abhSpeichern(){try{localStorage.setItem(AK,JSON.stringify(abh));}catch(e){}}
   var selTag=document.getElementById('abhol-tag'),selZeit=document.getElementById('abhol-zeit'),eName=document.getElementById('abhol-name'),hinweisZ=document.getElementById('abhol-hinweis');
   function zeitText(m,en){var h=Math.floor(m/60),r=m%60;return h+':'+(r<10?'0':'')+r+(en?'':' Uhr');}
@@ -1445,8 +1485,8 @@ ZETTEL_JS = r'''
   function winterAktiv(){if(WINTER.modus==='an')return true;if(WINTER.modus==='aus')return false;var md=isoTag(0).slice(5);
     return WINTER.von<=WINTER.bis?(md>=WINTER.von&&md<=WINTER.bis):(md>=WINTER.von||md<=WINTER.bis);}
   setTimeout(function(){var w=document.getElementById('winter');if(!w)return;try{w.hidden=!winterAktiv();}catch(e){}
-    var b=document.getElementById('winter-bestellen');if(b)b.addEventListener('click',function(){abh.laden='altenberg';abhSpeichern();ladenZeigen();oeffnen();});
-    var g=document.getElementById('winter-gruppe');if(g)g.addEventListener('click',function(){abh.laden='altenberg';abhSpeichern();var s=document.querySelector('[data-sammel-start]');if(s)s.click();});},0);
+    var b=document.getElementById('winter-bestellen');if(b)b.addEventListener('click',function(){abh.laden=WINTER.laden;abhSpeichern();ladenZeigen();oeffnen();});
+    var g=document.getElementById('winter-gruppe');if(g)g.addEventListener('click',function(){abh.laden=WINTER.laden;abhSpeichern();var s=document.querySelector('[data-sammel-start]');if(s)s.click();});},0);
   var VOLL=%%VOLL%%;
   function zeitenFuellen(){
     selZeit.textContent='';selTag.textContent='';hinweisZ.hidden=true;ZINFO={};
@@ -1536,12 +1576,12 @@ ZETTEL_JS = r'''
         z=function(m){return ('0'+Math.floor(m/60)).slice(-2)+('0'+m%60).slice(-2)+'00';},
         esc=function(t){return String(t).replace(/[\\;,]/g,function(c){return '\\'+c;}).replace(/\n/g,'\\n');},
         jetztZ=new Date().toISOString().replace(/[-:]/g,'').replace(/\.\d+/,'');
-    return ['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//Saray Doener//Bestellung//DE','BEGIN:VEVENT',
+    return ['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//'+LADEN_KURZ+'//Bestellung//DE','BEGIN:VEVENT',
       'UID:'+nr+'-'+d+'-'+zi.min+'@saray-doener','DTSTAMP:'+jetztZ,
       'DTSTART;TZID=Europe/Berlin:'+d+'T'+z(zi.min),'DTEND;TZID=Europe/Berlin:'+d+'T'+z(zi.min+15),
-      'SUMMARY:'+esc('Saray Döner abholen ('+nr+')'),'LOCATION:'+esc(ADR[abh.laden]||''),
+      'SUMMARY:'+esc(LADEN_NAME+' abholen ('+nr+')'),'LOCATION:'+esc(ADR[abh.laden]||''),
       'DESCRIPTION:'+esc(zettel.map(function(x){return x.q+'× '+x.n;}).join('\n')+'\nSumme: '+euro(summe())+' (nur Barzahlung)'),
-      'BEGIN:VALARM','ACTION:DISPLAY','DESCRIPTION:'+esc('Saray Döner abholen'),'TRIGGER:-PT15M','END:VALARM',
+      'BEGIN:VALARM','ACTION:DISPLAY','DESCRIPTION:'+esc(LADEN_NAME+' abholen'),'TRIGGER:-PT15M','END:VALARM',
       'END:VEVENT','END:VCALENDAR'].join('\r\n');
   }
   function icsLaden(text,name){
@@ -1661,7 +1701,7 @@ ZETTEL_JS = r'''
     var test=document.body.classList.contains('vorschau')||TESTMODUS?[TESTMODUS?'*TEST – bitte nicht zubereiten*':'*TEST – Entwurf, keine echte Bestellung*','']:[];
     var al=zettel.filter(function(x){return x.notiz&&ALLERGIE.test(x.notiz);}).map(function(x){return x.notiz;});
     var vb=ZINFO[abh.zeit]&&ZINFO[abh.zeit].off>0;
-    var z=[(vb?'Vorbestellung':'Bestellung')+' Saray Döner'+(abh.laden?' '+(abh.laden==='freital'?'Freital':'Altenberg'):'')];
+    var z=[(vb?'Vorbestellung':'Bestellung')+' '+LADEN_NAME+(abh.laden&&LADEN_N[abh.laden]?' '+LADEN_N[abh.laden]:'')];
     z.push('Bestellnummer: '+BNR+(gastNr()>1?' · '+gastNr()+'. Bestellung von diesem Handy':''));
     if(al.length)z.push('⚠ ALLERGIE / UNVERTRÄGLICHKEIT: '+al.join(' · '));
     if(abh.zeit)z.push('Abholung: '+abh.zeit+(abh.zug&&ZUG&&abh.laden===ZUG.laden?' (Zug '+abh.zug+')':''));
@@ -1683,7 +1723,7 @@ ZETTEL_JS = r'''
       melden(ok?kopiert:L('Kopieren hat nicht geklappt. Bitte die Bestellung abschreiben.','Copying did not work. Please write the order down.'));}
     function kopieren(){if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(t).then(function(){melden(kopiert);},notfall);else notfall();}
     if(navigator.share&&(window.matchMedia&&matchMedia('(pointer:coarse)').matches)){
-      navigator.share({title:titel||'Bestellung Saray Döner',text:t}).catch(function(e){if(!e||e.name!=='AbortError')kopieren();});
+      navigator.share({title:titel||'Bestellung '+LADEN_NAME,text:t}).catch(function(e){if(!e||e.name!=='AbortError')kopieren();});
     }else kopieren();
   }
   document.getElementById('zettel-kopieren').addEventListener('click',function(){letzteMerken();teilen(zettelText());});
@@ -1722,7 +1762,7 @@ ZETTEL_JS = r'''
           if(!name){fehler.textContent=L('Bitte Ihren Namen eintragen.','Please enter your name.');fehler.hidden=false;nf[1].focus();return;}
           abh.name=name;eName.value=name;abhSpeichern();dialogZu();
           var link=basisUrl()+'#sammel='+kodieren({an:name,l:abh.laden||''});
-          teilen('Ich bestelle bei Saray Döner für mehrere. Such dir dein Essen aus und schick mir deinen Teil zurück:\n'+link,'Sammelbestellung Saray Döner');}],
+          teilen('Ich bestelle bei '+LADEN_NAME+' für mehrere. Such dir dein Essen aus und schick mir deinen Teil zurück:\n'+link,'Sammelbestellung '+LADEN_NAME);}],
        [L('Abbrechen','Cancel'),dialogZu]]);
   }
   document.querySelectorAll('[data-sammel-start]').forEach(function(b){b.addEventListener('click',einladen);});
@@ -1741,9 +1781,9 @@ ZETTEL_JS = r'''
         var ds=st.getFullYear()+('0'+(st.getMonth()+1)).slice(-2)+('0'+st.getDate()).slice(-2),link=basisUrl()+'#gemeinsam';
         var ende=('0'+((+hh)+((+mm)+15>=60?1:0))).slice(-2)+('0'+(((+mm)+15)%60)).slice(-2);
         var esc=function(t){return String(t).replace(/[\\;,]/g,function(c){return '\\'+c;}).replace(/\n/g,'\\n');};
-        var ics=['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//Saray Doener//Doener-Tag//DE','BEGIN:VEVENT','UID:doenertag-'+Date.now()+'@saray','DTSTAMP:'+new Date().toISOString().replace(/[-:]/g,'').slice(0,15)+'Z',
+        var ics=['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//'+LADEN_KURZ+'//Bestell-Tag//DE','BEGIN:VEVENT','UID:bestelltag-'+Date.now()+'@'+'%%PFX%%','DTSTAMP:'+new Date().toISOString().replace(/[-:]/g,'').slice(0,15)+'Z',
           'DTSTART:'+ds+'T'+hh+mm+'00','DTEND:'+ds+'T'+ende+'00','RRULE:FREQ=WEEKLY;BYDAY='+WT.filter(function(w2){return w2[0]===tag;})[0][1],
-          'SUMMARY:'+esc(L('Döner-Tag: Bestellung bei Saray sammeln','Döner day: collect the order at Saray')),'URL:'+link,
+          'SUMMARY:'+esc(SP==='de'?'Bestell-Tag: Bestellung bei '+LADEN_KURZ+' sammeln':fuell(T('Order day: collect the order at {kurz}'),{kurz:LADEN_KURZ})),'URL:'+link,
           'DESCRIPTION:'+esc(L('Gemeinsam bestellen: ','Order as a group: ')+link),'BEGIN:VALARM','ACTION:DISPLAY','DESCRIPTION:'+esc(L('Döner-Tag','Döner day')),'TRIGGER:PT0M','END:VALARM','END:VEVENT','END:VCALENDAR'].join('\r\n');
         icsLaden(ics,'%%PFX%%-erinnerung.ics');dialogZu();melden(L('Erinnerung gespeichert – im Kalender öffnen.','Reminder saved – open it in your calendar.'));}],
        [L('Abbrechen','Cancel'),dialogZu]]);
@@ -1754,9 +1794,9 @@ ZETTEL_JS = r'''
     if(!name){eName.focus();melden(L('Bitte zuerst Ihren Namen eintragen.','Please enter your name first.'));return;}
     if(!zettel.length)return;
     var link=basisUrl()+'#teil='+kodieren({von:name,p:zettel.map(function(x){return {k:x.k,g:x.g,q:x.q,o:x.o,notiz:x.notiz||''};})});
-    var z=['Mein Teil für die Sammelbestellung bei Saray Döner ('+name+'):'];zettel.forEach(function(x){z.push(zeileText(x));});
+    var z=['Mein Teil für die Sammelbestellung bei '+LADEN_NAME+' ('+name+'):'];zettel.forEach(function(x){z.push(zeileText(x));});
     z.push('Summe: '+euro(summe()),'','Zum Hinzufügen öffnen:',link);
-    teilen(z.join('\n'),'Mein Teil – Saray Döner');
+    teilen(z.join('\n'),'Mein Teil – '+LADEN_NAME);
   }
   sTeil.addEventListener('click',teilSchicken);
   function sammelZeigen(){
@@ -1844,12 +1884,16 @@ JS = r"""
     else for(var li0=0;li0<langs.length;li0++){var k0=String(langs[li0]).slice(0,2).toLowerCase();if(SPRACHEN.some(function(x){return x[0]===k0;})){SP=k0;break;}}
   }
   function T(en){
-    if(SP==='en'||SP==='de'||en==null)return en;var d=DICT[SP]||{},r=en;
-    if(d[en]!=null)r=d[en];
-    else{var z=[],k=String(en).replace(/\d+(?:[.,:]\d+)*/g,function(m){z.push(m);return '{n}';});
-      if(z.length&&d[k]!=null){var i=0;r=d[k].replace(/\{n\}/g,function(){return z[i++];});}}
-    return LTR_ZAHLEN(r);
+    if(SP==='en'||SP==='de'||en==null)return en;var d=DICT[SP]||{};
+    function such(x){if(d[x]!=null)return d[x];var z=[],k=String(x).replace(/\d+(?:[.,:]\d+)*/g,function(m){z.push(m);return '{n}';});
+      if(z.length&&d[k]!=null){var i=0;return d[k].replace(/\{n\}/g,function(){return z[i++];});}return null;}
+    var r=such(en);
+    if(r==null&&NAME_T){ /* Name des Ladens im Text: im Wörterbuch steht {name} bzw. {kurz} */
+      var k2=String(en).split(NAME_T).join('{name}');if(KURZ_T)k2=k2.split(KURZ_T).join('{kurz}');
+      if(k2!==en){r=such(k2);if(r!=null)r=r.split('{name}').join(NAME_T).split('{kurz}').join(KURZ_T);}}
+    return LTR_ZAHLEN(r==null?en:r);
   }
+  var NAME_T=%%NAME_JS%%,KURZ_T=%%KURZ_JS%%;
   /* Rechts-nach-links (Arabisch): Telefonnummern, Uhrzeiten und Preise als Block links-nach-rechts halten */
   function LTR_ZAHLEN(r){
     if(document.documentElement.dir!=='rtl'||typeof r!=='string')return r;
@@ -1926,7 +1970,7 @@ JS = r"""
         document.querySelectorAll('li[data-k="'+(window.CSS&&CSS.escape?CSS.escape(k):k)+'"]').forEach(function(li){
           var ziel=li.querySelector('.name, .tipp-name');if(!ziel)return;
           var m=document.createElement('span');m.className='marke-beliebt marke-aktion';
-          var ort=a.laden?(a.laden==='freital'?' Freital':' Altenberg'):'';
+          var ort=a.laden&&LADEN_N[a.laden]?' '+LADEN_N[a.laden]:'';
           var uz=a.za!=null?' '+uhr(a.za).replace(' Uhr','')+'–'+uhr(a.zb):'';
           m.textContent=(a.m?L('Mittag ','Lunch '):L('Aktion ','Offer '))+a.p[k].map(euroK).join(' / ')+uz+(ort?(SP==='de'?' (nur'+ort+')':' '+fuell(T('({ort} only)'),{ort:ort.trim()})):'');
           ziel.appendChild(document.createTextNode(' '));ziel.appendChild(m);
@@ -1990,17 +2034,17 @@ JS = r"""
     if(!bw||bw.fertig||!GOOGLE[bw.l]||!GAST||GAST.n<3)return;var alt=Date.now()-bw.t;if(alt<2*36e5||alt>14*864e5)return;
     if(!document.getElementById('hand-tipp').hidden)return;
     try{bw.fertig=1;localStorage.setItem('%%PFX%%-bewertung',JSON.stringify(bw));}catch(e){return;}
-    var ort=bw.l==='freital'?'Freital':'Altenberg';
+    var ort=LADEN_N[bw.l]||'';
     /* Erst fragen: War alles gut? Ja -> Google-Bewertung. Nein -> Nachricht direkt an den Laden statt öffentlicher Kritik */
-    function google(){handTippZeigen('<b>'+L('Danke!','Thank you!')+'</b><br>'+(SP==='de'?'Über eine Google-Bewertung für Saray Döner '+ort+' freuen wir uns sehr.':fuell(T('We would love a Google review for Saray Döner {ort}.'),{ort:ort})),
+    function google(){handTippZeigen('<b>'+L('Danke!','Thank you!')+'</b><br>'+(SP==='de'?'Über eine Google-Bewertung für '+LADEN_NAME+' '+ort+' freuen wir uns sehr.':fuell(T('We would love a Google review for {name} {ort}.'),{name:LADEN_NAME,ort:ort})),
       [[L('⭐ Bewerten','⭐ Review'),function(){zaehlen('bewertung-'+bw.l);window.open('https://search.google.com/local/writereview?placeid='+GOOGLE[bw.l],'_blank','noopener');handTippZu();}],
        [L('Nein danke','No thanks'),handTippZu]],25000);}
-    function laden(){zaehlen('rueckmeldung-'+bw.l);var nr=WA[bw.l],t='Rückmeldung zu meiner Bestellung'+(bw.nr?' '+bw.nr:'')+' bei Saray Döner '+ort+': ';
+    function laden(){zaehlen('rueckmeldung-'+bw.l);var nr=WA[bw.l],t='Rückmeldung zu meiner Bestellung'+(bw.nr?' '+bw.nr:'')+' bei '+LADEN_NAME+' '+ort+': ';
       handTippZeigen('<b>'+L('Das tut uns leid.','We are sorry.')+'</b><br>'+L('Sagen Sie es uns direkt – wir kümmern uns darum.','Tell us directly – we will take care of it.'),
         [[nr?L('💬 Nachricht an den Laden','💬 Message the shop'):L('📞 Laden anrufen','📞 Call the shop'),function(){
           if(nr)window.open('https://wa.me/'+nr+'?text='+encodeURIComponent(t),'_blank','noopener');else location.href='tel:'+TEL[bw.l][1];handTippZu();}],
          [L('Schließen','Close'),handTippZu]],25000);}
-    handTippZeigen('<b>'+L('Hat alles gepasst?','Was everything okay?')+'</b><br>'+(SP==='de'?'Sie haben schon '+GAST.n+'-mal bei Saray Döner '+ort+' bestellt – danke!':fuell(T('You have already ordered {n} times at Saray Döner {ort} – thank you!'),{n:GAST.n,ort:ort})),
+    handTippZeigen('<b>'+L('Hat alles gepasst?','Was everything okay?')+'</b><br>'+(SP==='de'?'Sie haben schon '+GAST.n+'-mal bei '+LADEN_NAME+' '+ort+' bestellt – danke!':fuell(T('You have already ordered {n} times at {name} {ort} – thank you!'),{n:GAST.n,name:LADEN_NAME,ort:ort})),
       [[L('👍 Ja, lecker','👍 Yes, delicious'),google],[L('👎 Nicht ganz','👎 Not quite'),laden]],25000);
   },1500);
   /* „Inhaltsstoffe … · Allergene …“ öffnet die Liste unten */
@@ -2172,24 +2216,21 @@ JS = r"""
 
 SEITE = r"""<!doctype html>
 <!--
-  Saray Döner – neue Website (Stand: 16.10.2026)
-  Vor dem Livegang: Impressum und Datenschutz unten ausfüllen (gelb markiert),
-  Adresse/Öffnungszeiten Altenberg und Preise mit dem Inhaber gegenprüfen.
-  Keine externen Dienste: Schriften und Fotos sind in dieser Datei eingebettet.
+  %%NAME%% – gebaut aus der Laden-Vorlage. Vor dem Livegang: Impressum und Datenschutz (gelb markiert) ausfüllen.
 -->
 <html lang="de">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>%%TITEL_PRAEFIX%%Saray Döner Freital &amp; Altenberg – Döner, Pizza und Salate seit 1997</title>
-<meta name="description" content="Saray Döner in Freital (Dresdner Str. 87) und Altenberg (Dresdner Str. 23): Döner, Dürüm, Pizza, Lahmacun und Salate. Speisekarte mit Preisen, Öffnungszeiten und Telefonnummern.">
+<title>%%TITEL_PRAEFIX%%%%TITEL%%</title>
+<meta name="description" content="%%BESCHREIBUNG%%">
 <link rel="canonical" href="%%DOMAIN%%">
 <meta name="theme-color" content="#FFD21F">
 <meta name="format-detection" content="telephone=no">
 <meta property="og:type" content="website">
 <meta property="og:locale" content="de_DE">
-<meta property="og:title" content="Saray Döner – Freital &amp; Altenberg">
-<meta property="og:description" content="Döner, Dürüm, Pizza und Salate seit 1997. Speisekarte, Öffnungszeiten und Telefon.">
+<meta property="og:title" content="%%OG_TITEL%%">
+<meta property="og:description" content="%%OG_TEXT%%">
 <meta property="og:url" content="%%DOMAIN%%">%%OG_BILD%%
 <link rel="icon" href="%%FAVICON_PNG%%" type="image/png" sizes="96x96">
 <link rel="icon" href="%%IMG_KOPF%%" type="image/svg+xml">%%APP_KOPF%%
@@ -2204,7 +2245,7 @@ SEITE = r"""<!doctype html>
   <div class="seitenkopf wrap">
     <a class="marke" href="#oben">
       <img class="logo" src="%%IMG_KOPF%%" width="58" height="58" alt="">
-      <span class="marke-text"><b>Saray Döner</b><small data-en="Döner &amp; pizza since 1997">Döner &amp; Pizza seit 1997</small></span>
+      <span class="marke-text"><b>%%NAME%%</b>%%UNTERZEILE%%</span>
     </a>
     <nav class="kopf-nav" aria-label="Hauptmenü">
       <a href="#speisekarte" data-en="Menu">Menü</a><a href="#standorte" data-en="Opening hours">Öffnungszeiten</a>
@@ -2219,24 +2260,16 @@ SEITE = r"""<!doctype html>
 <div class="buehne-band">
   <section class="buehne wrap" aria-labelledby="titel">
     <div class="buehne-text">
-      <img class="koch-klein" src="%%IMG_KOCH%%" width="430" height="470" alt="">
-      <h1 id="titel" data-en-html="Fresh off the skewer.&lt;br&gt; Since 1997.">Frisch vom Spieß.<br> Seit 1997.</h1>
-      <p class="lead" data-en="Döner, dürüm, pizza and salads – in Freital on Dresdner Straße and in Altenberg right by the station.">Döner, Dürüm, Pizza und Salate – in Freital an der Dresdner Straße und in Altenberg direkt am Bahnhof.</p>
+      %%FIGUR_KLEIN%%
+      %%HELD%%
+      %%EINLEITUNG%%
       <ul class="schilder" aria-label="Unsere Läden">
 %%SCHILDER%%
       </ul>
-      <aside class="winter" id="winter" hidden aria-label="Wintersaison Altenberg">
-        <p class="winter-titel"><span aria-hidden="true">❄️ </span><span data-en="After the slopes in Altenberg">Nach der Piste in Altenberg</span></p>
-        <p data-en="Pre-order and pick up hot – right by the station. Taking the train back? We time your pickup to the departure.">Vorbestellen und warm abholen – direkt am Bahnhof. Mit dem Zug zurück? Wir richten die Abholung nach der Abfahrt.</p>
-        <div class="winter-knoepfe"><button type="button" class="knopf knopf-dunkel" id="winter-bestellen" data-en="Pre-order in Altenberg">In Altenberg vorbestellen</button>
-        <button type="button" class="knopf knopf-linie" id="winter-gruppe" data-en="👥 Ski class or group">👥 Skikurs oder Gruppe</button></div>
-      </aside>
+%%WINTER_BOX%%
     </div>
     <div class="bilder">
-      <figure class="foto"><img src="%%IMG_LADEN%%" srcset="%%IMG_LADEN_480%% 480w, %%IMG_LADEN%% 894w" sizes="(min-width: 900px) 440px, 100vw" width="894" height="700" decoding="async"
-        alt="Der Laden von außen: Eckhaus mit grünen Schildern, davor Tische und bunte Stühle."></figure>
-      <img class="koch" src="%%IMG_KOCH%%" width="430" height="470" alt="">
-      <p class="sticker" aria-hidden="true"><small>Döner Kebap</small><b>%%STICKER%%</b></p>
+%%BILDER%%
     </div>
   </section>
 </div>
@@ -2245,8 +2278,8 @@ SEITE = r"""<!doctype html>
   <div class="wrap">
     <header class="karte-kopf abschnitt-kopf">
       <h2 id="karte-titel" data-en="Menu">Speisekarte</h2>
-      <p data-en="All prices in euros incl. VAT. Pickup only, no delivery or shipping costs. Every dish comes with your choice of sauce: garlic, herb or chili.">Alle Preise in Euro inkl. MwSt. Nur Abholung, keine Liefer- oder Versandkosten. Zu jedem Gericht gibt es Soße nach Wahl: Knoblauch, Kräuter oder Chili.</p>
-      <p data-en="The menu applies in Freital and Altenberg.">Die Karte gilt in Freital und Altenberg.</p>
+      %%KARTE_INFO%%
+      %%KARTE_GILT%%
       <p class="sammel-start"><button type="button" class="knopf knopf-linie knopf-sammel" data-sammel-start data-en="👥 Order as a group">👥 Gemeinsam bestellen</button></p>
       <div class="sammel-band" id="sammel-band" hidden><p id="sammel-band-text"></p><button type="button" class="knopf-klein" id="sammel-ende" data-en="End">Beenden</button></div>
     </header>
@@ -2297,7 +2330,7 @@ SEITE = r"""<!doctype html>
       <p><b data-en="Larger orders">Größere Bestellungen</b> <span data-en="Please pre-order in good time or give us a quick call:">bitte rechtzeitig vorbestellen oder kurz anrufen:</span></p>
       %%GRUPPEN_TEL%%
       %%GRUPPEN_BAR%%
-      <p class="gutschein-hinweis"><span aria-hidden="true">🎁 </span><b data-en="Gift vouchers">Geschenkgutscheine</b> <span data-en="for birthdays, Christmas or as a thank-you – available at the counter in both shops.">zum Geburtstag, zu Weihnachten oder als Dankeschön – an der Theke in beiden Läden.</span></p>
+      %%GUTSCHEIN_HINWEIS%%
     </aside>
   </div>
 </section>
@@ -2305,7 +2338,7 @@ SEITE = r"""<!doctype html>
 <section class="standorte" id="standorte" aria-labelledby="standorte-titel">
   <div class="wrap">
     <h2 id="standorte-titel" data-en="Opening hours and directions">Öffnungszeiten und Anfahrt</h2>
-    <p class="intro" data-en="Two Saray shops: in Freital and in Altenberg.">Zweimal Saray: in Freital und in Altenberg.</p>
+    %%ORTE_INTRO%%
     <div class="orte">
 %%ORTE%%
     </div>
@@ -2319,23 +2352,18 @@ SEITE = r"""<!doctype html>
     <div class="fuss-raster">
       <div>
         <img class="logo" src="%%IMG_KOPF%%" width="76" height="76" alt="">
-        <p class="motto" data-en="Quality is no accident.">Qualität ist kein Zufall.</p>
-        <p><span lang="tr">Afiyet olsun</span> – <span data-en="enjoy your meal!">guten Appetit!</span></p>
+        %%MOTTO%%
+        %%GRUSS%%
         <p class="klein fuss-hand"><button type="button" class="hand-knopf" data-hand>Linkshänder: Knöpfe links</button>
           <button type="button" class="hand-knopf" data-gross>🔍 Große Schrift</button></p>
-        <p class="klein app-tipp" data-en="Tip: Put Saray on your home screen – in Safari via “Share” → “Add to Home Screen”, in Chrome via the menu → “Add to home screen”.">Tipp: Saray auf den Home-Bildschirm legen – in Safari über „Teilen“ → „Zum Home-Bildschirm“, in Chrome über das Menü → „Zum Startbildschirm hinzufügen“.</p>
+        <p class="klein app-tipp" data-en="Tip: Put %%KURZ%% on your home screen – in Safari via “Share” → “Add to Home Screen”, in Chrome via the menu → “Add to home screen”.">Tipp: %%KURZ%% auf den Home-Bildschirm legen – in Safari über „Teilen“ → „Zum Home-Bildschirm“, in Chrome über das Menü → „Zum Startbildschirm hinzufügen“.</p>
       </div>
 %%FUSS_ORTE%%
     </div>
     <div class="recht">
       <details id="impressum"><summary data-en="Impressum (legal notice)">Impressum</summary>
         <p>Angaben gemäß § 5 DDG</p>
-        <p><b>Saray Döner Freital</b><br><span class="platzhalter">[Inhaber Khan – vollständiger Name, Anschrift, E-Mail, ggf. Firmenform und USt-IdNr.]</span><br>Dresdner Str. 87<br>01705 Freital<br>
-        Telefon: <a href="tel:+4935127676660">0351 27676660</a></p>
-        <p><b>Saray Döner Altenberg</b><br>Ahmet Saglam<br>Bahnhof 3<br>01773 Altenberg</p>
-        <p>Telefon: <a href="tel:+493505623674">035056 23674</a><br>
-        Telefax: 035056 23676<br>
-        E-Mail: <a href="mailto:solino1@hotmail.de">solino1@hotmail.de</a></p>
+        %%IMPRESSUM%%
       </details>
       <details id="datenschutz"><summary data-en="Datenschutz (privacy policy)">Datenschutz</summary>
 %%DATENSCHUTZ%%
@@ -2547,9 +2575,7 @@ def datenschutz_html():
     entwurf = '<p class="platzhalter">Entwurf – vor dem Freischalten rechtlich prüfen lassen.</p>' if VORSCHAU else ""
     return f"""{entwurf}
         <h3>Verantwortlich</h3>
-        <p>Für Saray Döner Freital: <span class="platzhalter">[Khan – Name, Anschrift, E-Mail]</span>, Dresdner Str. 87, 01705 Freital, Telefon 0351 27676660.
-        Für Saray Döner Altenberg: Ahmet Saglam, Bahnhof 3, 01773 Altenberg, Telefon 035056 23674, E-Mail solino1@hotmail.de.
-        <span class="platzhalter">[Klären: Betreiben beide die Website gemeinsam (dann gemeinsam Verantwortliche nach Art. 26 DSGVO mit Vereinbarung) oder jeder für seinen Laden?]</span></p>
+        {K.VERANTWORTLICH}
         <h3>Das Wichtigste vorab</h3>
         <p>Diese Website setzt keine Cookies. Schriften, Bilder und Stadtpläne liegen auf unserem eigenen Webspace; Inhalte fremder Anbieter
         binden wir nicht ein{" – mit Ausnahme der unten beschriebenen Besucherzählung mit GoatCounter" if ZAEHLER else ""}.
@@ -2613,7 +2639,7 @@ def whatsapp_nummern(einzeln):
     return nr
 
 
-SW = r"""/* Saray Döner – offline-Speicher. Seite und status.json: erst Netz, sonst Speicher. Rest: erst Speicher. */
+SW = r"""/* Offline-Speicher. Seite und status.json: erst Netz, sonst Speicher. Rest: erst Speicher. */
 var V='%%PFX%%-%%V%%',VOR=%%LISTE%%;
 self.addEventListener('install',function(e){e.waitUntil(caches.open(V).then(function(c){return c.addAll(VOR);}).then(function(){return self.skipWaiting();}));});
 self.addEventListener('activate',function(e){e.waitUntil(caches.keys().then(function(ks){return Promise.all(ks.filter(function(k){return k!==V&&k.indexOf('%%PFX%%-')===0;}).map(function(k){return caches.delete(k);}));}).then(function(){return self.clients.claim();}));});
@@ -2641,7 +2667,9 @@ def bauen(hinweise=None, ziel=None, einzeln=False):
             .replace("%%WA%%", json.dumps(whatsapp_nummern(einzeln)))
             .replace("%%GOOGLE%%", json.dumps({st["id"]: st["google"] for st in STANDORTE if st.get("google")}))
             .replace("%%TEL%%", json.dumps({st["id"]: [st["tel"], st["tel_href"]] for st in STANDORTE}))
-            .replace("%%ADR%%", json.dumps({st["id"]: f'Saray Döner, {st["strasse"]}, {st["plz"]} {st["ort"]}' for st in STANDORTE}, ensure_ascii=False))
+            .replace("%%ADR%%", json.dumps({st["id"]: f'{NAME}, {st["strasse"]}, {st["plz"]} {st["ort"]}' for st in STANDORTE}, ensure_ascii=False))
+            .replace("%%LADEN_N%%", json.dumps({st["id"]: st["name"] for st in STANDORTE}, ensure_ascii=False))
+            .replace("%%NAME_JS%%", json.dumps(NAME, ensure_ascii=False)).replace("%%KURZ_JS%%", json.dumps(KURZ, ensure_ascii=False))
             .replace("%%SPERR%%", json.dumps(SPERRGRUPPEN, ensure_ascii=False))
             .replace("%%REGELN%%", json.dumps(VERFUEGBARKEIT, ensure_ascii=False))
             .replace("%%VORBESTELL_TAGE%%", str(VORBESTELL_TAGE)).replace("%%ZUG%%", json.dumps(ZUG)).replace("%%ALLERGIE%%", json.dumps(__import__("laden_seiten").ALLERGIE_RE)).replace("%%WINTER%%", json.dumps(WINTER)).replace("%%CODES%%", json.dumps(CODES, ensure_ascii=False)).replace("%%PAUSE%%", json.dumps(PAUSE))
@@ -2655,12 +2683,24 @@ def bauen(hinweise=None, ziel=None, einzeln=False):
         "%%LD%%": json.dumps(LD, ensure_ascii=False),
         "%%DOMAIN%%": DOMAIN,
         "%%FAVICON_PNG%%": maskottchen("favicon-96.png", "image/png"),
-        "%%IMG_KOPF%%": maskottchen("saray-koch-kopf.svg", "image/svg+xml"),
+        "%%IMG_KOPF%%": maskottchen(K.LOGO, "image/svg+xml"),
         "%%SCHILDER%%": STATUS_KARTEN,
-        "%%IMG_KOCH%%": maskottchen("saray-koch.svg", "image/svg+xml"),
-        "%%IMG_LADEN%%": b64("laden_web.webp", "image/webp"),
-        "%%IMG_LADEN_480%%": b64("laden_480.webp", "image/webp"),
-        "%%STICKER%%": preis(DOENER_PREIS, "sticker-preis") if DOENER_PREIS else "",
+        "%%FIGUR_KLEIN%%": f'<img class="koch-klein" src="{maskottchen(K.FIGUR, "image/svg+xml")}" width="430" height="470" alt="">' if getattr(K, "FIGUR", None) else "",
+        "%%BILDER%%": bilder_html(),
+        "%%WINTER_BOX%%": winter_box(),
+        "%%NAME%%": e(NAME), "%%KURZ%%": e(KURZ), "%%TITEL%%": e(K.TITEL), "%%BESCHREIBUNG%%": e(K.BESCHREIBUNG),
+        "%%OG_TITEL%%": e(K.OG_TITEL), "%%OG_TEXT%%": e(K.OG_TEXT),
+        "%%UNTERZEILE%%": de_en(getattr(K, "UNTERZEILE", None), "small"),
+        "%%HELD%%": f'<h1 id="titel" data-en-html="{e(K.HELD[1])}">{K.HELD[0]}</h1>',
+        "%%EINLEITUNG%%": de_en(getattr(K, "EINLEITUNG", None), "p", "lead"),
+        "%%KARTE_INFO%%": de_en(getattr(K, "KARTE_INFO", None)),
+        "%%KARTE_GILT%%": de_en(getattr(K, "KARTE_GILT", None)) if MEHRERE else "",
+        "%%ORTE_INTRO%%": de_en(getattr(K, "ORTE_INTRO", None), "p", "intro"),
+        "%%GUTSCHEIN_HINWEIS%%": ('<p class="gutschein-hinweis"><span aria-hidden="true">🎁 </span><b data-en="Gift vouchers">Geschenkgutscheine</b> '
+                                  + de_en(K.GUTSCHEIN_TEXT, "span") + '</p>') if getattr(K, "GUTSCHEIN_TEXT", None) else "",
+        "%%MOTTO%%": de_en(getattr(K, "MOTTO", None), "p", "motto"),
+        "%%GRUSS%%": f'<p>{K.GRUSS}</p>' if getattr(K, "GRUSS", "") else "",
+        "%%IMPRESSUM%%": K.IMPRESSUM,
         "%%SUCH_ICON%%": SUCH_ICON,
         "%%NAV%%": NAV,
         "%%KARTE%%": KARTE,
@@ -2681,21 +2721,21 @@ def bauen(hinweise=None, ziel=None, einzeln=False):
         "%%TITEL_PRAEFIX%%": "[Entwurf] " if VORSCHAU else "",
         "%%BODY_KLASSE%%": ' class="vorschau"' if VORSCHAU else "",
         "%%VORSCHAU_BAND%%": ('<div class="vorschau-band" role="note"><strong data-en="DRAFT">ENTWURF</strong> '
-                              '<span data-en="Not yet the official website of Saray Döner. Orders go to a test number.">'
-                              'Noch nicht die offizielle Seite von Saray Döner. Bestellungen gehen an eine Testnummer.</span>'
+                              f'<span data-en="Not yet the official website of {e(NAME)}. Orders go to a test number.">'
+                              f'Noch nicht die offizielle Seite von {e(NAME)}. Bestellungen gehen an eine Testnummer.</span>'
                               f' <small class="stand">Stand {STAND}</small></div>')
                              if VORSCHAU else "",
         "%%APP_KOPF%%": "" if einzeln else (
             '\n<link rel="manifest" href="manifest.webmanifest">'
             f'\n<link rel="apple-touch-icon" href="{maskottchen("app-180.png", "image/png")}">'
-            '\n<meta name="apple-mobile-web-app-title" content="Saray">'
+            f'\n<meta name="apple-mobile-web-app-title" content="{e(KURZ)}">'
             '\n<meta name="mobile-web-app-capable" content="yes">'
             '\n<meta name="apple-mobile-web-app-capable" content="yes">'),
         # Vorschaubild für WhatsApp, Facebook & Co. (1200 × 630, assets/og-bild.jpg); braucht eine absolute Adresse
         "%%OG_BILD%%": "" if einzeln else (
             f'\n<meta property="og:image" content="{SEITE_URL}{b64("og-bild.jpg", "image/jpeg")}">'
             '\n<meta property="og:image:width" content="1200">\n<meta property="og:image:height" content="630">'
-            '\n<meta property="og:image:alt" content="Saray Döner: Laden in Freital mit dem Koch-Maskottchen – Frisch vom Spieß seit 1997">'
+            f'\n<meta property="og:image:alt" content="{e(getattr(K, "OG_ALT", NAME))}">'
             '\n<meta name="twitter:card" content="summary_large_image">'),
         "%%ROBOTS%%": '<meta name="robots" content="noindex">\n' if VORSCHAU and not einzeln else "",
     }
@@ -2716,7 +2756,7 @@ def bauen(hinweise=None, ziel=None, einzeln=False):
     for k, v in ersetzen.items():
         seite = seite.replace(k, v)
     if einzeln:
-        seite = dateien_aufloesen(seite, True).replace("%%PFX%%", PFX)
+        seite = konfig.farben(dateien_aufloesen(seite, True).replace("%%PFX%%", PFX))
         assert "%%" not in seite, "Platzhalter übrig"
         ziel = pathlib.Path(ziel or HIER / "index.html")
         ziel.write_text(seite, encoding="utf-8")
@@ -2748,8 +2788,8 @@ def bauen(hinweise=None, ziel=None, einzeln=False):
     for g in (192, 512):
         shutil.copyfile(MASKOTT / f"app-{g}.png", aus / "img" / f"app-{g}.png")
     (aus / "manifest.webmanifest").write_text(json.dumps({
-        "name": "Saray Döner" + (" (Vorschau)" if VORSCHAU else ""), "short_name": "Saray",
-        "description": "Speisekarte, Öffnungszeiten und Bestellung bei Saray Döner in Freital und Altenberg.",
+        "name": NAME + (" (Vorschau)" if VORSCHAU else ""), "short_name": KURZ,
+        "description": f"Speisekarte, Öffnungszeiten und Bestellung bei {NAME} in {' und '.join(s['name'] for s in STANDORTE)}.",
         "lang": "de", "start_url": "./", "scope": "./", "display": "standalone",
         "background_color": "#FFD21F", "theme_color": "#FFD21F",
         "icons": [{"src": f"img/app-{g}.png", "sizes": f"{g}x{g}", "type": "image/png", "purpose": "any maskable"} for g in (192, 512)],
@@ -2789,10 +2829,11 @@ def bauen(hinweise=None, ziel=None, einzeln=False):
     laden_seiten.schreiben(aus, tv, {st["id"]: st["name"] for st in STANDORTE}, SEITE_URL, version, REPO,
                            tel_karte, "" if einzeln else ZAEHLER, NTFY, {"max": SLOT_MAX, "voll": VOLL})
     for f in aus.rglob("*"):   # Laden-Kürzel in Speicher-Schlüsseln (mehrere Läden unter einer Adresse dürfen sich nicht stören)
-        if f.is_file() and f.suffix in (".html", ".js", ".json", ".webmanifest"):
+        if f.is_file() and f.suffix in (".html", ".js", ".json", ".webmanifest", ".css"):
             t0 = f.read_text(encoding="utf-8")
-            if "%%PFX%%" in t0:
-                f.write_text(t0.replace("%%PFX%%", PFX), encoding="utf-8")
+            t1 = konfig.farben(t0.replace("%%PFX%%", PFX))
+            if t1 != t0:
+                f.write_text(t1, encoding="utf-8")
     gesamt = sum(f.stat().st_size for f in aus.rglob("*") if f.is_file())
     for w in WARNUNGEN:
         print("WARNUNG:", w)
