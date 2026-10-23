@@ -1,72 +1,37 @@
 #!/usr/bin/env python3
-"""Baut die Website von Saray Döner.
+"""Baut die Website eines Ladens aus der Vorlage.
 
-    python3 build.py            -> docs/ (index.html, css/, js/, fonts/, img/) für GitHub Pages
-    python3 build.py --einzeln  -> index.html als eine einzige Datei mit allem eingebettet (Vorschau)
+    LADEN=freital python3 build.py            -> docs/freital/ (index.html, css/, js/, fonts/, img/, chef/, kueche/, tv/)
+    LADEN=freital python3 build.py --einzeln  -> index.html als eine einzige Datei mit allem eingebettet (Vorschau)
+    python3 alle_bauen.py                     -> alle Läden plus Übersicht docs/index.html
 
-Keine externen Anfragen, keine Cookies. Speisekarte: menu.py · Englisch: englisch.py ·
-Standorte/Zeiten: STANDORTE unten · Hinweis-Band: HINWEISE unten.
-WhatsApp-Nummern stehen nicht im Repo: optional in lokal.json (siehe README).
+Keine externen Anfragen, keine Cookies. Alles, was den Laden ausmacht, steht in laeden/<id>/ (siehe konfig.py).
 """
 import base64, html, json, math, pathlib, re, shutil, sys, urllib.parse
-from menu import GRUPPEN, VEGETARISCH, FISCH, VEG_WAEHLBAR, ALLERGENE, ALLERGENE_EN, ZUTATEN, KENNZEICHNUNG, SOSSEN, GERICHT_ALLERGENE
+import os
+import konfig
+from konfig import K
+GRUPPEN, VEGETARISCH, FISCH, VEG_WAEHLBAR = konfig.menu.GRUPPEN, konfig.menu.VEGETARISCH, konfig.menu.FISCH, konfig.menu.VEG_WAEHLBAR
+ALLERGENE, ALLERGENE_EN, ZUTATEN, KENNZEICHNUNG = konfig.menu.ALLERGENE, konfig.menu.ALLERGENE_EN, konfig.menu.ZUTATEN, konfig.menu.KENNZEICHNUNG
+SOSSEN, GERICHT_ALLERGENE = konfig.menu.SOSSEN, konfig.menu.GERICHT_ALLERGENE
 import englisch as EN
 import anpassungen as ANP
 import sprachen_daten as SP
 
 HIER = pathlib.Path(__file__).parent
 A = HIER / "assets"
-DOMAIN = "https://xn--saraydner-57a.de/"  # saraydöner.de (Canonical)
-CNAME = "saray.micana.de"
-REPO = "michael-linuxdev/saray-doener"     # Chef-App speichert Änderungen in diesem Repo (daten/anpassungen.json)                  # Adresse der GitHub Page
-VORSCHAU = True                            # True: Suchmaschinen sollen die Vorschau-Adresse nicht aufnehmen
-ZAEHLER = "saraymicana"                            # GoatCounter-Kürzel (z. B. "saray-doener" für saray-doener.goatcounter.com); leer = kein Zählen
-
-STANDORTE = [
-    {
-        "id": "freital", "name": "Freital", "strasse": "Dresdner Str. 87", "plz": "01705", "ort": "Freital",
-        "tel": "0351 27676660", "tel_href": "+4935127676660", "tel_ld": "+49 351 27676660",
-        "bar": True,  # nur Barzahlung
-        "google": "ChIJi62UlB_FCUcRyZITkeCfe8Q",  # Google-Place-ID (Bewertungslink)
-        "whatsapp": "4915733729521",  # vorerst Khan privat; später Laden-Handy Freital eintragen; leer: Knopf ausgeblendet
-        "zeilen": [("Montag bis Freitag", "10–22 Uhr", [1, 2, 3, 4, 5]), ("Samstag und Sonntag", "11–22 Uhr", [6, 0])],
-        "zeilen_en": ["Monday to Friday", "Saturday and Sunday"], "extra_en": "Outdoor seating in good weather.",
-        "kurz": "Mo–Fr 10–22 Uhr, Sa–So 11–22 Uhr",
-        "extra": "Bei schönem Wetter sitzen Sie draußen.",
-        "lage": "an der Dresdner Straße",
-    },
-    {
-        "id": "altenberg", "name": "Altenberg", "strasse": "Dresdner Str. 23", "plz": "01773", "ort": "Altenberg",
-        "tel": "035056 23674", "tel_href": "+493505623674", "tel_ld": "+49 35056 23674",
-        "bar": True,
-        "google": "ChIJ7XWZiUmTCUcRxe2o2WmxkxQ",
-        "whatsapp": "491601836249",  # Testnummer (Michael)
-        "zeilen": [("Montag bis Samstag", "10–21 Uhr", [1, 2, 3, 4, 5, 6]), ("Sonntag", "11–21 Uhr", [0])],
-        "zeilen_en": ["Monday to Saturday", "Sunday"], "extra_en": "Right by the station.",
-        "kurz": "Mo–Sa 10–21 Uhr, So 11–21 Uhr",
-        "extra": "Direkt am Bahnhof.",
-        "lage": "direkt am Bahnhof",
-    },
-]
-
-
-# Zug ab Altenberg (Müglitztalbahn RB 72 / RE 19 Richtung Heidenau–Dresden): Abholung passend zur Abfahrt.
-# Quelle: DB-Kursbuch 246, gültig 14.12.2025–12.12.2026 (Stand 24.10.2025). Nach "gueltig_bis" blendet sich der
-# Vorschlag von selbst aus, bis der neue Fahrplan hier eingetragen ist. Feiertage = Tage in "werktags_nicht".
-ZUG = {
-    "laden": "altenberg", "gueltig_bis": "2026-12-12", "puffer": 15,
-    "taeglich": ["06:18", "08:18", "10:18", "12:18", "18:18", "20:18"],
-    "werktags": ["04:18", "05:18", "07:18", "09:18", "11:18", "13:18", "14:18", "15:18", "16:18", "17:18", "19:18", "21:18"],
-    "werktags_nicht": ["2025-12-25", "2025-12-26", "2026-01-01", "2026-04-03", "2026-04-06", "2026-05-01", "2026-05-14",
-                       "2026-05-25", "2026-11-18"],
-    "extra": [  # RE 19 nur am Wochenende in diesen Zeiträumen, dazu an einzelnen Tagen
-        {"zeit": "15:18", "wochenende": [["2025-12-14", "2026-02-22"], ["2026-11-07", "2026-12-12"]],
-         "auch": ["2025-12-25", "2025-12-26", "2026-01-01", "2026-11-18"]},
-        {"zeit": "17:18", "wochenende": [["2026-02-28", "2026-11-01"]],
-         "auch": ["2026-04-03", "2026-04-06", "2026-05-01", "2026-05-14", "2026-05-25"]},
-    ],
-}
-
+LADEN = konfig.ID
+NAME = K.NAME
+PFX = K.PRAEFIX
+DOMAIN = K.DOMAIN
+VORSCHAU = K.VORSCHAU
+SEITE_URL = K.VORSCHAU_URL if K.VORSCHAU else K.DOMAIN   # wo Gäste die Seite jetzt finden (QR-Codes, Vorschaubild)
+SEITE_ANZEIGE = SEITE_URL.split("://", 1)[-1].rstrip("/")   # für Druck: ohne https://
+REPO = K.REPO
+ZAEHLER = os.environ.get("LADEN_ZAEHLER", K.ZAEHLER)   # Tests setzen ein Kürzel, damit Zählen geprüft wird
+STANDORTE = [dict(s) for s in K.STANDORTE]
+ZUG = getattr(K, "ZUG", None)
+ANP.LAEDEN = tuple(s["id"] for s in STANDORTE)
 
 def minuten(spanne):
     a, b = spanne.replace(" Uhr", "").split("–")
@@ -75,7 +40,7 @@ def minuten(spanne):
 
 # Änderungen aus der Chef-App (daten/anpassungen.json) auf Speisekarte und Öffnungszeiten anwenden
 import os
-ANPASSUNGEN = ANP.laden(pathlib.Path(os.environ.get("SARAY_ANPASSUNGEN") or HIER / "daten" / "anpassungen.json"))
+ANPASSUNGEN = ANP.laden(pathlib.Path(os.environ.get("LADEN_ANPASSUNGEN") or konfig.DATEN / "anpassungen.json"))
 WARNUNGEN = []
 STANDARD_GRUPPEN = GRUPPEN
 GRUPPEN = ANP.karte(GRUPPEN, ANPASSUNGEN, WARNUNGEN.append)
@@ -87,17 +52,17 @@ def anz(nr):
     return ANZEIGE_NR.get(nr, nr)
 
 import datetime as _dt0, zoneinfo as _zi0
-HEUTE_ISO = os.environ.get("SARAY_HEUTE") or _dt0.datetime.now(_zi0.ZoneInfo("Europe/Berlin")).date().isoformat()  # Tests setzen das Datum fest
+HEUTE_ISO = os.environ.get("LADEN_HEUTE") or _dt0.datetime.now(_zi0.ZoneInfo("Europe/Berlin")).date().isoformat()  # Tests setzen das Datum fest
 SONDER = ANP.sonderzeiten(ANPASSUNGEN.get("sonderzeiten"), WARNUNGEN.append, HEUTE_ISO)
 WARTE = ANP.wartezeit(ANPASSUNGEN.get("wartezeit"), WARNUNGEN.append)
 PAUSE = ANP.pause(ANPASSUNGEN.get("pause"), WARNUNGEN.append)
 SLOT_MAX = ANP.slot_max(ANPASSUNGEN.get("slot_max"), WARNUNGEN.append)
 VOLL = ANP.voll(ANPASSUNGEN.get("voll"), WARNUNGEN.append, HEUTE_ISO)
 # „Abholbereit per Ton“: Push-Dienst für die Fertig-Meldung der Küche an die offene Seite (Open Source, auch selbst betreibbar)
-NTFY = os.environ.get("SARAY_NTFY", "https://ntfy.sh").rstrip("/")
+NTFY = os.environ.get("LADEN_NTFY", "https://ntfy.sh").rstrip("/")
 CODE_BOX = '      <details class="code-box" id="code-box" hidden><summary data-en="Company code?">Firmen-Code?</summary>\n        <form id="code-form" class="code-form"><input id="code-feld" type="text" autocomplete="off" autocapitalize="characters" aria-label="Firmen-Code" data-en-aria="Company code" placeholder="z. B. ELBTAL10" data-en-ph="e.g. ELBTAL10">\n        <button type="submit" class="knopf knopf-linie" data-en="Apply">Einlösen</button></form>\n        <p class="code-info" id="code-info" role="status" hidden></p><button type="button" class="link-knopf" id="code-weg" hidden data-en="Remove code">Code entfernen</button></details>'
 # Firmen-Rabattcodes: vorerst abgeschaltet (Missbrauch lässt sich ohne Server nicht verhindern). Einschalten: True
-FIRMEN_CODES = os.environ.get("SARAY_FIRMEN_CODES") == "1"
+FIRMEN_CODES = os.environ.get("LADEN_FIRMEN_CODES") == "1"
 CODES = ANP.codes(ANPASSUNGEN.get("codes"), WARNUNGEN.append, HEUTE_ISO) if FIRMEN_CODES else []
 WINTER = {"modus": ANP.winter(ANPASSUNGEN.get("winter"), WARNUNGEN.append), "von": ANP.WINTER_STANDARD[0], "bis": ANP.WINTER_STANDARD[1]}
 
@@ -126,15 +91,17 @@ def t(de, en, tag="span", cls=""):
 # Dateien werden erst beim Bauen aufgelöst: eingebettet (data:-URL) oder als eigene Datei.
 # Platzhalter: %%DATEI:<quelle relativ zu HIER>|<mime>|<ziel relativ zur Seite>%%
 def b64(datei, mime):
-    ordner = "fonts" if mime.startswith("font/") else "img"
-    return f"%%DATEI:assets/{datei}|{mime}|{ordner}/{datei}%%"
+    """Schriften (assets/, für alle Läden gleich) und Bilder des Ladens (laeden/<id>/bilder/)."""
+    if mime.startswith("font/"):
+        return f"%%DATEI:assets/{datei}|{mime}|fonts/{datei}%%"
+    return f"%%DATEI:{konfig.rel(konfig.BILDER / datei)}|{mime}|img/{datei}%%"
 
 
-MASKOTT = HIER / "maskottchen"   # erzeugt von maskottchen.py
+MASKOTT = konfig.BILDER.parent / "maskottchen"   # Logo, Figur, App-Symbole des Ladens
 
 
 def maskottchen(datei, mime):
-    return f"%%DATEI:maskottchen/{datei}|{mime}|img/{datei}%%"
+    return f"%%DATEI:{konfig.rel(MASKOTT / datei)}|{mime}|img/{datei}%%"
 
 
 DATEI_RE = re.compile(r"%%DATEI:([^|%]+)\|([^|%]+)\|([^|%]+)%%")
@@ -174,32 +141,16 @@ ICONS = {
     "kinder": f'<path d="M20 5 L24.5 14.5 L35 15.6 L27.2 22.6 L29.5 33 L20 27.7 L10.5 33 L12.8 22.6 L5 15.6 L15.5 14.5 Z" fill="#FFD21F" {_F}/><path d="M16.5 20.5 v1 M23.5 20.5 v1 M16.5 24.5 C18 26.5 22 26.5 23.5 24.5" {_K}/>',
     "getraenke": f'<path d="M11 13 H29 L26.5 35 H13.5 Z" fill="#C8371A" {_F}/><path d="M12 19 H28" stroke="#fff" stroke-width="2.6"/><path d="M20 13 L24 4 L29 4" {_K}/>',
 }
-EMPFEHLUNG = ["87", "1", "3", "26", "91", "125"]   # „Wir empfehlen“: alle gleich groß, ohne Koch
-BELIEBT = ["52", "5", "58", "24", "84", "50", "23", "130", "100", "105", "124"]
-# nur sichtbar, wenn „Vegetarisch“ oder „Pescetarisch“ eingeschaltet ist (Döner vegetarisch statt Döner Kebap usw.);
-# Fischgerichte darunter (Pizza Tonno) erscheinen nur bei „Pescetarisch“
-NUR_DIAET = {"87", "3", "52", "5", "58", "24", "84"}   # Reihenfolge wie vom Inhaber gewünscht; 23 = Döner-Teller mit Salat und Pommes
+EMPFEHLUNG = list(getattr(K, "EMPFEHLUNG", []))   # „Wir empfehlen“
+BELIEBT = list(getattr(K, "BELIEBT", []))
+NUR_DIAET = set(getattr(K, "NUR_DIAET", set()))   # nur bei „Vegetarisch“/„Pescetarisch“ in den Empfehlungen
 GERICHT = {g[0]: (g, gr, ab) for gr in GRUPPEN for ab in gr["abschnitte"] for g in ab["gerichte"] if g[0]}
-
-
-D_NR = {"18", "19", "60", "61", "121", "123", "124"}
-
-
-def gericht_typ(nr, gruppe, abschnitt):
-    if abschnitt == "Pizza":
-        return {"91": "S", "105": "R"}.get(nr, "P")
-    if nr and (gruppe in ("Döner", "Dürüm") or abschnitt in ("Dönerbox", "Dönerteller") or nr in D_NR):
-        return "D"
-    if gruppe == "Salate":
-        return "SA"
-    if abschnitt == "Pizzabrötchen":
-        return "B"
-    return ""
+gericht_typ = getattr(K, "gericht_typ", lambda nr, gruppe, abschnitt: "")
 
 
 # Fotos der Gerichte (Chef-App lädt sie nach daten/fotos/nr-<Nummer>.jpg hoch); hier verkleinert als WebP
-FOTO_QUELLE = HIER / "daten" / "fotos"
-FOTO_CACHE = HIER / ".fotos-cache"
+FOTO_QUELLE = konfig.DATEN / "fotos"
+FOTO_CACHE = HIER / ".fotos-cache" / LADEN
 
 
 def fotos_vorbereiten():
@@ -1029,7 +980,7 @@ html[lang=ar] .zeiten tr.heute th::after{content:"اليوم"}
 
 ZETTEL_JS = r'''
   /* Bestellzettel mit Wünschen je Gericht */
-  var ZK='saray-bestellzettel-2',zettel=[],uidZ=1,offen=null;
+  var ZK='%%PFX%%-bestellzettel-2',zettel=[],uidZ=1,offen=null;
   var SOSSEN=['Knoblauch','Kräuter','Chili'],OHNE=['Zwiebeln','Tomaten','Gurken','Rotkohl','Weißkohl','Eisbergsalat'];
   var GEMUESE=['Paprika','Zwiebel','Champignon','Tomate','Peperoni','Ananas','Oliven','Brokkoli','Mais'];
   var FLEISCH=['Schinken','Salami','Dönerfleisch','Hähnchen-Dönerfleisch'],KAESE=['Käse','Halloumikäse','Fetakäse'];
@@ -1354,7 +1305,7 @@ ZETTEL_JS = r'''
     getraenkFragen(li);
   }
   /* Lieblingswünsche: was jemand zuletzt zu einem Gericht gewählt hat (nur auf diesem Handy), beim nächsten Mal anbieten */
-  var WK='saray-wuensche',WUE={};try{WUE=JSON.parse(localStorage.getItem(WK)||'{}')||{};}catch(e){WUE={};}
+  var WK='%%PFX%%-wuensche',WUE={};try{WUE=JSON.parse(localStorage.getItem(WK)||'{}')||{};}catch(e){WUE={};}
   function lieblingeMerken(){zettel.forEach(function(x){if(!x.t&&!x.notiz)return;var std=JSON.stringify(grund(x.t));
     if(JSON.stringify(x.o)!==std||x.notiz)WUE[x.k]={o:JSON.parse(JSON.stringify(x.o)),notiz:x.notiz||''};else delete WUE[x.k];});
     try{localStorage.setItem(WK,JSON.stringify(WUE));}catch(e){}}
@@ -1444,7 +1395,7 @@ ZETTEL_JS = r'''
     else if(!ev.shiftKey&&(document.activeElement===letzt||!huelle.contains(document.activeElement))){ev.preventDefault();erst.focus();}
   });
   /* Abholung: Laden, Uhrzeit, Name */
-  var AK='saray-abholung',abh={laden:'',tag:'',zeit:'',name:''},VORBESTELL_TAGE=%%VORBESTELL_TAGE%%;
+  var AK='%%PFX%%-abholung',abh={laden:'',tag:'',zeit:'',name:''},VORBESTELL_TAGE=%%VORBESTELL_TAGE%%;
   try{abh=Object.assign(abh,JSON.parse(localStorage.getItem(AK)||'{}'));}catch(e){}
   /* ?laden=freital (z. B. vom QR-Aufsteller an der Theke) wählt den Laden vor */
   (function(){var m=/[?&]laden=(freital|altenberg)/.exec(location.search);if(m&&abh.laden!==m[1]){abh.laden=m[1];abh.zeit='';}})();
@@ -1476,7 +1427,7 @@ ZETTEL_JS = r'''
   function zugZeigen(off,sl){
     if(!zugBox)return;zugBox.textContent='';
     var vor=off===0?'heute':off===1?'morgen, '+tagLang(1):tagLang(off),en=SP!=='de';
-    if(abh.laden!==ZUG.laden){zugBox.hidden=true;return;}
+    if(!ZUG||abh.laden!==ZUG.laden){zugBox.hidden=true;return;}
     var paare=[];zuege(isoTag(off)).forEach(function(d){var s=sl.filter(function(m){return m<=d-ZUG.puffer&&m>=d-45;});if(s.length)paare.push([d,s[s.length-1]]);});
     paare=paare.slice(0,6);zugBox.hidden=!paare.length;if(!paare.length)return;
     zugBox.appendChild(el('p','zug-titel',L('🚆 Mit dem Zug zurück? Abholung passend zur Abfahrt:','🚆 Taking the train? Pickup matched to your departure:')));
@@ -1566,14 +1517,14 @@ ZETTEL_JS = r'''
   zl.addEventListener('click',function(){zeitenFuellen();waAktualisieren();});
   var TEL=%%TEL%%,waGesendet=document.getElementById('wa-gesendet');
   waKnopf.addEventListener('click',function(){waAktualisieren();letzteMerken();if(!TESTMODUS)gastGezaehlt();
-    try{var bw=JSON.parse(localStorage.getItem('saray-bewertung')||'null');if(!bw||!bw.fertig)localStorage.setItem('saray-bewertung',JSON.stringify({l:abh.laden,t:Date.now(),nr:BNR}));}catch(e){}
+    try{var bw=JSON.parse(localStorage.getItem('%%PFX%%-bewertung')||'null');if(!bw||!bw.fertig)localStorage.setItem('%%PFX%%-bewertung',JSON.stringify({l:abh.laden,t:Date.now(),nr:BNR}));}catch(e){}
     if(waKnopf.hidden)return;var tl=TEL[abh.laden];waGesendet.textContent='';bnrGesendet=true;
     var nrP=el('p','wa-nr');nrP.appendChild(document.createTextNode(L('Ihre Bestellnummer: ','Your order number: ')));nrP.appendChild(el('b',null,BNR));waGesendet.appendChild(nrP);
     waGesendet.appendChild(document.createTextNode(L('Gesendet? Der Laden bestätigt Ihre Bestellung per WhatsApp. Ohne Antwort bitte anrufen: ','Sent? The shop confirms your order via WhatsApp. No reply? Please call: ')));
     var a=el('a',null,tl[0]);a.href='tel:'+tl[1];waGesendet.appendChild(a);
     var zi=ZINFO[abh.zeit];
     if(zi){var kb=knopf(L('📅 Abholung in den Kalender','📅 Add pickup to calendar'),{'class':'knopf knopf-linie wa-kalender','id':'wa-kalender'});
-      var ics=icsText(zi,BNR);kb.addEventListener('click',function(){icsLaden(ics,'saray-abholung-'+BNR+'.ics');});waGesendet.appendChild(kb);}
+      var ics=icsText(zi,BNR);kb.addEventListener('click',function(){icsLaden(ics,'%%PFX%%-abholung-'+BNR+'.ics');});waGesendet.appendChild(kb);}
     var tf=kuecheLink()?tonToken():'';
     if(tf){var tb=knopf(L('🔔 Ton, wenn die Bestellung fertig ist','🔔 Sound when the order is ready'),{'class':'knopf knopf-linie wa-ton','id':'wa-ton'}),tnr=BNR;
       tb.addEventListener('click',function(){tonStarten(tf,tnr);tb.remove();});waGesendet.appendChild(tb);}
@@ -1599,7 +1550,7 @@ ZETTEL_JS = r'''
   }
   /* „Wie letztes Mal“: Zettel merken, sobald er abgeschickt, kopiert oder vorgelesen wird */
   /* Die letzten fünf Bestellungen (nur auf diesem Gerät); die neueste oben mit großem Knopf */
-  var LK='saray-letzte',LLK='saray-letzte-liste',letzteListe=[],letzte=null,boxL=document.getElementById('letzte');
+  var LK='%%PFX%%-letzte',LLK='%%PFX%%-letzte-liste',letzteListe=[],letzte=null,boxL=document.getElementById('letzte');
   try{letzteListe=JSON.parse(localStorage.getItem(LLK)||'[]');if(!Array.isArray(letzteListe))letzteListe=[];}catch(e){letzteListe=[];}
   if(!letzteListe.length){try{var alt1=JSON.parse(localStorage.getItem(LK)||'null');if(alt1&&Array.isArray(alt1.p))letzteListe=[alt1];}catch(e){}}
   letzte=letzteListe[0]||null;
@@ -1677,7 +1628,7 @@ ZETTEL_JS = r'''
   function tonPiep(n){try{tonAc=tonAc||new (window.AudioContext||window.webkitAudioContext)();if(tonAc.resume)tonAc.resume();var t=tonAc.currentTime+.05;
     for(var i=0;i<n;i++){var o=tonAc.createOscillator(),g=tonAc.createGain(),a=t+i*.32;o.frequency.value=i%2?1175:880;g.gain.setValueAtTime(.0001,a);
       g.gain.exponentialRampToValueAtTime(.5,a+.02);g.gain.exponentialRampToValueAtTime(.0001,a+.28);o.connect(g);g.connect(tonAc.destination);o.start(a);o.stop(a+.3);}}catch(e){}}
-  function tonMerken(){try{if(TONW)localStorage.setItem('saray-ton',JSON.stringify(TONW));else localStorage.removeItem('saray-ton');}catch(e){}}
+  function tonMerken(){try{if(TONW)localStorage.setItem('%%PFX%%-ton',JSON.stringify(TONW));else localStorage.removeItem('%%PFX%%-ton');}catch(e){}}
   function tonWach(){try{if(TONW&&TONW.z!=='fertig'&&navigator.wakeLock&&document.visibilityState==='visible')navigator.wakeLock.request('screen').then(function(w){tonWake=w;},function(){});}catch(e){}}
   function tonBox(){var b=document.getElementById('ton-box');if(!b){b=el('div','ton-box');b.id='ton-box';b.setAttribute('role','status');b.setAttribute('aria-live','assertive');document.body.appendChild(b);}return b;}
   function tonZeigen(){var b=tonBox();b.textContent='';if(!TONW){b.hidden=true;return;}b.hidden=false;b.classList.toggle('fertig',TONW.z==='fertig');
@@ -1696,16 +1647,16 @@ ZETTEL_JS = r'''
       tonES.onmessage=function(ev){try{var d=JSON.parse(ev.data);if(d.event==='message')tonMeldung(String(d.message||'').trim());}catch(e){}};}catch(e){}}
   function tonStarten(f,nr){TONW={f:f,nr:nr,a:Date.now(),z:''};tonMerken();tonPiep(1);tonZeigen();tonVerbinden();tonWach();}
   document.addEventListener('visibilitychange',function(){if(document.visibilityState==='visible'&&TONW){tonVerbinden();tonWach();}});
-  try{var tw=JSON.parse(localStorage.getItem('saray-ton')||'null');if(tw&&tw.f&&Date.now()-tw.a<6*36e5){TONW=tw;setTimeout(function(){tonZeigen();if(TONW.z!=='fertig')tonVerbinden();},0);}else localStorage.removeItem('saray-ton');}catch(e){}
+  try{var tw=JSON.parse(localStorage.getItem('%%PFX%%-ton')||'null');if(tw&&tw.f&&Date.now()-tw.a<6*36e5){TONW=tw;setTimeout(function(){tonZeigen();if(TONW.z!=='fertig')tonVerbinden();},0);}else localStorage.removeItem('%%PFX%%-ton');}catch(e){}
   /* Allergie-Hinweis: steht im Wunschfeld etwas wie „Nussallergie“ oder „glutenfrei“, kommt eine Warnzeile oben in die Nachricht */
   var ALLERGIE=new RegExp(%%ALLERGIE%%,'i');
   /* Stammgast: zufällige Kennung + Zähler auf diesem Handy (keine Telefonnummer, kein Name) */
-  var GAST={id:'',n:0,letzte:''};try{GAST=Object.assign(GAST,JSON.parse(localStorage.getItem('saray-gast')||'{}'));}catch(e){}
+  var GAST={id:'',n:0,letzte:''};try{GAST=Object.assign(GAST,JSON.parse(localStorage.getItem('%%PFX%%-gast')||'{}'));}catch(e){}
   if(!GAST.id){var zs='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';for(var gi=0;gi<8;gi++)GAST.id+=zs.charAt(Math.floor(Math.random()*zs.length));}
   function gastNr(){if(!GAST)return 1;return GAST.letzte===BNR?GAST.n:GAST.n+1;}
-  function gastGezaehlt(){if(!GAST||GAST.letzte===BNR)return;GAST.n++;GAST.letzte=BNR;try{localStorage.setItem('saray-gast',JSON.stringify(GAST));}catch(e){}}
+  function gastGezaehlt(){if(!GAST||GAST.letzte===BNR)return;GAST.n++;GAST.letzte=BNR;try{localStorage.setItem('%%PFX%%-gast',JSON.stringify(GAST));}catch(e){}}
   /* Testbestellung aus der Chef-App (#testbestellung): Nachricht und Küche zeigen TEST */
-  var TESTMODUS=false;try{TESTMODUS=sessionStorage.getItem('saray-test')==='1';}catch(e){}
+  var TESTMODUS=false;try{TESTMODUS=sessionStorage.getItem('%%PFX%%-test')==='1';}catch(e){}
   function zettelText(mitKueche){
     var test=document.body.classList.contains('vorschau')||TESTMODUS?[TESTMODUS?'*TEST – bitte nicht zubereiten*':'*TEST – Entwurf, keine echte Bestellung*','']:[];
     var al=zettel.filter(function(x){return x.notiz&&ALLERGIE.test(x.notiz);}).map(function(x){return x.notiz;});
@@ -1713,7 +1664,7 @@ ZETTEL_JS = r'''
     var z=[(vb?'Vorbestellung':'Bestellung')+' Saray Döner'+(abh.laden?' '+(abh.laden==='freital'?'Freital':'Altenberg'):'')];
     z.push('Bestellnummer: '+BNR+(gastNr()>1?' · '+gastNr()+'. Bestellung von diesem Handy':''));
     if(al.length)z.push('⚠ ALLERGIE / UNVERTRÄGLICHKEIT: '+al.join(' · '));
-    if(abh.zeit)z.push('Abholung: '+abh.zeit+(abh.zug&&abh.laden===ZUG.laden?' (Zug '+abh.zug+')':''));
+    if(abh.zeit)z.push('Abholung: '+abh.zeit+(abh.zug&&ZUG&&abh.laden===ZUG.laden?' (Zug '+abh.zug+')':''));
     if(abh.name)z.push('Name: '+abh.name);
     z.push('');
     zettel.forEach(function(x){z.push(zeileText(x));});
@@ -1743,7 +1694,7 @@ ZETTEL_JS = r'''
   function kodieren(o){return btoa(unescape(encodeURIComponent(JSON.stringify(o)))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');}
   function dekodieren(t){t=t.replace(/-/g,'+').replace(/_/g,'/');while(t.length%4)t+='=';return JSON.parse(decodeURIComponent(escape(atob(t))));}
   function basisUrl(){return location.origin+location.pathname;}
-  var SK='saray-sammel',SIK='saray-sammel-import',sammel=null;
+  var SK='%%PFX%%-sammel',SIK='%%PFX%%-sammel-import',sammel=null;
   try{sammel=JSON.parse(localStorage.getItem(SK)||'null');}catch(e){sammel=null;}
   function sammelSpeichern(){try{if(sammel)localStorage.setItem(SK,JSON.stringify(sammel));else localStorage.removeItem(SK);}catch(e){}}
   var sDlg=document.getElementById('sammel-dialog'),sBand=document.getElementById('sammel-band'),sTeil=document.getElementById('sammel-teil');
@@ -1794,7 +1745,7 @@ ZETTEL_JS = r'''
           'DTSTART:'+ds+'T'+hh+mm+'00','DTEND:'+ds+'T'+ende+'00','RRULE:FREQ=WEEKLY;BYDAY='+WT.filter(function(w2){return w2[0]===tag;})[0][1],
           'SUMMARY:'+esc(L('Döner-Tag: Bestellung bei Saray sammeln','Döner day: collect the order at Saray')),'URL:'+link,
           'DESCRIPTION:'+esc(L('Gemeinsam bestellen: ','Order as a group: ')+link),'BEGIN:VALARM','ACTION:DISPLAY','DESCRIPTION:'+esc(L('Döner-Tag','Döner day')),'TRIGGER:PT0M','END:VALARM','END:VEVENT','END:VCALENDAR'].join('\r\n');
-        icsLaden(ics,'saray-doener-tag.ics');dialogZu();melden(L('Erinnerung gespeichert – im Kalender öffnen.','Reminder saved – open it in your calendar.'));}],
+        icsLaden(ics,'%%PFX%%-erinnerung.ics');dialogZu();melden(L('Erinnerung gespeichert – im Kalender öffnen.','Reminder saved – open it in your calendar.'));}],
        [L('Abbrechen','Cancel'),dialogZu]]);
   }
   document.querySelectorAll('[data-doenertag]').forEach(function(b){b.addEventListener('click',doenerTag);});
@@ -1822,7 +1773,7 @@ ZETTEL_JS = r'''
   document.getElementById('sammel-einladen').addEventListener('click',einladen);
   function linkPruefen(){
     if(location.hash==='#testbestellung'){history.replaceState(null,'',location.pathname+location.search);
-      TESTMODUS=true;try{sessionStorage.setItem('saray-test','1');}catch(e){}
+      TESTMODUS=true;try{sessionStorage.setItem('%%PFX%%-test','1');}catch(e){}
       var tl=gerichtLi('1');zettel=[];if(tl)zettel.push({k:'1',n:tl.dataset.n,d:tl.dataset.d,g:'',c:+tl.dataset.p.split('|')[0],q:1,t:tl.dataset.t||'',v:'',o:grund(tl.dataset.t),notiz:'Testbestellung',u:uidZ++});
       abh.name='Test';eName.value='Test';abhSpeichern();getraenkGefragt=true;speichern();zeichnen();zeitenFuellen();waAktualisieren();oeffnen();
       dialog(L('Testbestellung','Test order'),[el('p',null,'So sieht eine Bestellung aus: 1. Laden wählen, 2. auf „Per WhatsApp bestellen“ tippen und an den Laden schicken, 3. im Laden in WhatsApp den Link „Für die Küche“ antippen – die Bestellung erscheint in der Küchenansicht mit „TEST“.')],[[L('Los geht’s','Let’s go'),dialogZu]]);
@@ -1882,7 +1833,7 @@ JS = r"""
   /* Weitere Sprachen: Wörterbuch Englisch -> Sprache (docs/lang/<code>.json); fehlt ein Text, bleibt Englisch.
      Zahlen im Text werden als {n} nachgeschlagen, damit „3 dishes found“ und „{n} dishes found“ zusammenpassen. */
   var SPRACHEN=%%SPRACHEN%%,DICT=%%DICTS%%,LOC={de:'de-DE',en:'en-GB',cs:'cs-CZ',ru:'ru-RU',tr:'tr-TR',ar:'ar-u-nu-latn'};
-  var SPK='saray-sprache',SP='de';
+  var SPK='%%PFX%%-sprache',SP='de';
   try{SP=localStorage.getItem(SPK)||'';}catch(e){SP='';}
   /* ?sp=cs (z. B. vom QR-Code auf dem Aushang) wählt die Sprache */
   try{var spQ=new URLSearchParams(location.search).get('sp');if(spQ&&SPRACHEN.some(function(x){return x[0]===spQ;})){SP=spQ;localStorage.setItem(SPK,spQ);}}catch(e){}
@@ -1907,13 +1858,13 @@ JS = r"""
   function L(de,en){return SP==='de'?de:T(en);}
   function fuell(tpl,w){return tpl.replace(/\{(\w+)\}/g,function(_,k){return w[k]!=null?w[k]:'';});}
   /* Linkshänder-Modus: auf diesem Gerät gemerkt */
-  var HK='saray-hand',linkshand=false;
+  var HK='%%PFX%%-hand',linkshand=false;
   try{linkshand=localStorage.getItem(HK)==='links';}catch(e){}
   function handZeigen(){document.documentElement.classList.toggle('links',linkshand);
     document.querySelectorAll('[data-hand]').forEach(function(b){b.textContent=linkshand?L('✋ Rechtshänder? Knöpfe nach rechts','✋ Right-handed? Buttons to the right'):L('✋ Linkshänder? Knöpfe nach links','✋ Left-handed? Buttons to the left');
       b.setAttribute('aria-pressed',String(linkshand));});}
   /* Große Schrift: auf diesem Gerät gemerkt */
-  var GSK='saray-gross',gross=false;try{gross=localStorage.getItem(GSK)==='1';}catch(e){}
+  var GSK='%%PFX%%-gross',gross=false;try{gross=localStorage.getItem(GSK)==='1';}catch(e){}
   function grossZeigen(){document.documentElement.classList.toggle('gross',gross);
     document.querySelectorAll('[data-gross]').forEach(function(b){b.textContent=gross?L('🔍 Normale Schrift','🔍 Normal text'):L('🔍 Große Schrift','🔍 Large text');b.setAttribute('aria-pressed',String(gross));});}
   grossZeigen();
@@ -2035,10 +1986,10 @@ JS = r"""
      Stammgäste werden gefragt, nicht jeder Erstbesteller – das schont Gäste und bringt ehrlichere Bewertungen. */
   var GOOGLE=%%GOOGLE%%;
   setTimeout(function(){
-    var bw=null;try{bw=JSON.parse(localStorage.getItem('saray-bewertung')||'null');}catch(e){return;}
+    var bw=null;try{bw=JSON.parse(localStorage.getItem('%%PFX%%-bewertung')||'null');}catch(e){return;}
     if(!bw||bw.fertig||!GOOGLE[bw.l]||!GAST||GAST.n<3)return;var alt=Date.now()-bw.t;if(alt<2*36e5||alt>14*864e5)return;
     if(!document.getElementById('hand-tipp').hidden)return;
-    try{bw.fertig=1;localStorage.setItem('saray-bewertung',JSON.stringify(bw));}catch(e){return;}
+    try{bw.fertig=1;localStorage.setItem('%%PFX%%-bewertung',JSON.stringify(bw));}catch(e){return;}
     var ort=bw.l==='freital'?'Freital':'Altenberg';
     /* Erst fragen: War alles gut? Ja -> Google-Bewertung. Nein -> Nachricht direkt an den Laden statt öffentlicher Kritik */
     function google(){handTippZeigen('<b>'+L('Danke!','Thank you!')+'</b><br>'+(SP==='de'?'Über eine Google-Bewertung für Saray Döner '+ort+' freuen wir uns sehr.':fuell(T('We would love a Google review for Saray Döner {ort}.'),{ort:ort})),
@@ -2663,9 +2614,9 @@ def whatsapp_nummern(einzeln):
 
 
 SW = r"""/* Saray Döner – offline-Speicher. Seite und status.json: erst Netz, sonst Speicher. Rest: erst Speicher. */
-var V='saray-%%V%%',VOR=%%LISTE%%;
+var V='%%PFX%%-%%V%%',VOR=%%LISTE%%;
 self.addEventListener('install',function(e){e.waitUntil(caches.open(V).then(function(c){return c.addAll(VOR);}).then(function(){return self.skipWaiting();}));});
-self.addEventListener('activate',function(e){e.waitUntil(caches.keys().then(function(ks){return Promise.all(ks.filter(function(k){return k!==V&&k.indexOf('saray-')===0;}).map(function(k){return caches.delete(k);}));}).then(function(){return self.clients.claim();}));});
+self.addEventListener('activate',function(e){e.waitUntil(caches.keys().then(function(ks){return Promise.all(ks.filter(function(k){return k!==V&&k.indexOf('%%PFX%%-')===0;}).map(function(k){return caches.delete(k);}));}).then(function(){return self.clients.claim();}));});
 self.addEventListener('fetch',function(e){
   var r=e.request,u=new URL(r.url);
   if(r.method!=='GET'||u.origin!==location.origin||u.pathname.indexOf('/chef/')>-1||u.pathname.indexOf('/druck/')>-1||u.pathname.indexOf('/kueche/')>-1||u.pathname.indexOf('/tv/')>-1)return;
@@ -2742,7 +2693,7 @@ def bauen(hinweise=None, ziel=None, einzeln=False):
             '\n<meta name="apple-mobile-web-app-capable" content="yes">'),
         # Vorschaubild für WhatsApp, Facebook & Co. (1200 × 630, assets/og-bild.jpg); braucht eine absolute Adresse
         "%%OG_BILD%%": "" if einzeln else (
-            f'\n<meta property="og:image" content="{DOMAIN if not VORSCHAU else f"https://{CNAME}/"}%%DATEI:assets/og-bild.jpg|image/jpeg|img/og-bild.jpg%%">'
+            f'\n<meta property="og:image" content="{SEITE_URL}{b64("og-bild.jpg", "image/jpeg")}">'
             '\n<meta property="og:image:width" content="1200">\n<meta property="og:image:height" content="630">'
             '\n<meta property="og:image:alt" content="Saray Döner: Laden in Freital mit dem Koch-Maskottchen – Frisch vom Spieß seit 1997">'
             '\n<meta name="twitter:card" content="summary_large_image">'),
@@ -2765,13 +2716,13 @@ def bauen(hinweise=None, ziel=None, einzeln=False):
     for k, v in ersetzen.items():
         seite = seite.replace(k, v)
     if einzeln:
-        seite = dateien_aufloesen(seite, True)
+        seite = dateien_aufloesen(seite, True).replace("%%PFX%%", PFX)
         assert "%%" not in seite, "Platzhalter übrig"
         ziel = pathlib.Path(ziel or HIER / "index.html")
         ziel.write_text(seite, encoding="utf-8")
         print(f"{ziel}  {ziel.stat().st_size // 1024} KB  ·  {ANZAHL} Positionen")
         return
-    aus = pathlib.Path(ziel or HIER / "docs")
+    aus = pathlib.Path(ziel or HIER / "docs" / LADEN)
     status = (aus / "status.json").read_text() if (aus / "status.json").exists() else None
     if aus.exists():
         shutil.rmtree(aus)
@@ -2780,6 +2731,7 @@ def bauen(hinweise=None, ziel=None, einzeln=False):
     seite = dateien_aufloesen(seite, False, aus, "")
     css = dateien_aufloesen(css, False, aus, "../")
     for name, inhalt in (("index.html", seite), ("css/style.css", css), ("js/main.js", js)):
+        inhalt = inhalt.replace("%%PFX%%", PFX)
         assert "%%" not in inhalt, f"Platzhalter übrig in {name}"
         (aus / name).write_text(inhalt.strip() + "\n", encoding="utf-8")
     (aus / ".nojekyll").write_text("")
@@ -2803,15 +2755,13 @@ def bauen(hinweise=None, ziel=None, einzeln=False):
         "icons": [{"src": f"img/app-{g}.png", "sizes": f"{g}x{g}", "type": "image/png", "purpose": "any maskable"} for g in (192, 512)],
     }, ensure_ascii=False, indent=2) + "\n")
     (aus / "status.json").write_text(status or '{\n  "regeln": []\n}\n')
-    if CNAME:
-        (aus / "CNAME").write_text(CNAME + "\n")
     (aus / "robots.txt").write_text("User-agent: *\n" + ("Disallow: /\n" if VORSCHAU else "Disallow: /chef/\nDisallow: /druck/\nDisallow: /kueche/\nDisallow: /tv/\n"
                                                            f"\nSitemap: {DOMAIN}sitemap.xml\n"))
     if not VORSCHAU:   # eine Seite – die Sitemap sagt Google nur, wo sie liegt und wann sie sich geändert hat
         (aus / "sitemap.xml").write_text('<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">'
                                          f"<url><loc>{DOMAIN}</loc><lastmod>{HEUTE_ISO}</lastmod></url></urlset>\n")
     import chef_app
-    chef_app.schreiben(aus, STANDARD_GRUPPEN, STANDORTE, SPERRGRUPPEN, REPO, ZAEHLER, CNAME, FOTOS, FIRMEN_CODES, ZUG["gueltig_bis"])
+    chef_app.schreiben(aus, STANDARD_GRUPPEN, STANDORTE, SPERRGRUPPEN, REPO, ZAEHLER, SEITE_URL, FOTOS, FIRMEN_CODES, ZUG["gueltig_bis"] if ZUG else "")
     # Bildschirm im Laden (tv/) und Küchenansicht (kueche/)
     import laden_seiten
     tv_gruppen = [{"id": g["id"], "titel": g["titel"], "abschnitte": [{
@@ -2836,8 +2786,13 @@ def bauen(hinweise=None, ziel=None, einzeln=False):
     tv["version"] = version
     tel_karte = [[(f"Nr. {x['nr']} " if x["nr"] else "") + x["name"] + (f" ({ab['groessen'][i]})" if ab["groessen"] else ""), c]
                  for g in tv_gruppen for ab in g["abschnitte"] for x in ab["gerichte"] for i, c in enumerate(x["p"])]
-    laden_seiten.schreiben(aus, tv, {st["id"]: st["name"] for st in STANDORTE}, DOMAIN if not VORSCHAU else f"https://{CNAME}/", version, REPO,
+    laden_seiten.schreiben(aus, tv, {st["id"]: st["name"] for st in STANDORTE}, SEITE_URL, version, REPO,
                            tel_karte, "" if einzeln else ZAEHLER, NTFY, {"max": SLOT_MAX, "voll": VOLL})
+    for f in aus.rglob("*"):   # Laden-Kürzel in Speicher-Schlüsseln (mehrere Läden unter einer Adresse dürfen sich nicht stören)
+        if f.is_file() and f.suffix in (".html", ".js", ".json", ".webmanifest"):
+            t0 = f.read_text(encoding="utf-8")
+            if "%%PFX%%" in t0:
+                f.write_text(t0.replace("%%PFX%%", PFX), encoding="utf-8")
     gesamt = sum(f.stat().st_size for f in aus.rglob("*") if f.is_file())
     for w in WARNUNGEN:
         print("WARNUNG:", w)

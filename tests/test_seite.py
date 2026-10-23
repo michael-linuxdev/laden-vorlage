@@ -25,7 +25,7 @@ import urllib.parse
 from playwright.sync_api import sync_playwright
 
 REPO = pathlib.Path(__file__).resolve().parent.parent
-DOCS = REPO / "docs"   # wird in main() auf die Standard-Seite im Testordner umgestellt
+DOCS = REPO / "docs" / os.environ.get("LADEN", "saray")   # wird in main() auf die Standard-Seite im Testordner umgestellt
 HANDY = {"width": 390, "height": 844}
 DESKTOP = {"width": 1440, "height": 900}
 # Mittwoch 21.10.2026, 17:45 Uhr: beide Läden offen
@@ -606,7 +606,7 @@ def chef_app_aenderungen(b, url):
         datei.write_text(json.dumps(d))
         root = REPO
         out = subprocess.run([sys.executable, "-c", f"import build; build.bauen(ziel={str(pathlib.Path(tmp) / 'docs')!r})"],
-                             cwd=root, env=dict(os.environ, SARAY_ANPASSUNGEN=str(datei)), capture_output=True, text=True)
+                             cwd=root, env=dict(os.environ, LADEN_ZAEHLER="saraymicana", LADEN_ANPASSUNGEN=str(datei)), capture_output=True, text=True)
         assert out.returncode == 0 and "WARNUNG" not in out.stdout, out.stdout + out.stderr
         seite = (pathlib.Path(tmp) / "docs" / "index.html").read_text()
         assert 'id="nr-8"' not in seite and "Döner Spezial" in seite and 'data-p="750"' in seite
@@ -660,7 +660,7 @@ def bauen_mit(anp, ordner, env=None):
     datei = pathlib.Path(ordner) / "anp.json"
     datei.write_text(json.dumps(anp))
     out = subprocess.run([sys.executable, "-c", f"import build; build.bauen(ziel={str(pathlib.Path(ordner) / 'docs')!r})"],
-                         cwd=REPO, env=dict(os.environ, SARAY_ANPASSUNGEN=str(datei), SARAY_HEUTE="2026-10-21", **(env or {})), capture_output=True, text=True)
+                         cwd=REPO, env=dict(os.environ, LADEN_ZAEHLER="saraymicana", LADEN_ANPASSUNGEN=str(datei), LADEN_HEUTE="2026-10-21", **(env or {})), capture_output=True, text=True)
     assert out.returncode == 0 and "WARNUNG" not in out.stdout, out.stdout + out.stderr
     handler = functools.partial(Leise, directory=str(pathlib.Path(ordner) / "docs"))
     srv = http.server.ThreadingHTTPServer(("127.0.0.1", 0), handler)
@@ -1219,7 +1219,7 @@ def chef_app_foto_hochladen(b, url):
         p.click('.liste-gericht[data-k="1"]')
         p.set_input_files("#foto-datei", str(bild))
         p.wait_for_selector(".foto-bereich >> text=Foto gespeichert")
-    assert FOTO_HOCHGELADEN and FOTO_HOCHGELADEN[0][0] == "daten/fotos/nr-1.jpg" and FOTO_HOCHGELADEN[0][1] == "Chef-App: Foto Nr. 1", FOTO_HOCHGELADEN
+    assert FOTO_HOCHGELADEN and FOTO_HOCHGELADEN[0][0] == "laeden/saray/daten/fotos/nr-1.jpg" and FOTO_HOCHGELADEN[0][1] == "Chef-App: Foto Nr. 1", FOTO_HOCHGELADEN
     assert FOTO_HOCHGELADEN[0][2] < 1_500_000, "Foto nicht verkleinert"
     assert not fehler, fehler
     ctx.close()
@@ -1490,7 +1490,7 @@ def firmen_code(b, url):
     with tempfile.TemporaryDirectory() as tmp:
         srv, u = bauen_mit({"codes": [{"h": h, "name": "Elbtal GmbH", "prozent": 10, "zeit_ab": "11:00", "zeit_bis": "14:00", "bis": "2027-10-21"}],
                             "aktionen": [{"name": "Dürüm 6 €", "von": "2026-10-20", "bis": "2026-10-25", "preise": {"50": ["6,00"]}}]}, tmp,
-                           env={"SARAY_FIRMEN_CODES": "1"})
+                           env={"LADEN_FIRMEN_CODES": "1"})
         s = Seite(b, u, zeit=datetime.datetime.fromisoformat("2026-10-21T12:00:00+02:00"))
         s.p.click("#nr-1 .plus")
         s.p.click("#nr-50 .plus")
@@ -1535,7 +1535,7 @@ def chef_app_codes_und_viel_los(b, url):
     import hashlib
     gespeichert = []
     tmp0 = tempfile.TemporaryDirectory()
-    srv0, url = bauen_mit({}, tmp0.name, env={"SARAY_FIRMEN_CODES": "1"})
+    srv0, url = bauen_mit({}, tmp0.name, env={"LADEN_FIRMEN_CODES": "1"})
     ctx, p, fehler = chef_oeffnen(b, url, gespeichert=gespeichert)
     p.click("#viel-los")
     assert "wieder aus" in p.text_content("#viel-los")
@@ -1643,7 +1643,7 @@ def rueckmeldung_zuerst_an_den_laden(b, url):
     p.click("#hand-tipp >> text=👎 Nicht ganz")
     assert "Sagen Sie es uns direkt" in p.text_content("#hand-tipp")
     p.click("#hand-tipp >> text=💬 Nachricht an den Laden")
-    assert p.evaluate("window._offen").startswith("https://wa.me/4915733729521?text=Rückmeldung zu meiner Bestellung K47 bei Saray Döner Freital: ")
+    assert p.evaluate("window._offen").startswith("https://wa.me/491601836249?text=Rückmeldung zu meiner Bestellung K47 bei Saray Döner Freital: ")
     ctx.close()
 
 
@@ -2042,7 +2042,7 @@ def standard_bauen(ziel):
     leer = pathlib.Path(ziel) / "leer.json"
     leer.write_text("{}")
     out = subprocess.run([sys.executable, "-c", f"import build; build.bauen(ziel={str(pathlib.Path(ziel) / 'docs')!r})"],
-                         cwd=REPO, env=dict(os.environ, SARAY_ANPASSUNGEN=str(leer)), capture_output=True, text=True)
+                         cwd=REPO, env=dict(os.environ, LADEN_ZAEHLER="saraymicana", LADEN_ANPASSUNGEN=str(leer)), capture_output=True, text=True)
     if out.returncode:
         print(out.stdout + out.stderr)
         raise SystemExit("Standard-Seite ließ sich nicht bauen")
@@ -2199,10 +2199,12 @@ def chef_app_einfuehrung_und_antworten(b, url):
     p.wait_for_selector("#tour")
     assert "1 / 11" in p.text_content(".tour-karte") and "Willkommen" in p.text_content(".tour-karte"), p.text_content(".tour-karte")
     p.click("#tour-weiter")
+    p.wait_for_selector(".tour-zahl:text-is('2 / 11')")
     assert "Laden heute spontan zu" in p.text_content(".tour-karte"), p.text_content(".tour-karte")
     p.wait_for_function("parseFloat(getComputedStyle(document.querySelector('.tour-loch')).width)>100")  # hervorgehoben
-    for _ in range(6):
+    for n in range(3, 9):
         p.click("#tour-weiter")
+        p.wait_for_selector(f".tour-zahl:text-is('{n} / 11')")
     assert "Speichern" in p.text_content(".tour-karte h3"), p.text_content(".tour-karte")
     assert p.is_visible("#speichern"), "Speichern-Leiste nicht gezeigt"
     p.click("#tour-zurueck")

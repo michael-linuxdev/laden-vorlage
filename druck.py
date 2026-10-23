@@ -21,7 +21,8 @@ from playwright.async_api import async_playwright
 
 import build
 import aufsteller
-from menu import ALLERGENE, ZUTATEN, KENNZEICHNUNG, SOSSEN, GERICHT_ALLERGENE
+from konfig import menu
+ALLERGENE, ZUTATEN, KENNZEICHNUNG, SOSSEN, GERICHT_ALLERGENE = menu.ALLERGENE, menu.ZUTATEN, menu.KENNZEICHNUNG, menu.SOSSEN, menu.GERICHT_ALLERGENE
 from qr import qr_svg
 
 HIER = pathlib.Path(__file__).parent
@@ -32,6 +33,8 @@ RUECKSEITE = ["getraenke"]
 
 
 def uri(*teile):
+    if teile[0] == "maskottchen":   # Logo und Figur des Ladens
+        return (build.MASKOTT.joinpath(*teile[1:])).resolve().as_uri()
     return (HIER.joinpath(*teile)).resolve().as_uri()
 
 
@@ -69,7 +72,7 @@ def gruppe_html(gid):
 
 def flyer_html():
     heute = datetime.datetime.now(zoneinfo.ZoneInfo("Europe/Berlin")).strftime("%d.%m.%Y")
-    qr = qr_svg(f"https://{build.CNAME}/#speisekarte", "M", "#3A1531")
+    qr = qr_svg(f"{build.SEITE_URL}#speisekarte", "M", "#3A1531")
     muster = '<div class="muster">ENTWURF</div>' if build.VORSCHAU else ""
     laeden = "".join(
         f'<div class="laden"><h3>{e(s["name"])}</h3><p>{e(s["strasse"])}, {e(s["plz"])} {e(s["ort"])}<br>'
@@ -133,7 +136,7 @@ li{{display:flex;gap:1.5mm;padding:.45mm 0;border-bottom:.15mm dotted #d9cbd4;br
     <p>Genaue Angaben zu Zutaten und Allergenen erhalten Sie an der Theke und auf unserer Website. Preise in Euro inkl. MwSt.</p></div></div></div>
   <div class="panel titel"><div><div class="seit">seit 1997</div><img src="{uri("maskottchen", "saray-koch.svg")}" alt="">
     <h1>Saray Döner</h1><div class="unter">Döner · Pizza · Lahmacun</div><div class="orte">{" · ".join(e(s["name"]) for s in build.STANDORTE)}</div></div>
-    <div class="qr">{qr}<div><b>Speisekarte &amp; vorbestellen</b><span>Code scannen und per WhatsApp vorbestellen – ohne Warten an der Theke.<br>{e(build.CNAME)}</span></div></div>
+    <div class="qr">{qr}<div><b>Speisekarte &amp; vorbestellen</b><span>Code scannen und per WhatsApp vorbestellen – ohne Warten an der Theke.<br>{e(build.SEITE_ANZEIGE)}</span></div></div>
     <div class="gueltig">Preise gültig ab {heute}</div></div>
 </div>
 <div class="seite">
@@ -187,7 +190,7 @@ def plakat_html(a, quadrat=False, status=False):
     uhr = f"{build.ANP.uhr(build.ANP._min(a['zeit_ab']))}–{build.ANP.uhr(build.ANP._min(a['zeit_bis']))} Uhr" if a.get("zeit_ab") else ""
     wo = next((f"nur in {s['name']}" for s in build.STANDORTE if s["id"] == a.get("laden")),
               " und ".join(s["name"] for s in build.STANDORTE))
-    qr = qr_svg(f"https://{build.CNAME}/#speisekarte", "M", "#3A1531")
+    qr = qr_svg(f"{build.SEITE_URL}#speisekarte", "M", "#3A1531")
     muster = '<div class="muster">ENTWURF</div>' if build.VORSCHAU else ""
     return f"""<!doctype html><html lang="de"><head><meta charset="utf-8"><style>
 @font-face{{font-family:Slab;src:url({uri("assets", "Roboto-Slab-Bold.sub.woff")});font-weight:700}}
@@ -220,7 +223,7 @@ li{{display:flex;align-items:baseline;gap:5mm;background:#fff;border:1mm solid #
 <h1>{e(a["name"]).replace(" €", "&nbsp;€")}</h1>
 <ul>{"".join(zeilen)}</ul>
 <div class="wann">{wann}<span>{" · ".join(x for x in (tage, uhr, wo) if x)}</span></div></main>
-<div class="fuss">{qr}<div><b>Jetzt vorbestellen</b><p>Code scannen, Gerichte wählen und per WhatsApp schicken – ohne Warten an der Theke.<br>{e(build.CNAME)}</p></div></div>
+<div class="fuss">{qr}<div><b>Jetzt vorbestellen</b><p>Code scannen, Gerichte wählen und per WhatsApp schicken – ohne Warten an der Theke.<br>{e(build.SEITE_ANZEIGE)}</p></div></div>
 <script>/* bei vielen Gerichten verkleinern, bis alles auf die Seite passt */
 var m=document.querySelector('main'),z=1;while(m.scrollHeight>m.clientHeight+1&&z>.5){{z-=.03;m.style.zoom=z;}}</script>
 </body></html>"""
@@ -231,7 +234,7 @@ def status_empfehlung_html():
     gerichte = {(g[0] or g[1]): g for gr in build.GRUPPEN for ab in gr["abschnitte"] for g in ab["gerichte"]}
     zeilen = "".join(f'<li><span class="nm">{e(gerichte[n][1])}<small>{e(gerichte[n][2])}</small></span><span class="neu">{gerichte[n][3][0]} €</span></li>'
                      for n in [x for x in build.EMPFEHLUNG if x in gerichte and x not in build.NUR_DIAET][:4])
-    qr = qr_svg(f"https://{build.CNAME}/#speisekarte", "M", "#3A1531")
+    qr = qr_svg(f"{build.SEITE_URL}#speisekarte", "M", "#3A1531")
     return f"""<!doctype html><html lang="de"><head><meta charset="utf-8"><style>
 @font-face{{font-family:Slab;src:url({uri("assets", "Roboto-Slab-Bold.sub.woff")});font-weight:700}}
 @font-face{{font-family:Text;src:url({uri("assets", "lato-normal.sub.woff")});font-weight:400}}
@@ -252,7 +255,7 @@ li{{display:flex;align-items:center;gap:5mm;background:#fff;border:1mm solid #3A
 <h1>Frisch vom Spieß.<br>Heute bei uns:</h1>
 <ul>{zeilen}</ul>
 <img class="koch" src="{uri("maskottchen", "saray-koch.svg")}" alt="">
-<div class="fuss">{qr}<div><b>Jetzt vorbestellen</b><p>Code scannen, wählen, per WhatsApp schicken – ohne Warten abholen. Nur Barzahlung.<br>{e(build.CNAME)}</p></div></div>
+<div class="fuss">{qr}<div><b>Jetzt vorbestellen</b><p>Code scannen, wählen, per WhatsApp schicken – ohne Warten abholen. Nur Barzahlung.<br>{e(build.SEITE_ANZEIGE)}</p></div></div>
 </body></html>"""
 
 
@@ -260,7 +263,7 @@ def aushang_html():
     """A3 hoch: die ganze Karte als Aushang fürs Schaufenster oder den Rahmen an der Theke – immer mit aktuellen Preisen."""
     heute = datetime.datetime.now(zoneinfo.ZoneInfo("Europe/Berlin")).strftime("%d.%m.%Y")
     spalten = "".join(gruppe_html(g["id"]) for g in build.GRUPPEN)
-    qr = qr_svg(f"https://{build.CNAME}/#speisekarte", "M", "#3A1531")
+    qr = qr_svg(f"{build.SEITE_URL}#speisekarte", "M", "#3A1531")
     orte = " · ".join(f'<b>{e(st["name"])}</b> {e(st["strasse"])}, Tel. {e(st["tel"])}, {e(st["kurz"])}' for st in build.STANDORTE)
     muster = '<div class="muster">ENTWURF</div>' if build.VORSCHAU else ""
     return f"""<!doctype html><html lang="de"><head><meta charset="utf-8"><style>
@@ -286,7 +289,7 @@ ul{{list-style:none;margin:0;padding:0}}li{{display:flex;gap:1.6mm;padding:.7mm 
 </style></head><body>{muster}
 <div class="kopf"><img src="{uri("maskottchen", "saray-koch-kopf.svg")}" alt=""><h1>Saray Döner · Speisekarte</h1><span>Nur Barzahlung · Preise in Euro inkl. MwSt.<br>Stand {heute}</span></div>
 <div class="spalten">{spalten}</div>
-<div class="fuss">{qr}<div><b>Vorbestellen per WhatsApp: {e(build.CNAME)}</b><br>{orte}<br>Alle Gerichte mit Soße nach Wahl: Knoblauch, Kräuter, Chili. Allergene und Inhaltsstoffe: Mappe an der Theke.</div></div>
+<div class="fuss">{qr}<div><b>Vorbestellen per WhatsApp: {e(build.SEITE_ANZEIGE)}</b><br>{orte}<br>Alle Gerichte mit Soße nach Wahl: Knoblauch, Kräuter, Chili. Allergene und Inhaltsstoffe: Mappe an der Theke.</div></div>
 <script>/* passt alles auf das Blatt? sonst Schrift verkleinern */
 var sp=document.querySelector('.spalten'),f=3.1;
 function zuViel(){{var r=sp.getBoundingClientRect();return [].some.call(sp.querySelectorAll('li,h3'),function(x){{var q=x.getBoundingClientRect();return q.right>r.right+1||q.bottom>r.bottom+1;}});}}
@@ -310,16 +313,16 @@ def vorbestellen_html():
     kopf = uri("maskottchen", "saray-koch-kopf.svg")
     orte = " · ".join(f'{e(st["name"])}: {e(st["strasse"])}' for st in build.STANDORTE)
     seiten = []
-    qr_alle = qr_svg(f"https://{build.CNAME}/#speisekarte", "M", "#3A1531")
+    qr_alle = qr_svg(f"{build.SEITE_URL}#speisekarte", "M", "#3A1531")
     zeilen = "".join(f'<li lang="{c}" dir="{"rtl" if c == "ar" else "ltr"}"><b>{u.replace("<br>", " ")}</b></li>' for c, u, _, _ in VORBESTELLEN[1:])
     seiten.append(f'<section class="s alle"><div class="k"><img src="{kopf}" alt=""><b>Saray Döner</b></div><h1>{VORBESTELLEN[0][1]}</h1>'
-                  f'<div class="qr">{qr_alle}</div><ul>{zeilen}</ul><p class="f">{e(build.CNAME)} · {orte}</p></section>')
+                  f'<div class="qr">{qr_alle}</div><ul>{zeilen}</ul><p class="f">{e(build.SEITE_ANZEIGE)} · {orte}</p></section>')
     for c, ueber, schritte, zusatz in VORBESTELLEN:
-        qr = qr_svg(f"https://{build.CNAME}/?sp={c}#speisekarte", "M", "#3A1531")
+        qr = qr_svg(f"{build.SEITE_URL}?sp={c}#speisekarte", "M", "#3A1531")
         liste = "".join(f"<li><span>{i + 1}</span>{e(x)}</li>" for i, x in enumerate(schritte))
         seiten.append(f'<section class="s" lang="{c}" dir="{"rtl" if c == "ar" else "ltr"}"><div class="k" dir="ltr"><img src="{kopf}" alt=""><b>Saray Döner</b></div>'
                       f'<h1>{ueber}</h1><p class="z">{e(zusatz)}</p><div class="qr">{qr}</div><ol>{liste}</ol>'
-                      f'<p class="f" dir="ltr">{e(build.CNAME)} · {orte}</p></section>')
+                      f'<p class="f" dir="ltr">{e(build.SEITE_ANZEIGE)} · {orte}</p></section>')
     return f"""<!doctype html><html lang="de"><head><meta charset="utf-8"><style>
 @font-face{{font-family:Slab;src:url({uri("assets", "Roboto-Slab-Bold.sub.woff")});font-weight:700}}
 @font-face{{font-family:Text;src:url({uri("assets", "lato-normal.sub.woff")});font-weight:400}}
@@ -344,7 +347,7 @@ def fenster_html():
     """A4 quer fürs Schaufenster: sehr großer QR-Code (15 cm, von draußen aus 1–2 m scannbar), kurz in 6 Sprachen.
     Mit der bedruckten Seite nach außen von innen an die Scheibe kleben."""
     kopf = uri("maskottchen", "saray-koch-kopf.svg")
-    qr = qr_svg(f"https://{build.CNAME}/#speisekarte", "Q", "#3A1531", rand=2)
+    qr = qr_svg(f"{build.SEITE_URL}#speisekarte", "Q", "#3A1531", rand=2)
     de = VORBESTELLEN[0]
     schritte = "".join(f"<li><span>{i + 1}</span>{e(x)}</li>" for i, x in enumerate(de[2]))
     zeilen = "".join(f'<li lang="{c}" dir="{"rtl" if c == "ar" else "ltr"}">{u.replace("<br>", " ")}</li>' for c, u, _, _ in VORBESTELLEN[1:])
@@ -369,7 +372,7 @@ ul li{{margin-bottom:.8mm}}
 </style></head><body><section class="s"><div class="qr">{qr}</div><div class="r">
 <div class="k"><img src="{kopf}" alt=""><b>Saray Döner</b></div>
 <h1>{de[1]}</h1><p class="pfeil">← Mit der Handykamera scannen</p><ol>{schritte}</ol><ul>{zeilen}</ul>
-<p class="f">{e(build.CNAME)}</p></div></section></body></html>"""
+<p class="f">{e(build.SEITE_ANZEIGE)}</p></div></section></body></html>"""
 
 
 def allergenmappe_html():
@@ -461,10 +464,10 @@ body{{width:210mm;display:grid;grid-template-columns:repeat(2,105mm);grid-auto-r
 
 def aufkleber_html():
     """A4-Bogen mit 24 Etiketten 70 × 37 mm (z. B. Zweckform 3474) für Tüten: QR-Code zur Speisekarte."""
-    qr = qr_svg(f"https://{build.CNAME}/#speisekarte", "M", "#3A1531")
+    qr = qr_svg(f"{build.SEITE_URL}#speisekarte", "M", "#3A1531")
     kopf = uri("maskottchen", "saray-koch-kopf.svg")
     eins = (f'<div class="et"><div>{qr}</div><div class="t"><div class="k"><img src="{kopf}" alt=""><b>Saray Döner</b></div>'
-            f'<p>Nächstes Mal online vorbestellen – ohne Warten.</p><small>{e(build.CNAME)}</small></div></div>')
+            f'<p>Nächstes Mal online vorbestellen – ohne Warten.</p><small>{e(build.SEITE_ANZEIGE)}</small></div></div>')
     return f"""<!doctype html><html lang="de"><head><meta charset="utf-8"><style>
 @font-face{{font-family:Slab;src:url({uri("assets", "Roboto-Slab-Bold.sub.woff")});font-weight:700}}
 @font-face{{font-family:Text;src:url({uri("assets", "lato-normal.sub.woff")});font-weight:400}}
@@ -481,7 +484,7 @@ body{{width:210mm;height:297mm;display:grid;grid-template-columns:repeat(3,70mm)
 
 def gruppen_flyer_html():
     """A5-Flyer für Betriebe, Vereine und Feiern: gemeinsam bestellen, gesammelt abholen."""
-    qr = qr_svg(f"https://{build.CNAME}/#gruppen", "M", "#3A1531")
+    qr = qr_svg(f"{build.SEITE_URL}#gruppen", "M", "#3A1531")
     muster = '<div class="muster">ENTWURF</div>' if build.VORSCHAU else ""
     laeden = "".join(f'<div class="laden"><b>{e(st["name"])}</b><span>{e(st["strasse"])}</span><span>Tel. {e(st["tel"])}</span>'
                      f'<span>{e(st["kurz"])}</span></div>' for st in build.STANDORTE)
@@ -513,7 +516,7 @@ li b{{font-family:Slab}}
 <li><span><b>Aussuchen:</b> Jeder wählt sein Essen am eigenen Handy und schickt seinen Teil zurück.</span></li>
 <li><span><b>Abholen:</b> Laden und Uhrzeit wählen – auch Tage im Voraus – und alles mit einer Nachricht schicken.</span></li>
 </ol>
-<div class="qr">{qr}<div><b>Gemeinsam bestellen</b><span>{e(build.CNAME)}</span></div></div>
+<div class="qr">{qr}<div><b>Gemeinsam bestellen</b><span>{e(build.SEITE_ANZEIGE)}</span></div></div>
 <p class="hinweis"><b>Größere Bestellungen</b> bitte rechtzeitig vorbestellen oder kurz anrufen. Bezahlt wird bei Abholung, nur bar.</p></div>
 <div class="laeden">{laeden}</div>
 </body></html>"""

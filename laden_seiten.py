@@ -337,7 +337,7 @@ details.erledigt .bon{opacity:.6}
 <script>
 (function(){
 'use strict';
-var LAEDEN=%%LAEDEN%%,K='saray-kueche',F='saray-kueche-filter',liste=[],filter='';
+var LAEDEN=%%LAEDEN%%,K='%%PFX%%-kueche',F='%%PFX%%-kueche-filter',liste=[],filter='';
 try{liste=JSON.parse(localStorage.getItem(K)||'[]');if(!Array.isArray(liste))liste=[];}catch(e){liste=[];}
 try{filter=localStorage.getItem(F)||'';}catch(e){}
 function speichern(){try{localStorage.setItem(K,JSON.stringify(liste));}catch(e){}}
@@ -351,7 +351,7 @@ function lesen(b){try{var t=decodeURIComponent(escape(atob(b.replace(/-/g,'+').r
 /* Link aus WhatsApp: Bestellung übernehmen (doppelt geöffnet = einmal gespeichert) */
 var m=/[#&]b=([A-Za-z0-9_-]+)/.exec(location.hash);
 /* Jahresstatistik: pro Tag Bestellungen, Summe, Gerichte, Uhrzeiten, Sprachen, Laden (ohne Tests) */
-var JK='saray-kueche-jahr',JAHR={};try{JAHR=JSON.parse(localStorage.getItem(JK)||'{}')||{};}catch(e){JAHR={};}
+var JK='%%PFX%%-kueche-jahr',JAHR={};try{JAHR=JSON.parse(localStorage.getItem(JK)||'{}')||{};}catch(e){JAHR={};}
 function jahrZaehlen(x){if(x.test)return;var d=x.t?x.t.slice(0,10):new Date(x.a).toISOString().slice(0,10),j=JAHR[d]=JAHR[d]||{n:0,s:0,g:{},h:{},sp:{},l:{}};if(x.tel)j.tel=(j.tel||0)+1;
   j.n++;j.s+=x.s;x.p.forEach(function(p){var n=p.n.replace(/\s*\(.*\)$/,'');j.g[n]=(j.g[n]||0)+p.q;});
   if(x.t){var h=x.t.slice(11,13);j.h[h]=(j.h[h]||0)+1;}j.sp[x.sp]=(j.sp[x.sp]||0)+1;if(x.l)j.l[x.l]=(j.l[x.l]||0)+1;
@@ -488,7 +488,7 @@ function monatZeigen(){
     b.addEventListener('click',function(){monatWahl=m;zeichnen();});w.appendChild(b);});
   var inh=document.getElementById('monat-inhalt');inh.textContent='';var pre=el('div','monat');pre.style.whiteSpace='pre-line';pre.textContent=monatText(monatWahl);inh.appendChild(pre);
   besucherHolen(monatWahl);}
-function besucherHolen(m){var key='';try{key=localStorage.getItem('saray-chef-goatcounter')||'';}catch(e){}
+function besucherHolen(m){var key='';try{key=localStorage.getItem('%%PFX%%-chef-goatcounter')||'';}catch(e){}
   if(!key||!ZAEHLER||besucher[m]!=null||besucherHolen.laeuft)return;besucherHolen.laeuft=1;
   var start=m+'-01T00:00:00Z',e2=new Date(Date.UTC(+m.slice(0,4),+m.slice(5),1)).toISOString().replace('.000','');
   fetch('https://'+ZAEHLER+'.goatcounter.com/api/v0/stats/hits?limit=100&start='+encodeURIComponent(start)+'&end='+encodeURIComponent(e2),{headers:{'Authorization':'Bearer '+key,'Accept':'application/json'}})
@@ -498,8 +498,8 @@ document.getElementById('monat-drucken').addEventListener('click',function(){doc
 document.getElementById('monat-teilen').addEventListener('click',function(){window.open('https://wa.me/?text='+encodeURIComponent(monatText(monatWahl)),'_blank');});
 /* Viel los? Ab 8 offenen Bestellungen in der nächsten Stunde (je Laden) +15 Min. Wartezeit vorschlagen.
    Mit Chef-App-Zugang auf diesem Gerät wird direkt gespeichert (GitHub), sonst führt der Knopf in die Chef-App. */
-var REPO=%%REPO%%,SCHWELLE=8,warteWeg={},warteGesetzt={};
-function chefToken(){try{return localStorage.getItem('saray-chef-token')||'';}catch(e){return '';}}
+var REPO=%%REPO%%,DATEI=%%DATEI%%,SCHWELLE=8,warteWeg={},warteGesetzt={};
+function chefToken(){try{return localStorage.getItem('%%PFX%%-chef-token')||'';}catch(e){return '';}}
 function warteVorschlag(){
   var box=document.getElementById('warte-vorschlag'),h=heuteISO();box.textContent='';
   var l=Object.keys(LAEDEN).filter(function(id){return (!filter||filter===id)&&!warteWeg[id+h]&&!warteGesetzt[id+h]&&
@@ -517,7 +517,7 @@ function warteVorschlag(){
   box.appendChild(ja);box.appendChild(nein);
 }
 function warteSetzen(laden,plus){
-  var api='https://api.github.com/repos/'+REPO+'/contents/daten/anpassungen.json',kopf={'Accept':'application/vnd.github+json','Authorization':'Bearer '+chefToken()};
+  var api='https://api.github.com/repos/'+REPO+'/contents/'+DATEI,kopf={'Accept':'application/vnd.github+json','Authorization':'Bearer '+chefToken()};
   return fetch(api+'?ref=main',{headers:kopf,cache:'no-store'}).then(function(r){if(!r.ok&&r.status!==404)throw new Error(String(r.status));return r.status===404?{}:r.json();}).then(function(d){
     var anp=d.content?JSON.parse(decodeURIComponent(escape(atob(d.content.replace(/\s/g,'')))))||{}:{},h=heuteISO(),w=(anp.wartezeit=anp.wartezeit||{}),alt=w[laden]&&w[laden].datum===h?w[laden].min:0,min=Math.min(120,alt+plus);
     w[laden]={datum:h,min:min};
@@ -527,7 +527,7 @@ function warteSetzen(laden,plus){
 /* Abholzeit-Slots: Sind für eine Viertelstunde so viele Bestellungen da wie in der Chef-App eingestellt (Standard 5),
    sperrt die Küche diese Zeit auf der Seite (mit Chef-App-Zugang auf diesem Gerät, sonst nur Hinweis). Die Seite schlägt dann die nächste freie Zeit vor. */
 var SLOTS=%%SLOTS%%,vollBekannt={},vollLaeuft=0,vollFehler=0;
-try{vollBekannt=JSON.parse(localStorage.getItem('saray-kueche-voll')||'{}')||{};}catch(e){}
+try{vollBekannt=JSON.parse(localStorage.getItem('%%PFX%%-kueche-voll')||'{}')||{};}catch(e){}
 Object.keys(SLOTS.voll||{}).forEach(function(l){Object.keys(SLOTS.voll[l]).forEach(function(d){SLOTS.voll[l][d].forEach(function(z){vollBekannt[l+'|'+d+'|'+z]=1;});});});
 function slotVon(t){var m=Math.floor((+t.slice(11,13)*60+ +t.slice(14,16))/15)*15;return t.slice(0,10)+'|'+('0'+Math.floor(m/60)).slice(-2)+':'+('0'+m%60).slice(-2);}
 function slotsPruefen(){
@@ -545,13 +545,13 @@ function slotsPruefen(){
   anpAendern(function(anp){var v=anp.voll=anp.voll||{};Object.keys(v).forEach(function(l){Object.keys(v[l]||{}).forEach(function(d){if(d<h)delete v[l][d];});});
     neu.forEach(function(k){var p=k.split('|'),t=(v[p[0]]=v[p[0]]||{}),z=(t[p[1]]=t[p[1]]||[]);if(z.indexOf(p[2])<0)z.push(p[2]);z.sort();});},
     'Küche: ausgebucht '+neu.map(function(k){return k.replace(/\|/g,' ');}).join(', ')).then(function(){
-    neu.forEach(function(k){vollBekannt[k]=1;});try{localStorage.setItem('saray-kueche-voll',JSON.stringify(vollBekannt));}catch(e){}
+    neu.forEach(function(k){vollBekannt[k]=1;});try{localStorage.setItem('%%PFX%%-kueche-voll',JSON.stringify(vollBekannt));}catch(e){}
     vollLaeuft=0;melden('Ausgebucht gemeldet – in 2–3 Minuten bietet die Seite die nächste freie Zeit an.');slotsPruefen();},
     function(){vollLaeuft=0;vollFehler=Date.now()+60000;});
 }
 /* daten/anpassungen.json lesen, ändern, zurückschreiben (Chef-App-Zugang auf diesem Gerät) */
 function anpAendern(aendern,nachricht){
-  var api='https://api.github.com/repos/'+REPO+'/contents/daten/anpassungen.json',kopf={'Accept':'application/vnd.github+json','Authorization':'Bearer '+chefToken()};
+  var api='https://api.github.com/repos/'+REPO+'/contents/'+DATEI,kopf={'Accept':'application/vnd.github+json','Authorization':'Bearer '+chefToken()};
   return fetch(api+'?ref=main',{headers:kopf,cache:'no-store'}).then(function(r){if(!r.ok&&r.status!==404)throw new Error(String(r.status));return r.status===404?{}:r.json();}).then(function(d){
     var anp=d.content?JSON.parse(decodeURIComponent(escape(atob(d.content.replace(/\s/g,'')))))||{}:{};aendern(anp);
     var body={message:nachricht,branch:'main',content:btoa(unescape(encodeURIComponent(JSON.stringify(anp,null,2)+'\n')))};if(d.sha)body.sha=d.sha;
@@ -666,5 +666,5 @@ def schreiben(aus, daten, laeden, seite_url, version, repo="", karte=(), zaehler
           .replace("%%QR%%", qr_svg(seite_url, ecl="M", farbe="#3A1531", rand=1))
           .replace("%%ADRESSE%%", anzeige), encoding="utf-8")
     (aus / "kueche").mkdir(exist_ok=True)
-    (aus / "kueche" / "index.html").write_text(KUECHE.replace("%%LAEDEN%%", json.dumps(laeden, ensure_ascii=False)).replace("%%REPO%%", json.dumps(repo)).replace("%%KARTE%%", json.dumps(list(karte), ensure_ascii=False)).replace("%%ZAEHLER%%", json.dumps(zaehler)).replace("%%ALLERGIE%%", json.dumps(ALLERGIE_RE)).replace("%%NTFY%%", json.dumps(ntfy)).replace("%%SLOTS%%", json.dumps(slots or {"max": {}, "voll": {}})), encoding="utf-8")
+    (aus / "kueche" / "index.html").write_text(KUECHE.replace("%%LAEDEN%%", json.dumps(laeden, ensure_ascii=False)).replace("%%REPO%%", json.dumps(repo)).replace("%%DATEI%%", json.dumps(__import__("konfig").rel(__import__("konfig").DATEN / "anpassungen.json"))).replace("%%KARTE%%", json.dumps(list(karte), ensure_ascii=False)).replace("%%ZAEHLER%%", json.dumps(zaehler)).replace("%%ALLERGIE%%", json.dumps(ALLERGIE_RE)).replace("%%NTFY%%", json.dumps(ntfy)).replace("%%SLOTS%%", json.dumps(slots or {"max": {}, "voll": {}})), encoding="utf-8")
     (aus / "version.json").write_text(json.dumps({"v": version}) + "\n")

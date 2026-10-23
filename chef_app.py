@@ -182,12 +182,12 @@ a.knopf{color:inherit}
 <script>
 (function(){
 'use strict';
-var REPO=%%REPO%%, DATEI='daten/anpassungen.json', API='https://api.github.com/repos/'+REPO;
-var TK='saray-chef-token', STD=null, ANP={}, ALT='{}', SHA=null, TAB='heute', LADEN='alle', SUCHE='';
+var REPO=%%REPO%%, DATEI=%%DATEI%%, API='https://api.github.com/repos/'+REPO;
+var TK='%%PFX%%-chef-token', STD=null, ANP={}, ALT='{}', SHA=null, TAB='heute', LADEN='alle', SUCHE='';
 var app=document.getElementById('app');
 /* Sprache der Chef-App: Deutsch oder Türkisch. Übersetzt wird die fertige Anzeige (Texte, Platzhalter, Beschriftungen);
    gespeicherte Daten, Gerichtsnamen und alles, was auf der Website oder dem Gutschein erscheint, bleiben deutsch. */
-var UE=%%CHEF_TR%%,UE_SP='';try{UE_SP=localStorage.getItem('saray-chef-sprache')||'';}catch(e){}
+var UE=%%CHEF_TR%%,UE_SP='';try{UE_SP=localStorage.getItem('%%PFX%%-chef-sprache')||'';}catch(e){}
 if(UE_SP!=='tr'&&UE_SP!=='de')UE_SP=/^tr/i.test(navigator.language||'')?'tr':'de';
 var UE_FR=Object.keys(UE).filter(function(k){return /^[\s)“,.·(]|[\s„(,]$/.test(k)&&k.trim().length>=2;}).sort(function(a,b){return b.length-a.length;});
 function ue(t){
@@ -216,7 +216,7 @@ if(UE_SP==='tr'){document.documentElement.lang='tr';
 /* Sprachwahl mit Flaggen: 🇩🇪 DE | 🇹🇷 TR, die aktive ist hervorgehoben */
 [].forEach.call(document.querySelectorAll('[data-ue-sp]'),function(b){var l=b.dataset.ueSp;b.setAttribute('aria-pressed',String(UE_SP===l));
   b.addEventListener('click',function(){if(UE_SP===l)return;if(STD&&geaendert()){status(UE_SP==='tr'?'Lütfen önce kaydedin veya iptal edin.':'Bitte zuerst speichern oder verwerfen.','rot',3000);return;}
-    try{localStorage.setItem('saray-chef-sprache',l);}catch(e){}location.reload();});});
+    try{localStorage.setItem('%%PFX%%-chef-sprache',l);}catch(e){}location.reload();});});
 
 /* ---------- Hilfen ---------- */
 function el(tag,attrs,kinder){var e=document.createElement(tag);attrs=attrs||{};
@@ -429,7 +429,7 @@ var TOUR=[
   {t:'heute',z:'nav.tabs [data-tab="mehr"]',h:'Mehr',x:'Drucken, Zahlen, WhatsApp-Antworten, Checkliste – und oben ein Suchfeld: einfach „Urlaub“ oder „Gutschein“ eintippen.'},
   {t:'heute',z:'#sprache',h:'Deutsch oder Türkisch',x:'Hier die Sprache der App umschalten. Die Website und die Gerichtsnamen bleiben davon unberührt.'},
   {t:'heute',h:'Fertig!',x:'Mehr braucht es für den Alltag nicht. Bei Fragen: Michael anrufen. Die Einführung finden Sie wieder oben unter „?“.'}];
-var TOUR_K='saray-chef-tour';
+var TOUR_K='%%PFX%%-chef-tour';
 function tourStarten(){var i=0,box=el('div',{class:'tour',id:'tour',role:'dialog','aria-modal':'true','aria-label':'Einführung'}),loch=el('div',{class:'tour-loch'}),karte=el('div',{class:'tour-karte'});
   box.appendChild(loch);box.appendChild(karte);document.body.appendChild(box);
   function ende(){try{localStorage.setItem(TOUR_K,'1');}catch(e){}box.remove();window.removeEventListener('resize',lage);leiste();zuTab('heute');}
@@ -713,7 +713,7 @@ function bearbeiten(x){
 }
 
 /* ---------- Fotos der Gerichte: daten/fotos/nr-<Nummer>.jpg im Repo; die Seite zeigt sie verkleinert ---------- */
-function fotoPfad(nr){return 'daten/fotos/nr-'+nr+'.jpg';}
+function fotoPfad(nr){return %%FOTOS%%+'nr-'+nr+'.jpg';}
 function fotoSha(nr){return api('/contents/'+fotoPfad(nr)+'?ref=main',{cache:'no-store'}).then(function(r){
   if(r.status===404)return null;if(!r.ok)throw new Error('GitHub antwortet nicht ('+r.status+')');return r.json().then(function(d){return d.sha;});});}
 function verkleinern(datei){ /* längste Seite 1600 px, JPEG – spart Speicher und Ladezeit */
@@ -925,7 +925,7 @@ function sonderKarte(){
 }
 function zahlenKarte(){
   if(!STD.zaehler)return;
-  var GK='saray-chef-goatcounter',schl='';try{schl=localStorage.getItem(GK)||'';}catch(e){}
+  var GK='%%PFX%%-chef-goatcounter',schl='';try{schl=localStorage.getItem(GK)||'';}catch(e){}
   var dash='https://'+STD.zaehler+'.goatcounter.com/',k=el('div',{class:'karte'},[el('h3',{text:'Besucher und Bestellungen'})]);
   app.appendChild(el('h2',{text:'Zahlen'}));app.appendChild(k);
   var link=el('a',{class:'knopf klein',href:dash,target:'_blank',rel:'noopener',style:'display:inline-flex;align-items:center;text-decoration:none',text:'Ausführliche Statistik'});
@@ -1414,10 +1414,11 @@ CHECKLISTE = [
 ]
 
 
-def schreiben(aus, gruppen, standorte, sperrgruppen, repo, zaehler="", cname="", fotos=(), firmen_codes=False, zug_bis=""):
+def schreiben(aus, gruppen, standorte, sperrgruppen, repo, zaehler="", seite_url="", fotos=(), firmen_codes=False, zug_bis=""):
     """Schreibt docs/chef/: index.html, standard.json, manifest.webmanifest."""
     import anpassungen as ANP
-    from menu import GRUNDSTAND
+    from konfig import menu
+    GRUNDSTAND = menu.GRUNDSTAND
     ordner = aus / "chef"
     ordner.mkdir(exist_ok=True)
     zeit = lambda m: f"{m // 60:02d}:{m % 60:02d}"
@@ -1429,7 +1430,7 @@ def schreiben(aus, gruppen, standorte, sperrgruppen, repo, zaehler="", cname="",
         "grundstand": GRUNDSTAND,
         "zutaten": ZUTATEN_SCHALTER,
         "zaehler": zaehler,
-        "seite": f"https://{cname}/",
+        "seite": seite_url,
         "fotos": sorted(fotos),
         "firmen_codes": bool(firmen_codes),
         "zug_bis": zug_bis,
@@ -1443,7 +1444,10 @@ def schreiben(aus, gruppen, standorte, sperrgruppen, repo, zaehler="", cname="",
                      "doener", "duerum", "teller", "pizza", "lahmacun", "baguette", "salate", "kinder"] if k in sperrgruppen],
     }
     (ordner / "standard.json").write_text(json.dumps(standard, ensure_ascii=False) + "\n", encoding="utf-8")
+    import konfig
     (ordner / "index.html").write_text(SEITE.replace("%%REPO%%", json.dumps(repo))
+                                        .replace("%%DATEI%%", json.dumps(konfig.rel(konfig.DATEN / "anpassungen.json")))
+                                        .replace("%%FOTOS%%", json.dumps(konfig.rel(konfig.DATEN / "fotos") + "/"))
                                         .replace("%%CHECKLISTE%%", json.dumps(CHECKLISTE, ensure_ascii=False))
                                         .replace("%%CHEF_TR%%", (pathlib.Path(__file__).parent / "sprachen" / "chef_tr.json").read_text(encoding="utf-8")), encoding="utf-8")
     (ordner / "manifest.webmanifest").write_text(json.dumps({
