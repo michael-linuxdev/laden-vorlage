@@ -2202,8 +2202,9 @@ def chef_app_einfuehrung_und_antworten(b, url):
     p.wait_for_selector(".tour-zahl:text-is('2 / 11')")
     assert "Laden heute spontan zu" in p.text_content(".tour-karte"), p.text_content(".tour-karte")
     p.wait_for_function("parseFloat(getComputedStyle(document.querySelector('.tour-loch')).width)>100")  # hervorgehoben
-    for n in range(3, 9):
-        p.click("#tour-weiter")
+    for n in range(3, 9):   # Karte wandert nach jedem Schritt an den hervorgehobenen Knopf: erst klicken, wenn sie steht
+        p.wait_for_timeout(150)
+        p.locator("#tour-weiter").dispatch_event("click")
         p.wait_for_selector(f".tour-zahl:text-is('{n} / 11')")
     assert "Speichern" in p.text_content(".tour-karte h3"), p.text_content(".tour-karte")
     assert p.is_visible("#speichern"), "Speichern-Leiste nicht gezeigt"
