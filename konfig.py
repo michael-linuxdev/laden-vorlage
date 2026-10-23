@@ -28,6 +28,12 @@ def _modul(name, pfad):
     return m
 
 
+def basis(laden_id):
+    """Einstellungen eines anderen Ladens als Grundlage (für Filialen): globals().update(basis("saray"))"""
+    m = _modul(f"basis_{laden_id}", HIER / "laeden" / laden_id / "laden.py")
+    return {k: v for k, v in vars(m).items() if not k.startswith("__")}
+
+
 K = _modul("laden_konfig", ORDNER / "laden.py")
 KARTE_ORDNER = HIER / "laeden" / getattr(K, "SPEISEKARTE_VON", ID)
 BILDER = HIER / "laeden" / getattr(K, "BILDER_VON", ID) / "bilder"

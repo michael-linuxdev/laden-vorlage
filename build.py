@@ -1439,6 +1439,9 @@ ZETTEL_JS = r'''
   try{abh=Object.assign(abh,JSON.parse(localStorage.getItem(AK)||'{}'));}catch(e){}
   /* ?laden=freital (z. B. vom QR-Aufsteller an der Theke) wählt den Laden vor */
   (function(){var m=/[?&]laden=([a-z0-9-]+)/.exec(location.search);if(m&&LADEN_N[m[1]]&&abh.laden!==m[1]){abh.laden=m[1];abh.zeit='';}})();
+  /* Gespeicherter Laden gibt es hier nicht (mehr): vergessen. Nur ein Laden: immer der. */
+  if(abh.laden&&!LADEN_N[abh.laden]){abh.laden='';abh.zeit='';}
+  if(LADEN_IDS.length===1)abh.laden=LADEN_IDS[0];
   function abhSpeichern(){try{localStorage.setItem(AK,JSON.stringify(abh));}catch(e){}}
   var selTag=document.getElementById('abhol-tag'),selZeit=document.getElementById('abhol-zeit'),eName=document.getElementById('abhol-name'),hinweisZ=document.getElementById('abhol-hinweis');
   function zeitText(m,en){var h=Math.floor(m/60),r=m%60;return h+':'+(r<10?'0':'')+r+(en?'':' Uhr');}
@@ -2390,7 +2393,7 @@ SEITE = r"""<!doctype html>
 %%CODE_BOX%%
       <fieldset class="abholung">
         <legend data-en="Pickup">Abholung</legend>
-        <div class="z-chips" role="group" aria-label="Laden" data-en-aria="Shop">%%LADEN_CHIPS%%</div>
+        <div class="z-chips" role="group" aria-label="Laden" data-en-aria="Shop"%%CHIPS_VERSTECKT%%>%%LADEN_CHIPS%%</div>
         <label for="abhol-tag" data-en="Day">Tag</label>
         <select id="abhol-tag"></select>
         <label for="abhol-zeit" data-en="Time">Uhrzeit</label>
@@ -2715,6 +2718,7 @@ def bauen(hinweise=None, ziel=None, einzeln=False):
         "%%FUSS_ORTE%%": FUSS_ORTE,
         "%%HINWEISE%%": hinweise_html(HINWEISE if hinweise is None else hinweise),
         "%%WA_ICON%%": '<svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 20.5l1.3-4.2A8.5 8.5 0 1 1 8 19.4z"/><path d="M9 8.5c0 3 2.5 6 6 6.5l1.2-1.4-2-1-.9.8c-1-.4-1.9-1.3-2.3-2.3l.8-.9-1-2L9.4 8.4"/></svg>',
+        "%%CHIPS_VERSTECKT%%": "" if MEHRERE else " hidden",
         "%%LADEN_CHIPS%%": "".join(f'<button type="button" class="chip" data-laden="{st["id"]}" aria-pressed="false">{e(st["name"])}</button>' for st in STANDORTE),
         "%%ZETTEL_ANRUF%%": "".join(f'<a class="knopf knopf-dunkel" data-anruf="{st["id"]}" href="tel:{st["tel_href"]}">{TEL_ICON}{t(st["name"] + " anrufen: " + st["tel"], "Call " + st["name"] + ": " + st["tel"])}</a>' for st in STANDORTE),
 
