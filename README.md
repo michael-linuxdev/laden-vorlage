@@ -1,52 +1,82 @@
-# Saray Döner – Website
+# Laden-Vorlage – Website mit Bestellung, Chef-App und Küchenansicht
 
-Neue Website für **Saray Döner** in Freital und Altenberg: Speisekarte mit Suche, Bestellzettel mit Wünschen je Gericht, Abholzeit, Öffnungsstatus live, sechs Sprachen (Deutsch, Englisch, Tschechisch, Türkisch, Russisch, Arabisch).
+Eine Technik für viele Läden: Speisekarte mit Suche, Bestellzettel mit Wünschen je Gericht, Bestellung per WhatsApp, Abholzeit,
+Öffnungsstatus live, sechs Sprachen, Chef-App für den Inhaber, Küchenansicht, Bildschirm im Laden und Druckvorlagen.
+Entstanden aus der Seite von **Saray Döner** (Repo `saray-doener`); was einen Laden ausmacht, steht jetzt in **einem Ordner je Laden**.
 
-Live (Vorschau): **https://saray.micana.de**
+Übersicht (Vorschau): **https://michael-linuxdev.github.io/laden-vorlage/**
 
-Statische Seite ohne Framework, ohne externe Anfragen und ohne Cookies. Was im Browser gespeichert wird (Bestellzettel, Abholung, Sprache, letzte Bestellung), bleibt in `localStorage` auf dem Gerät des Gastes.
+| Laden | Ordner | Was er zeigt |
+|---|---|---|
+| Saray Döner Freital & Altenberg | `laeden/saray/` | Referenz: beide Läden auf einer Seite (wie saray-doener); alle Tests laufen hiergegen |
+| Saray Döner Freital | `laeden/freital/` | eigene Seite für einen Laden – Karte und Bilder von „saray“, eigene Chef-App-Daten |
+| Saray Döner Altenberg | `laeden/altenberg/` | dito, mit Zugzeiten und Wintersaison |
+| Feuerspieß Bannewitz | `laeden/bannewitz/` | **erfunden**: anderer Name, Farben, Logo, Karte (Döner, Bowls, Burger) |
+| Pizzeria Fiamma Pirna | `laeden/pirna/` | **erfunden**: Pizzeria mit Größen, Extras, Pizza nach Wahl – Muster für einen neuen Laden |
+
+Statische Seiten ohne Framework, ohne externe Anfragen und ohne Cookies. Was im Browser gespeichert wird, bleibt in `localStorage`
+auf dem Gerät des Gastes – je Laden mit eigenem Kürzel (`PRAEFIX`), damit sich Läden unter einer Adresse nicht stören.
+
+## Neuer Laden in 6 Schritten
+
+1. `laeden/pirna/` kopieren, z. B. nach `laeden/dohna/`.
+2. `laden.py` anpassen: Name, `PRAEFIX` (kurz, nur a–z, eindeutig), Adressen, Standorte mit Öffnungszeiten, Telefon, WhatsApp,
+   Texte (Deutsch und Englisch), Farben, Impressum, Checkliste. Jede Einstellung ist dort kommentiert; alle Möglichkeiten zeigt `laeden/saray/laden.py`.
+3. `speisekarte.py` (Gerichte, Preise, Größen, Allergene) und `englisch.py` (englische Namen) ersetzen.
+   Mehrere Seiten mit derselben Karte: `SPEISEKARTE_VON = "<laden>"` und `BILDER_VON = "<laden>"` (siehe `laeden/freital/`).
+4. Logo als `maskottchen/logo.svg` (rund) und optional eine Figur `maskottchen/figur.svg` ablegen, dann `python3 bilder.py dohna`
+   (App-Symbole, Favicon, Vorschaubild für WhatsApp). Optional: Ladenfoto und Kartenausschnitte in `bilder/` (`FOTO`, `karte_<standort>.webp`).
+5. `echo '{}' > laeden/dohna/daten/anpassungen.json`, dann `LADEN=dohna python3 build.py` und im Browser `docs/dohna/` ansehen.
+6. Committen und pushen – der Workflow baut alle Läden, prüft sie und veröffentlicht sie. Die Chef-App des Ladens liegt unter `…/dohna/chef/`.
 
 ## Aufbau
 
 | Pfad | Inhalt |
 |---|---|
-| `menu.py` | Speisekarte (Standard): alle Gerichte, Preise, Größen |
-| `daten/anpassungen.json` | Änderungen aus der Chef-App (leer = Standard) |
+| `laeden/<id>/laden.py` | **alles, was den Laden ausmacht**: Name, Standorte, Zeiten, Texte, Farben, Bilder, „Anpassen“-Daten, Rechtliches, Checkliste, Druck |
+| `laeden/<id>/speisekarte.py` / `englisch.py` | Speisekarte (Standard) und englische Namen |
+| `laeden/<id>/daten/` | `anpassungen.json` und `fotos/` – schreibt die Chef-App dieses Ladens |
+| `laeden/<id>/bilder/`, `maskottchen/` | Foto, Kartenausschnitte, Vorschaubild / Logo, Figur, App-Symbole |
+| `konfig.py` | lädt den Laden aus `LADEN=<id>` (ohne: „saray“), Farben ersetzen, `basis()` für Filialen |
+| `build.py` | baut eine Seite: HTML, CSS, JavaScript (Vorlage für alle Läden) |
+| `alle_bauen.py` | baut alle Läden nach `docs/<id>/` und die Übersicht `docs/index.html` |
+| `bilder.py` | App-Symbole, Favicon und Vorschaubild aus Logo, Figur, Farben und Texten |
 | `anpassungen.py` / `chef_app.py` | Änderungen anwenden / Chef-App |
-| `qr.py` / `aufsteller.py` | QR-Codes / Druckvorlagen für die Theke |
-| `tests/` | automatische Browser-Tests |
-| `englisch.py` | Englische Namen und Beschreibungen |
-| `laden_seiten.py` | Bildschirm im Laden (`docs/tv/`) und Küchenansicht (`docs/kueche/`) |
+| `laden_seiten.py` | Bildschirm im Laden (`tv/`) und Küchenansicht (`kueche/`) |
+| `druck.py`, `qr.py`, `aufsteller.py` | Druckvorlagen (Flyer, Aufsteller, Aushänge, Allergenmappe …) und QR-Codes |
 | `sprachen/*.json`, `sprachen_daten.py` | Wörterbücher Englisch → Tschechisch/Türkisch/Russisch/Arabisch; `python3 sprachen_daten.py` zeigt, was fehlt |
-| `build.py` | Standorte, Öffnungszeiten, Hinweis-Band, Vorlage, CSS und JS; baut die Seite |
-| `maskottchen.py` | Zeichnet das Koch-Maskottchen als SVG (`maskottchen/`) |
-| `png_export.py` | PNG-Fassungen und Favicon aus den SVGs |
-| `assets/` | Schriften (Roboto Slab, Lato), Ladenfoto, Kartenausschnitte (© OpenStreetMap-Mitwirkende) |
-| `docs/` | **Fertige Seite** – wird von GitHub Pages ausgeliefert, nicht von Hand ändern |
+| `assets/` | Schriften (Roboto Slab, Lato) für alle Läden |
+| `tests/test_seite.py` | ausführliche Browser-Tests am Referenz-Laden „saray“ |
+| `tests/rauchtest.py` | kurzer Test aller Läden: Seite, Bestellung, Küche, Chef-App, Bildschirm |
+| `docs/` | **fertige Seiten** – von GitHub Pages ausgeliefert, nicht von Hand ändern |
 
 ## Bauen
 
 ```bash
-python3 build.py            # docs/: index.html, css/style.css, js/main.js, fonts/, img/
-python3 build.py --einzeln  # index.html als einzelne Datei mit allem eingebettet (Vorschau, nicht im Repo)
+python3 alle_bauen.py                      # alle Läden nach docs/<id>/ und Übersicht docs/index.html
+LADEN=pirna python3 build.py               # nur einen Laden
+LADEN=pirna python3 build.py --einzeln     # eine einzelne Datei mit allem eingebettet (Vorschau)
+python3 tests/test_seite.py && python3 tests/rauchtest.py
 ```
 
-Nur Python 3, keine Pakete nötig. Nach jeder Änderung `python3 build.py` laufen lassen und `docs/` mit committen.
+Nur Python 3 (Pillow für Fotos der Gerichte, Playwright für Tests, Druck und `bilder.py`).
 
 ## Häufige Änderungen
 
-- **Preise oder Gerichte:** `menu.py`, bei neuen Gerichten auch `englisch.py`.
+Die Beispiele beziehen sich auf den Referenz-Laden „saray“; jeder Laden hat dieselben Einstellungen in seinem Ordner.
+
+- **Preise oder Gerichte:** `laeden/<id>/speisekarte.py`, bei neuen Gerichten auch `laeden/<id>/englisch.py`.
 - **Weitere Sprachen:** Jede Sprache übersetzt die englischen Texte (`sprachen/<code>.json`, Schlüssel = englischer Text, Zahlen als `{n}`). Neue Texte prüfen mit `python3 sprachen_daten.py`; fehlende Einträge erscheinen auf Englisch. Die Bestellung an den Laden bleibt immer Deutsch. Arabisch läuft von rechts nach links; Telefonnummern, Uhrzeiten und Preise bleiben dabei links-nach-rechts. Die Übersetzungen sollte vor dem Freischalten jemand mit der jeweiligen Muttersprache gegenlesen.
-- **Öffnungszeiten, Telefon:** `STANDORTE` in `build.py`.
-- **Hinweis oben (Urlaub, Feiertag, Angebot):** `HINWEISE` in `build.py`, mit `von`/`bis` als Datum. Außerhalb des Zeitraums blendet sich das Band von selbst aus.
-- **Zutaten und Allergene:** `ALLERGENE`, `ZUTATEN`, `KENNZEICHNUNG` (je Abschnitt) und `SOSSEN` in `menu.py`, abgeschrieben von der gedruckten Karte („Gültig ab 01.02.2024“). Unter jedem Abschnitt steht eine Zeile „Inhaltsstoffe … · Allergene …“, unten die aufklappbare Liste.
+- **Öffnungszeiten, Telefon:** `STANDORTE` in `laeden/<id>/laden.py`.
+- **Hinweis oben (Urlaub, Feiertag, Angebot):** `HINWEISE` in `build.py` bzw. `laeden/<id>/laden.py`, mit `von`/`bis` als Datum. Außerhalb des Zeitraums blendet sich das Band von selbst aus.
+- **Zutaten und Allergene:** `ALLERGENE`, `ZUTATEN`, `KENNZEICHNUNG` (je Abschnitt) und `SOSSEN` in `laeden/<id>/speisekarte.py`, abgeschrieben von der gedruckten Karte („Gültig ab 01.02.2024“). Unter jedem Abschnitt steht eine Zeile „Inhaltsstoffe … · Allergene …“, unten die aufklappbare Liste.
 - **Barzahlung:** `"bar": True` je Laden in `STANDORTE` – zeigt „Nur Barzahlung“ beim Laden, in den Schildern oben, in „Meine Bestellung“ und in den Suchmaschinen-Daten.
-- **Besucher zählen (ohne Cookies):** `ZAEHLER` in `build.py` auf das GoatCounter-Kürzel setzen (Konto auf goatcounter.com, kostenlos für kleine Seiten). Gezählt werden Seitenaufrufe und Klicks auf WhatsApp, Anrufen, Teilen und Gemeinsam bestellen. Leer = aus. Der Datenschutz-Hinweis passt sich an.
-- **Vegetarisch:** `VEGETARISCH` in `menu.py` (Nummern bzw. Namen); Getränke und neue Gerichte mit „vegetarisch“ im Namen zählen automatisch. Blatt-Symbol am Gericht. `FISCH` in `menu.py` für pescetarisch (Fisch-Symbol). Unter der Suche die Schalter „Vegetarisch“ und „Pescetarisch“: filtern die Karte und blenden beim Anpassen Fleisch (bzw. Fleisch und Fisch) aus.
+- **Besucher zählen (ohne Cookies):** `ZAEHLER` in `build.py` bzw. `laeden/<id>/laden.py` auf das GoatCounter-Kürzel setzen (Konto auf goatcounter.com, kostenlos für kleine Seiten). Gezählt werden Seitenaufrufe und Klicks auf WhatsApp, Anrufen, Teilen und Gemeinsam bestellen. Leer = aus. Der Datenschutz-Hinweis passt sich an.
+- **Vegetarisch:** `VEGETARISCH` in `laeden/<id>/speisekarte.py` (Nummern bzw. Namen); Getränke und neue Gerichte mit „vegetarisch“ im Namen zählen automatisch. Blatt-Symbol am Gericht. `FISCH` in `laeden/<id>/speisekarte.py` für pescetarisch (Fisch-Symbol). Unter der Suche die Schalter „Vegetarisch“ und „Pescetarisch“: filtern die Karte und blenden beim Anpassen Fleisch (bzw. Fleisch und Fisch) aus.
 - **„Hat’s geschmeckt?“:** Ab der 3. WhatsApp-Bestellung von einem Handy sieht der Gast beim nächsten Besuch (2 Stunden bis 14 Tage später) einmal „Hat alles gepasst? Sie haben schon 3-mal … bestellt“. Ja → Google-Bewertung (`google` in `STANDORTE`), Nein → Nachricht direkt an den Laden. Erstbesteller werden nicht gefragt.
-- **Datenschutz:** Entwurf in `datenschutz_html()` in `build.py` – beschreibt GitHub Pages, Speicherung im Browser, WhatsApp, GoatCounter. Vor dem Livegang rechtlich prüfen lassen.
-- **Empfehlung und „Beliebt“:** `EMPFEHLUNG` und `BELIEBT` in `build.py`.
-- **Vorbestellung:** `VORBESTELL_TAGE` in `build.py` (Standard 14 Tage; 0 = nur heute). Angeboten werden nur Öffnungstage im 15-Minuten-Raster; die Nachricht heißt dann „Vorbestellung“ und nennt Wochentag und Datum.
+- **Datenschutz:** Entwurf in `datenschutz_html()` in `build.py` bzw. `laeden/<id>/laden.py` – beschreibt GitHub Pages, Speicherung im Browser, WhatsApp, GoatCounter. Vor dem Livegang rechtlich prüfen lassen.
+- **Empfehlung und „Beliebt“:** `EMPFEHLUNG` und `BELIEBT` in `build.py` bzw. `laeden/<id>/laden.py`.
+- **Vorbestellung:** `VORBESTELL_TAGE` in `build.py` bzw. `laeden/<id>/laden.py` (Standard 14 Tage; 0 = nur heute). Angeboten werden nur Öffnungstage im 15-Minuten-Raster; die Nachricht heißt dann „Vorbestellung“ und nennt Wochentag und Datum.
 
 ## Verfügbarkeit („heute kein Hähnchen“, „Nuggets ab 17 Uhr“)
 
@@ -71,7 +101,7 @@ Tagesaktuelle Sperren stehen in **`docs/status.json`**. Die Seite lädt die Date
 
 Auf der Seite: Hinweis am Gericht („heute nicht verfügbar“, „erst ab 17 Uhr“, „Altenberg: …“), ganz gesperrte Gerichte sind ausgegraut. Im Bestellzettel wird gegen Laden **und Abholzeit** geprüft – Nuggets um 15 Uhr für 17:30 Uhr vorbestellen geht, für „so schnell wie möglich“ nicht. Solange etwas nicht passt, ist der WhatsApp-Knopf ausgeblendet.
 
-Feste Regeln, die immer gelten, können stattdessen in `VERFUEGBARKEIT` in `build.py` stehen.
+Feste Regeln, die immer gelten, können stattdessen in `VERFUEGBARKEIT` in `build.py` bzw. `laeden/<id>/laden.py` stehen.
 
 ## Sammelbestellung (ohne Server)
 
@@ -83,7 +113,7 @@ Unter **/chef/** (z. B. https://saray.micana.de/chef/) – nicht verlinkt, für 
 
 - **Heute:** Hähnchen, Nuggets, Falafel, Pizza, Baguette … für heute aus, ab Uhrzeit (heute oder jeden Tag) oder dauerhaft aus – für beide Läden oder nur einen.
 - **Karte:** Nummer (nur die angezeigte; intern bleibt die alte Nummer der Schlüssel für Varianten, Sperren, Aktionen), Preise, Namen und Beschreibungen ändern, Gerichte löschen (und wieder anzeigen), neue Gerichte anlegen.
-- **Heute → Zutaten:** einzelne Zutaten (Soßen, Salat/Gemüse, Beilagen Pommes/Reis, Käse, Fleisch/Fisch/Ei) aus, bis sie wieder eingeschaltet werden – je Laden oder für beide. Pommes/Reis aus: Gerichte gibt es ohne diese Beilage, je 0,50 € günstiger (`BEILAGE_RABATT`), nur die reinen Pommes sind nicht zu haben. Kräuter aus: keine Soße vorausgewählt. Auf der Seite sind sie dann beim Anpassen ausgegraut („nicht verfügbar“) und werden aus schon gewählten Wünschen entfernt. Liste: `ZUTATEN_SCHALTER` in `chef_app.py`; Regel `{"was": "z:Ananas"}`.
+- **Heute → Zutaten:** einzelne Zutaten (Soßen, Salat/Gemüse, Beilagen Pommes/Reis, Käse, Fleisch/Fisch/Ei) aus, bis sie wieder eingeschaltet werden – je Laden oder für beide. Pommes/Reis aus: Gerichte gibt es ohne diese Beilage, je 0,50 € günstiger (`BEILAGE_RABATT`), nur die reinen Pommes sind nicht zu haben. Kräuter aus: keine Soße vorausgewählt. Auf der Seite sind sie dann beim Anpassen ausgegraut („nicht verfügbar“) und werden aus schon gewählten Wünschen entfernt. Liste: `ZUTATEN_SCHALTER` in `laeden/<id>/laden.py`; Regel `{"was": "z:Ananas"}`.
 - **Heute → Wartezeit:** bei viel Betrieb +15/+30/+45 Minuten je Laden, nur für heute. Die früheste Abholzeit verschiebt sich, die Schilder zeigen „Wartezeit ca. … Min.“.
 - **Zeiten:** Öffnungszeiten je Laden und Wochentag, auch „geschlossen“. Darunter **Besondere Tage** (Heiligabend, Feiertag, Urlaub): an einem Datum geschlossen oder andere Zeiten. Die Seite zeigt sie beim Laden an, Status und Abholzeiten richten sich danach; vergangene Tage verschwinden von selbst.
 - **Karte → Sonderaktionen:** z. B. „Döner 5 €, Dürüm 6 €“ mit Zeitraum, optional nur an bestimmten Wochentagen oder in einem Laden. Die Seite zeigt den alten Preis durchgestrichen mit roter Marke „Aktion 5,00 €“, oben ein Hinweisband, und die Bestellung rechnet am Abholtag mit dem Aktionspreis („(Aktion)“ in der Nachricht). Abgelaufene Aktionen verschwinden von selbst.
@@ -94,14 +124,14 @@ Unter **/chef/** (z. B. https://saray.micana.de/chef/) – nicht verlinkt, für 
 - **Link-Vorschau und Google:** `assets/og-bild.jpg` (1200 × 630, Laden + Maskottchen) als Vorschaubild für WhatsApp/Facebook (`og:image`) und als Bild in den Google-Daten (`image`). Schriften werden vorgeladen (schnellere erste Anzeige auf dem Handy). Nach dem Freischalten (`VORSCHAU = False`) gibt es `sitemap.xml` und den Verweis in `robots.txt`.
 - **Navigation der Chef-App:** unten fünf Reiter – Heute (Laden zu, Wartezeit/Pause, Hinweis, „Was gibt es nicht?“, Zutaten), Karte (Aktionen, Boxen, Speisekarte), Preise (anpassen, Verlauf, Stände, Gutscheine), Zeiten (Was kommt, Öffnungszeiten, besondere Tage, Urlaub, Winter, Viertelstunde), Mehr. Längere Reiter haben oben eine Sprungleiste. „Mehr“ ist ein Menü mit Unterseiten (Drucken, Google, Bildschirm/Schaufenster/Küche, Zahlen, Checkliste, Website, Rückgängig, Gefahrenbereich) und einem Suchfeld (deutsch und türkisch), das in jeden Reiter führt. Ein roter Punkt an „Mehr“, solange Pflicht-Fragen der Checkliste offen sind. Listen: `MEHR` und `ZIELE` in `chef_app.py`.
 - **Preise → Preis-Verlauf:** Beim Speichern hält die Chef-App jede Preisänderung mit Datum fest (`preisverlauf`, höchstens 300 Einträge, 2 Jahre). „↩ Zurück“ setzt den alten Preis wieder ein, „Alle zurück“ eine ganze Änderung (z. B. eine Preiserhöhung). Bleibt bei „Standard wiederherstellen“ erhalten.
-- **Zeiten → Vorbestellungen je Viertelstunde:** Höchstzahl je Laden (Standard 5, `SLOT_STANDARD` in `anpassungen.py`; „Keine Grenze“ möglich). Ist sie erreicht, schreibt die Küchenansicht die Viertelstunde als ausgebucht nach `daten/anpassungen.json` (`voll`, braucht den Chef-App-Zugang auf dem Küchen-Gerät; ohne Zugang nur ein Hinweis in der Küche). Nach 2–3 Minuten ist die Zeit auf der Seite gesperrt („ausgebucht“); wer sie gewählt hatte, bekommt die nächste freie vorgeschlagen. In der Chef-App lässt sich eine Zeit wieder freigeben.
+- **Zeiten → Vorbestellungen je Viertelstunde:** Höchstzahl je Laden (Standard 5, `SLOT_STANDARD` in `anpassungen.py`; „Keine Grenze“ möglich). Ist sie erreicht, schreibt die Küchenansicht die Viertelstunde als ausgebucht nach `laeden/<id>/daten/anpassungen.json` (`voll`, braucht den Chef-App-Zugang auf dem Küchen-Gerät; ohne Zugang nur ein Hinweis in der Küche). Nach 2–3 Minuten ist die Zeit auf der Seite gesperrt („ausgebucht“); wer sie gewählt hatte, bekommt die nächste freie vorgeschlagen. In der Chef-App lässt sich eine Zeit wieder freigeben.
 - **🔔 Abholbereit per Ton:** Nach dem Senden kann der Gast „Ton, wenn die Bestellung fertig ist“ antippen. Der Küchen-Link enthält dafür ein zufälliges Stichwort (`f`); „Bestätigen“ und „Fertig ✓“ in der Küche melden „ok“ bzw. „fertig“ an den Push-Dienst ntfy.sh (`SARAY_NTFY`, auch selbst betreibbar). Die offene Seite spielt einen Ton, vibriert und zeigt „Ihre Bestellung … ist fertig“; der Bildschirm bleibt bis dahin an. Bei gesperrtem Handy erscheint die Meldung beim nächsten Öffnen. Keine Bestelldaten beim Dienst; Absatz in der Datenschutzerklärung.
 - **Mehr → Preis-Stände:** Stand 01.02.2024 (gedruckte Karte) ist fest; dazu bis zu drei eigene Stände („Heutige Preise als Stand festlegen“). Ein Stand lässt sich ganz übernehmen; einzelne Preise holt man beim Gericht unter „Frühere Preise“ zurück.
 - **Mehr → Zahlen:** Seitenaufrufe, WhatsApp-Bestellungen und Anrufe je Laden, Teilen, Gemeinsam bestellen, Bewertungs-Klicks (heute / 7 Tage) aus GoatCounter. Einmal einen API-Schlüssel (nur Lesen) von GoatCounter eintragen; er bleibt auf dem Gerät.
 - **Sonderaktionen mit Uhrzeit:** z. B. Mittagsangebot 11–14 Uhr – gilt dann nur für Abholzeiten in diesem Fenster. Zu jeder Aktion gibt es unter „Drucken“ ein A4-Plakat fürs Schaufenster.
 - **Drucken, weitere Vorlagen:** Allergenmappe für die Theke (alle Gerichte mit Inhaltsstoffen und Allergenen), Tüten-Aufkleber (A4-Bogen, 24 Etiketten 70 × 37 mm, z. B. Zweckform 3474) und je Aktion ein Bild 1080 × 1080 zum Posten.
 - **Mehr → Drucken:** Flyer (A4 quer, beidseitig, Wickelfalz) und Aufsteller je Laden als PDF – immer mit den aktuellen Preisen. Erzeugt `druck.py` im GitHub-Workflow nach jedem Bauen (`docs/druck/`, nicht im Repo). Lokal: `python3 druck.py`.
-- **Mehr → Vor dem Freischalten:** Checkliste der offenen Punkte (abhaken, Antwort notieren), gespeichert in `daten/anpassungen.json` unter `checkliste`; Liste: `CHECKLISTE` in `chef_app.py`. Bleibt bei „Standard wiederherstellen“ erhalten.
+- **Mehr → Vor dem Freischalten:** Checkliste der offenen Punkte (abhaken, Antwort notieren), gespeichert in `laeden/<id>/daten/anpassungen.json` unter `checkliste`; Liste: `CHECKLISTE` in `laeden/<id>/laden.py`. Bleibt bei „Standard wiederherstellen“ erhalten.
 - **Zeiten → Feiertage demnächst:** sächsische Feiertage (dazu Heiligabend, Silvester) der nächsten Wochen mit „Beide geschlossen“, „Wie sonntags“ oder „Normal geöffnet“; unter „Heute“ ein Hinweis, wenn einer in den nächsten 14 Tagen noch offen ist.
 - **Karte → Gericht → Foto:** Foto aufnehmen oder auswählen; wird verkleinert nach `daten/fotos/nr-<Nr>.jpg` gespeichert und erscheint auf der Seite (4:3, WebP) bei „Wir empfehlen“/„Beliebt“ und klein in der Karte.
 - **Mehr → Google-Unternehmensprofil:** Name, Adresse, Telefon, Website, Bestell-Link, Öffnungszeiten, Zahlungsart, Beschreibung und Merkmale je Laden zum Kopieren.
@@ -109,10 +139,10 @@ Unter **/chef/** (z. B. https://saray.micana.de/chef/) – nicht verlinkt, für 
 - **Bestellung:** Jede WhatsApp-Nachricht hat eine kurze Bestellnummer (z. B. K47); nach dem Senden kann der Gast die Abholung in seinen Kalender eintragen (.ics, Erinnerung 15 Minuten vorher).
 - **Karte → + Mittagstisch:** Aktion mit Art „Mittagstisch“ (Mo–Fr 11–14 Uhr vorbelegt). Auf der Seite ein eigener Kasten „🍽 Mittagstisch“ über den Empfehlungen, nur an den gewählten Tagen bis Ende der Uhrzeit; Marke „Mittag 8,50 €“ am Gericht.
 - **Zeiten → Wintersaison Altenberg:** Kasten oben „Nach der Piste in Altenberg“ mit „In Altenberg vorbestellen“ und „Skikurs oder Gruppe“. Automatisch 1.12.–15.3. (`WINTER_STANDARD` in `anpassungen.py`), per Chef-App auch „Jetzt an“ oder „Aus“.
-- **Zug ab Altenberg:** Wer in Altenberg abholt, bekommt Abholzeiten passend zu den Abfahrten Richtung Heidenau/Dresden („Zug 17:18 → abholen 17:00“, 15 Minuten Puffer); die Nachricht nennt „(Zug 17:18)“. Fahrplan `ZUG` in `build.py`, gültig bis 12.12.2026 – danach blendet sich der Vorschlag aus, bis der neue Fahrplan eingetragen ist.
+- **Zug ab Altenberg:** Wer in Altenberg abholt, bekommt Abholzeiten passend zu den Abfahrten Richtung Heidenau/Dresden („Zug 17:18 → abholen 17:00“, 15 Minuten Puffer); die Nachricht nennt „(Zug 17:18)“. Fahrplan `ZUG` in `build.py` bzw. `laeden/<id>/laden.py`, gültig bis 12.12.2026 – danach blendet sich der Vorschlag aus, bis der neue Fahrplan eingetragen ist.
 - **Küchenansicht (`docs/kueche/`):** Jede WhatsApp-Nachricht endet mit „Für die Küche: <Link>“. Der Link enthält die Bestellung selbst (kein Server). Im Laden geöffnet: große Karte je Bestellung, Gerichte abhaken, sortiert nach Abholzeit, rot bei „bald fällig“, „Fertig ✓“, Bon-Druck (80-mm-Bondrucker oder A4). Gespeichert nur auf dem Gerät, nach 3 Tagen gelöscht.
 - **Küchenansicht → Bestätigen / „Ist fertig“:** öffnet WhatsApp mit einer fertigen Antwort an den Gast – in der Sprache, in der er bestellt hat (Deutsch, Englisch, Türkisch, Tschechisch, Russisch, Arabisch). Dann nur noch seinen Chat antippen und senden (die Telefonnummer des Gastes kennt die Seite nicht). Unten der **Tagesabschluss**: Bestellungen, Summe, Gerichte, Durchschnitt, die zehn meistbestellten Gerichte und die Stunde mit den meisten Abholungen, je Tag (7 Tage) und Laden; Testbestellungen zählen nicht mit. Ersetzt keine Kasse.
-- **Mehr → Firmen-Codes (abgeschaltet, `FIRMEN_CODES` in `build.py`; zum Testen `SARAY_FIRMEN_CODES=1`):** Rabatt für Betriebe (5–20 %, optional nur 11–14 Uhr und nur ein Laden, ein Jahr gültig). Im Bestellzettel „Firmen-Code?“; der Rabatt gilt nicht auf Aktionspreise, steht in der Nachricht und in der Küchenansicht. Gespeichert wird nur der SHA-256-Prüfwert von „saray|CODE“ – der Code wird beim Anlegen einmal angezeigt.
+- **Mehr → Firmen-Codes (abgeschaltet, `FIRMEN_CODES` in `build.py` bzw. `laeden/<id>/laden.py`; zum Testen `SARAY_FIRMEN_CODES=1`):** Rabatt für Betriebe (5–20 %, optional nur 11–14 Uhr und nur ein Laden, ein Jahr gültig). Im Bestellzettel „Firmen-Code?“; der Rabatt gilt nicht auf Aktionspreise, steht in der Nachricht und in der Küchenansicht. Gespeichert wird nur der SHA-256-Prüfwert von „saray|CODE“ – der Code wird beim Anlegen einmal angezeigt.
 - **„Getränk dazu?“:** Beim ersten Essen ohne Getränk fragt die Seite einmal pro Bestellung: Cola, Fanta oder Wasser (0,5 l, 2,50 €) mit einem Tipp; die Sorte steht als Wunsch in der Nachricht.
 - **Frühere Bestellungen:** „Wie letztes Mal?“ zeigt die neueste, darunter aufklappbar bis zu vier frühere, jede mit „Nochmal“ (nur auf dem Handy des Gastes).
 - **„Neu“-Marke:** Gerichte, die in der Chef-App neu angelegt werden (`seit`), tragen 30 Tage lang die Marke „Neu“.
@@ -152,7 +182,7 @@ Unter **/chef/** (z. B. https://saray.micana.de/chef/) – nicht verlinkt, für 
 - **Mehr → Gefahrenbereich:** „Alles auf Standard zurücksetzen“ und „Auf diesem Gerät abmelden“, rot gekennzeichnet.
 - **Mehr:** Hinweis oben auf der Seite (Text mit Zeitraum), „Letzte Änderung rückgängig“ (holt den Stand vor dem letzten Speichern zurück), „Alles auf Standard zurücksetzen“, Abmelden.
 
-Gespeichert wird nur die Abweichung vom Standard in **`daten/anpassungen.json`** (Aufbau siehe `anpassungen.py`). Danach baut der GitHub-Workflow die Seite neu, testet sie und veröffentlicht sie – nach ca. 2–3 Minuten ist alles online; die App zeigt den Fortschritt an. Ungültige Einträge werden beim Bauen übersprungen (Warnung im Workflow-Log), der Standard bleibt dann stehen. Der Standard selbst steht weiter in `menu.py` und `STANDORTE` in `build.py`.
+Gespeichert wird nur die Abweichung vom Standard in **`laeden/<id>/daten/anpassungen.json`** (Aufbau siehe `anpassungen.py`). Danach baut der GitHub-Workflow die Seite neu, testet sie und veröffentlicht sie – nach ca. 2–3 Minuten ist alles online; die App zeigt den Fortschritt an. Ungültige Einträge werden beim Bauen übersprungen (Warnung im Workflow-Log), der Standard bleibt dann stehen. Der Standard selbst steht weiter in `laeden/<id>/speisekarte.py` und `STANDORTE` in `laeden/<id>/laden.py`.
 
 **Zugang einrichten (einmal pro Gerät):**
 1. GitHub → Settings → Developer settings → *Fine-grained personal access tokens* → *Generate new token*
@@ -186,8 +216,8 @@ Optional nur lokal: `lokal.json` (steht in `.gitignore`) überschreibt die Numme
 
 ## Vor dem Wechsel auf saraydöner.de
 
-- `VORSCHAU = False` in `build.py`. Das entfernt das Band „Entwurf“, den Titel-Zusatz, den TEST-Hinweis in der WhatsApp-Nachricht, `noindex` und die Sperre in `robots.txt`.
-- `CNAME` in `build.py` auf die endgültige Domain setzen und den DNS-Eintrag umstellen.
+- `VORSCHAU = False` in `build.py` bzw. `laeden/<id>/laden.py`. Das entfernt das Band „Entwurf“, den Titel-Zusatz, den TEST-Hinweis in der WhatsApp-Nachricht, `noindex` und die Sperre in `robots.txt`.
+- `CNAME` in `build.py` bzw. `laeden/<id>/laden.py` auf die endgültige Domain setzen und den DNS-Eintrag umstellen.
 - Testnummer bei `whatsapp` durch die Nummern der Läden ersetzen (Freital: Laden-Handy 0157 37807403 → `4915737807403`).
 - Datenschutzerklärung fertigstellen (inkl. Hinweis auf WhatsApp/Meta).
 - Offline: Die Seite legt Speisekarte, Schriften und Bilder im Browser ab (`docs/sw.js`), damit sie auch ohne Netz öffnet. Seite und `status.json` kommen immer zuerst frisch aus dem Netz.

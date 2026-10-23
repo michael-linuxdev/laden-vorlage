@@ -1399,6 +1399,7 @@ def schreiben(aus, gruppen, standorte, sperrgruppen, repo, zaehler="", seite_url
         "google_text": getattr(konfig.K, "GOOGLE_TEXT", ""),
         "zaehler": zaehler,
         "seite": seite_url,
+        "praefix": konfig.K.PRAEFIX,
         "fotos": sorted(fotos),
         "firmen_codes": bool(firmen_codes),
         "zug_bis": zug_bis,
@@ -1408,7 +1409,8 @@ def schreiben(aus, gruppen, standorte, sperrgruppen, repo, zaehler="", seite_url
                     "zeiten": {str(t): [zeit(v[0]), zeit(v[1])] for t, v in s["zeiten_standard"].items()}} for s in standorte],
         # Reihenfolge der Kärtchen unter „Heute“
         "sperren": [{"id": k, "name": sperrgruppen[k]["de"]} for k in
-                    (getattr(konfig.K, "SPERR_REIHENFOLGE", None) or [k for k in sperrgruppen if not k.startswith("z:")]) if k in sperrgruppen],
+                    (getattr(konfig.K, "SPERR_REIHENFOLGE", None) or [k for k in sperrgruppen if not k.startswith("z:")])
+                    if k in sperrgruppen and sperrgruppen[k]["nr"]],   # leere Gruppen (z. B. „Falafel“ in der Pizzeria) nicht zeigen
     }
     (ordner / "standard.json").write_text(json.dumps(standard, ensure_ascii=False) + "\n", encoding="utf-8")
     kurz = getattr(konfig.K, "KURZNAME", konfig.K.NAME)

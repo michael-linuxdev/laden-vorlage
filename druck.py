@@ -155,7 +155,7 @@ li{{display:flex;gap:1.5mm;padding:.45mm 0;border-bottom:.15mm dotted #d9cbd4;br
   <div class="panel rueck"><div class="fit"><h2>Öffnungszeiten</h2>{laeden}{bar}
     {"".join(gruppe_html(i) for i in RUECKSEITE)}
     <div class="klein"><p><b>Allergene:</b> {leg}</p><p><b>Inhaltsstoffe:</b> {zut}</p>
-    <p><b>Soßen</b> ({e(SOSSEN[0])}): {SOSSEN[1]} · {SOSSEN[2].replace(",", ", ")}</p>
+    {f'<p><b>Soßen</b> ({e(SOSSEN[0])}): {SOSSEN[1]} · {SOSSEN[2].replace(",", ", ")}</p>' if SOSSEN else ""}
     <p>Genaue Angaben zu Zutaten und Allergenen erhalten Sie an der Theke und auf unserer Website. Preise in Euro inkl. MwSt.</p></div></div></div>
   <div class="panel titel"><div>{f'<div class="seit">seit {e(K.SEIT)}</div>' if getattr(K, "SEIT", "") else ""}<img src="{uri("maskottchen", getattr(K, "FIGUR", None) or K.LOGO)}" alt="">
     <h1>{NAME}</h1><div class="unter">{e(getattr(K, "DRUCK_UNTERZEILE", ""))}</div><div class="orte">{" · ".join(e(s["name"]) for s in build.STANDORTE)}</div></div>
@@ -436,7 +436,7 @@ td small{{display:block;color:#6b5566;font-size:8pt}}td.nr{{width:10mm;font-weig
 </style></head><body>{muster}
 <h1>Allergene und Inhaltsstoffe</h1><p class="stand">{NAME} {" und ".join(e(s["name"]) for s in build.STANDORTE)} · Stand {heute}</p>
 <div class="kasten"><div><h2>Allergene</h2><table class="leg">{leg}</table>
-<p>Soßen ({e(SOSSEN[0])}): Inhaltsstoff {SOSSEN[1]} · Allergene {SOSSEN[2].replace(",", ", ")}</p></div>
+{f'<p>Soßen ({e(SOSSEN[0])}): Inhaltsstoff {SOSSEN[1]} · Allergene {SOSSEN[2].replace(",", ", ")}</p>' if SOSSEN else ""}</div>
 <div><h2>Inhaltsstoffe</h2><table class="leg">{zut}</table></div></div>
 {"".join(teile)}
 <p class="hinweis">Angaben nach Herstellerangaben. Spuren anderer Allergene durch die Zubereitung in unserer Küche sind möglich.

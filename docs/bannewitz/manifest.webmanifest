@@ -1,0 +1,25 @@
+{
+  "name": "Feuerspieß (Vorschau)",
+  "short_name": "Feuerspieß",
+  "description": "Speisekarte, Öffnungszeiten und Bestellung bei Feuerspieß in Bannewitz.",
+  "lang": "de",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#FFB627",
+  "theme_color": "#FFB627",
+  "icons": [
+    {
+      "src": "img/app-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "img/app-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

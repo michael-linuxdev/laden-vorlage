@@ -1,9 +1,9 @@
-name: Seite bauen, prüfen und veröffentlichen
+name: Seiten bauen, prüfen und veröffentlichen
 
-# Läuft bei jedem Push (auch wenn die Chef-App daten/anpassungen.json speichert):
-# 1. baut die Seite mit build.py neu (inkl. Änderungen aus daten/anpassungen.json)
-# 2. testet die fertige Seite im Browser (tests/test_seite.py)
-# 3. nur auf main: schreibt docs/ zurück ins Repo und veröffentlicht docs/ auf GitHub Pages
+# Läuft bei jedem Push (auch wenn eine Chef-App laeden/<id>/daten/anpassungen.json speichert):
+# 1. baut alle Läden mit alle_bauen.py neu (docs/<id>/, dazu docs/index.html als Übersicht)
+# 2. testet den Referenz-Laden „saray“ ausführlich (tests/test_seite.py) und alle Läden kurz (tests/rauchtest.py)
+# 3. nur auf main: schreibt docs/ zurück ins Repo, erzeugt die Druckvorlagen und veröffentlicht docs/ auf GitHub Pages
 #    (Einstellung: Settings → Pages → Source: „GitHub Actions“)
 on:
   push:
@@ -22,7 +22,7 @@ concurrency:
 jobs:
   bauen:
     runs-on: ubuntu-latest
-    timeout-minutes: 25
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@v4
 
@@ -33,19 +33,22 @@ jobs:
       - name: Pillow (Fotos der Gerichte verkleinern)
         run: pip install pillow==11.0.0
 
-      - name: Seite neu bauen
-        run: python3 build.py
+      - name: Alle Läden bauen
+        run: python3 alle_bauen.py
 
       - name: Playwright installieren
         run: |
           pip install playwright==1.56.0
           python -m playwright install --with-deps chromium
 
-      - name: Abläufe testen (Standard-Seite ohne Chef-App-Änderungen)
+      - name: Abläufe testen (Referenz-Laden „saray“ ohne Chef-App-Änderungen)
         run: python3 tests/test_seite.py
 
       - name: Echte Seite lädt fehlerfrei
         run: python3 tests/test_seite.py --echt
+
+      - name: Alle Läden kurz prüfen (Seite, Bestellung, Küche, Chef-App, Bildschirm)
+        run: python3 tests/rauchtest.py
 
       - name: docs/ ins Repo zurückschreiben
         if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
@@ -68,7 +71,10 @@ jobs:
       - name: Druckvorlagen (Flyer, Aufsteller) als PDF
         if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
         continue-on-error: true
-        run: python3 druck.py docs/druck
+        run: |
+          for l in $(ls laeden); do
+            [ -f "laeden/$l/laden.py" ] && LADEN=$l python3 druck.py "docs/$l/druck" || echo "Druck $l fehlgeschlagen"
+          done
 
       - name: Pages-Paket hochladen
         if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'

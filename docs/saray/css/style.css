@@ -137,6 +137,8 @@ p{margin:0}
 .band-icon{width:1.45em;height:1.45em;flex:none;margin:-4px 0}
 .buehne-text{position:relative}
 .koch-klein{position:absolute;right:-4px;top:40px;width:100px;filter:drop-shadow(0 6px 7px rgba(58,21,49,.25))}
+@media (max-width:959px){.buehne-text:has(.koch-klein) h1{padding-inline-end:88px}}
+@media (min-width:600px) and (max-width:959px){.buehne-text:has(.koch-klein) h1{padding-inline-end:140px}}
 @media (max-width:959px){.bilder .koch{display:none}}
 @media (min-width:600px) and (max-width:959px){.koch-klein{width:150px;top:20px}}
 @media (min-width:960px){.koch-klein{display:none}}

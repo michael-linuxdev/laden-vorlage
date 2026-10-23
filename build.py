@@ -144,6 +144,13 @@ ICONS = {
     "schnitzel": f'<rect x="6" y="18" width="13" height="11" rx="5" fill="#E7A84B" {_F}/><rect x="19" y="20" width="14" height="11" rx="5" fill="#E7A84B" {_F}/><rect x="12" y="9" width="14" height="11" rx="5" fill="#E7A84B" {_F}/>',
     "kinder": f'<path d="M20 5 L24.5 14.5 L35 15.6 L27.2 22.6 L29.5 33 L20 27.7 L10.5 33 L12.8 22.6 L5 15.6 L15.5 14.5 Z" fill="#FFD21F" {_F}/><path d="M16.5 20.5 v1 M23.5 20.5 v1 M16.5 24.5 C18 26.5 22 26.5 23.5 24.5" {_K}/>',
     "getraenke": f'<path d="M11 13 H29 L26.5 35 H13.5 Z" fill="#C8371A" {_F}/><path d="M12 19 H28" stroke="#fff" stroke-width="2.6"/><path d="M20 13 L24 4 L29 4" {_K}/>',
+    # weitere Kategorien für andere Läden; Gruppe wählt ihr Bild über "icon" (sonst über die Kennung), Rest: Besteck
+    "pasta": f'<path d="M5 20 H35 C35 29 28 34 20 34 C12 34 5 29 5 20 Z" fill="#fff" {_F}/><path d="M9 20 C10 13 15 15 16 19 C17 12 23 12 24 18 C26 13 31 14 31 20" fill="#F2C35B" {_F}/><path d="M26 6 L18 18" {_K}/><circle cx="16" cy="17" r="2.4" fill="#C8371A"/>',
+    "dessert": f'<path d="M8 18 H32 L28 34 H12 Z" fill="#fff" {_F}/><path d="M8 18 C8 10 32 10 32 18 Z" fill="#E9B98A" {_F}/><circle cx="20" cy="9" r="3.2" fill="#C8371A" {_F}/>',
+    "burger": f'<path d="M7 17 C7 8 33 8 33 17 Z" fill="#E7A84B" {_F}/><rect x="6" y="19" width="28" height="5" rx="2.5" fill="#5DB44C" {_F}/><rect x="6" y="24" width="28" height="5" rx="2.5" fill="#9C4F2B" {_F}/><path d="M7 30 H33 C33 34 7 34 7 30 Z" fill="#E7A84B" {_F}/>',
+    "bowl": f'<path d="M5 19 H35 C35 29 28 34 20 34 C12 34 5 29 5 19 Z" fill="#fff" {_F}/><circle cx="14" cy="16" r="5" fill="#5DB44C" {_F}/><circle cx="22" cy="14" r="5" fill="#F2C35B" {_F}/><circle cx="28" cy="17" r="4" fill="#9C4F2B" {_F}/>',
+    "wurst": f'<path d="M6 26 C6 18 34 18 34 26 C34 32 6 32 6 26 Z" fill="#fff" {_F}/><path d="M9 24 C14 19 26 19 31 24" fill="none" stroke="#B5482E" stroke-width="6" stroke-linecap="round"/><path d="M12 22 l2 3 M18 21 l2 3 M24 21 l2 3" stroke="#C8371A" stroke-width="2"/><path d="M26 8 L30 20" {_K}/>',
+    "besteck": f'<path d="M13 5 V35 M9 5 V13 C9 16 17 16 17 13 V5" {_K}/><path d="M27 35 V5 C22 9 22 18 27 20" fill="#fff" {_F}/>',
 }
 EMPFEHLUNG = list(getattr(K, "EMPFEHLUNG", []))   # „Wir empfehlen“
 BELIEBT = list(getattr(K, "BELIEBT", []))
@@ -268,10 +275,10 @@ def gericht_html(g, gruppe, abschnitt, groessen):
 
 def kennzeichnung_html(zahlen, buchstaben):
     """Kurze Zeile „Inhaltsstoffe 1, 7 · Allergene a, b“ – Kürzel mit Erklärung, Klick führt zur Liste."""
-    z = ", ".join(f'<abbr title="{e(ZUTATEN[n][0])}">{n}</abbr>' for n in zahlen.split(","))
-    b = ", ".join(f'<abbr title="{e(ALLERGENE[x])}" data-en-title="{e(ALLERGENE_EN[x])}">{x}</abbr>' for x in buchstaben.split(","))
-    return (f'<p class="kennz"><a href="#allergene" data-allergene>{t("Inhaltsstoffe", "Ingredients")} {z} · '
-            f'{t("Allergene", "Allergens")} {b}</a></p>')
+    z = ", ".join(f'<abbr title="{e(ZUTATEN[n][0])}">{n}</abbr>' for n in zahlen.split(",") if n)
+    b = ", ".join(f'<abbr title="{e(ALLERGENE[x])}" data-en-title="{e(ALLERGENE_EN[x])}">{x}</abbr>' for x in buchstaben.split(",") if x)
+    teile = ([f'{t("Inhaltsstoffe", "Ingredients")} {z}'] if z else []) + ([f'{t("Allergene", "Allergens")} {b}'] if b else [])
+    return f'<p class="kennz"><a href="#allergene" data-allergene>{" · ".join(teile)}</a></p>' if teile else ""
 
 
 def allergene_html():
@@ -282,16 +289,16 @@ def allergene_html():
         f'<summary>{t("Zutaten und Allergene", "Ingredients and allergens")}</summary>'
         f'<p>{t("Jede Kategorie der Karte nennt ihre Inhaltsstoffe (Zahlen) und Allergene (Buchstaben).", "Each menu category lists its ingredients (numbers) and allergens (letters).")}</p>'
         f'<h4>{t("Allergene", "Allergens")}</h4><ul class="leg">{leg}</ul>'
-        f'<h4>{t("Soßen", "Sauces")}</h4><p>{t("Alle Gerichte mit Soße nach Wahl: " + SOSSEN[0], "All dishes with sauce of your choice: garlic, herbs, chili")} – '
-        f'{t("Inhaltsstoffe", "Ingredients")} {SOSSEN[1]} · {t("Allergene", "Allergens")} {", ".join(SOSSEN[2].split(","))}</p>'
-        f'<h4>{t("Inhaltsstoffe", "Ingredients")}</h4><ul class="zut" lang="de">{zut}</ul>'
+        + (f'<h4>{t("Soßen", "Sauces")}</h4><p>{t("Alle Gerichte mit Soße nach Wahl: " + SOSSEN[0], "All dishes with sauce of your choice: " + (SOSSEN[3] if len(SOSSEN) > 3 else "garlic, herbs, chili"))} – '
+           + (f'{t("Inhaltsstoffe", "Ingredients")} {SOSSEN[1]} · ' if SOSSEN[1] else "") + f'{t("Allergene", "Allergens")} {", ".join(SOSSEN[2].split(","))}</p>' if SOSSEN else "") +
+        (f'<h4>{t("Inhaltsstoffe", "Ingredients")}</h4><ul class="zut" lang="de">{zut}</ul>' if ZUTATEN else "") +
         f'<p>{t("Fragen Sie an der Theke nach Zutaten, Allergenen und Zusatzstoffen – unsere Allergiker-Speisekarte können Sie jederzeit einsehen.", "Ask at the counter about ingredients, allergens and additives – you can see our allergen menu at any time.")}</p>'
         '</details>')
 
 
 def gruppe_html(gr):
     out = [f'<section class="gruppe" id="{gr["id"]}" aria-labelledby="g-{gr["id"]}">',
-           f'<h3 class="band" id="g-{gr["id"]}"><svg class="band-icon" viewBox="0 0 40 40" aria-hidden="true">{ICONS[gr["id"]]}</svg>{t(gr["titel"], EN.titel(gr["titel"]))}</h3>']
+           f'<h3 class="band" id="g-{gr["id"]}"><svg class="band-icon" viewBox="0 0 40 40" aria-hidden="true">{ICONS.get(gr.get("icon") or gr["id"], ICONS["besteck"])}</svg>{t(gr["titel"], EN.titel(gr["titel"]))}</h3>']
     for ab in gr["abschnitte"]:
         groessen = ab.get("groessen")
         n = len(ab["gerichte"])
@@ -303,7 +310,7 @@ def gruppe_html(gr):
         else:
             out.append(f'<h4 class="abschnitt-titel">{t(ab["titel"], EN.titel(ab["titel"]))}{info}</h4>')
         if ab["titel"] in KENNZEICHNUNG:
-            out.append(kennzeichnung_html(*KENNZEICHNUNG[ab["titel"]]))
+            out.append(kennzeichnung_html(*KENNZEICHNUNG[ab["titel"]]) if ab["titel"] in KENNZEICHNUNG else "")
         if groessen:
             kopf = "".join(f"<span>{e(x)}</span>" for x in groessen) + "<span></span>"
             out.append(f'<div class="groessen-kopf" aria-hidden="true"><div class="groessen"><span></span><span></span>{kopf}</div>'
@@ -633,6 +640,8 @@ p{margin:0}
 .band-icon{width:1.45em;height:1.45em;flex:none;margin:-4px 0}
 .buehne-text{position:relative}
 .koch-klein{position:absolute;right:-4px;top:40px;width:100px;filter:drop-shadow(0 6px 7px rgba(58,21,49,.25))}
+@media (max-width:959px){.buehne-text:has(.koch-klein) h1{padding-inline-end:88px}}
+@media (min-width:600px) and (max-width:959px){.buehne-text:has(.koch-klein) h1{padding-inline-end:140px}}
 @media (max-width:959px){.bilder .koch{display:none}}
 @media (min-width:600px) and (max-width:959px){.koch-klein{width:150px;top:20px}}
 @media (min-width:960px){.koch-klein{display:none}}
@@ -2704,8 +2713,8 @@ def bauen(hinweise=None, ziel=None, einzeln=False):
         "%%TITEL_PRAEFIX%%": "[Entwurf] " if VORSCHAU else "",
         "%%BODY_KLASSE%%": ' class="vorschau"' if VORSCHAU else "",
         "%%VORSCHAU_BAND%%": ('<div class="vorschau-band" role="note"><strong data-en="DRAFT">ENTWURF</strong> '
-                              f'<span data-en="Not yet the official website of {e(NAME)}. Orders go to a test number.">'
-                              f'Noch nicht die offizielle Seite von {e(NAME)}. Bestellungen gehen an eine Testnummer.</span>'
+                              + t(*(getattr(K, "VORSCHAU_TEXT", None) or (f"Noch nicht die offizielle Seite von {NAME}. Bestellungen gehen an eine Testnummer.",
+                                                                          f"Not yet the official website of {NAME}. Orders go to a test number."))) +
                               f' <small class="stand">Stand {STAND}</small></div>')
                              if VORSCHAU else "",
         "%%APP_KOPF%%": "" if einzeln else (

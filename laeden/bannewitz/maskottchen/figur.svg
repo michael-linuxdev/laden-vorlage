@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 430 470" role="img" aria-label="Drehspieß über dem Feuer">
+  <rect x="80" y="420" width="270" height="40" rx="12" fill="#3B3E5B" stroke="#1B1C2B" stroke-width="5"/>
+  <path d="M215 20 V420" stroke="#9AA0B8" stroke-width="12" stroke-linecap="round"/>
+  <path d="M130 70 C130 50 300 50 300 70 L265 330 C258 360 172 360 165 330 Z" fill="#B5612E" stroke="#5A2A10" stroke-width="6" stroke-linejoin="round"/>
+  <g stroke="#7E3A15" stroke-width="8" stroke-linecap="round" fill="none">
+    <path d="M140 110 Q215 130 290 110"/><path d="M146 160 Q215 180 284 160"/><path d="M152 210 Q215 230 278 210"/><path d="M158 260 Q215 280 272 260"/><path d="M164 305 Q215 322 266 305"/>
+  </g>
+  <path d="M200 85 Q215 60 235 85" fill="none" stroke="#E9A86B" stroke-width="8" stroke-linecap="round"/>
+  <path d="M95 420 C70 385 95 360 115 345 C115 370 128 378 135 372 C130 345 150 325 165 312 C168 345 190 350 195 335 C215 360 230 335 235 315 C250 335 262 350 270 345 C268 330 285 318 300 305 C305 335 320 350 330 335 C350 360 355 395 335 420 Z" fill="#E4572E" stroke="#B83A18" stroke-width="5" stroke-linejoin="round"/>
+  <path d="M140 420 C125 400 138 385 150 378 C152 392 162 396 168 392 C172 404 180 410 185 405 C190 395 200 388 210 382 C214 398 226 404 232 398 C240 405 248 400 252 392 C262 400 272 410 268 420 Z" fill="#FFB627"/>
+</svg>

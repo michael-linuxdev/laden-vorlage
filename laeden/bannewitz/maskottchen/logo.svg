@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" role="img" aria-label="Feuerspieß">
+  <circle cx="60" cy="60" r="57" fill="#2B2D42" stroke="#FFB627" stroke-width="5"/>
+  <path d="M60 14 V100" stroke="#C9CCD8" stroke-width="4" stroke-linecap="round"/>
+  <path d="M44 30 C44 26 76 26 76 30 L70 76 C68 82 52 82 50 76 Z" fill="#B5612E" stroke="#5A2A10" stroke-width="3" stroke-linejoin="round"/>
+  <path d="M46 42 H74 M48 54 H72 M50 66 H70" stroke="#7E3A15" stroke-width="3" stroke-linecap="round"/>
+  <path d="M40 104 C30 92 38 84 44 78 C44 86 49 88 51 86 C49 78 55 72 60 68 C60 78 68 80 70 74 C76 82 82 90 78 100 Z" fill="#E4572E" stroke="#FFB627" stroke-width="3" stroke-linejoin="round"/>
+  <path d="M52 100 C48 94 52 90 55 87 C56 92 60 92 61 90 C64 94 66 97 64 100 Z" fill="#FFB627"/>
+</svg>

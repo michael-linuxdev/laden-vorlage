@@ -1,5 +1,5 @@
 /* Offline-Speicher. Seite und status.json: erst Netz, sonst Speicher. Rest: erst Speicher. */
-var V='sarayfreital-4bbc13d6ce',VOR=["./", "css/style.css?v=6d9f2add", "js/main.js?v=542f2ad0", "fonts/Roboto-Slab-Bold.sub.woff", "fonts/Roboto-Slab-Regular.sub.woff", "fonts/lato-bold.sub.woff", "fonts/lato-normal.sub.woff", "img/saray-koch-kopf.svg", "img/saray-koch.svg"];
+var V='sarayfreital-ec40f7642d',VOR=["./", "css/style.css?v=a7e412a1", "js/main.js?v=c9408c6b", "fonts/Roboto-Slab-Bold.sub.woff", "fonts/Roboto-Slab-Regular.sub.woff", "fonts/lato-bold.sub.woff", "fonts/lato-normal.sub.woff", "img/saray-koch-kopf.svg", "img/saray-koch.svg"];
 self.addEventListener('install',function(e){e.waitUntil(caches.open(V).then(function(c){return c.addAll(VOR);}).then(function(){return self.skipWaiting();}));});
 self.addEventListener('activate',function(e){e.waitUntil(caches.keys().then(function(ks){return Promise.all(ks.filter(function(k){return k!==V&&k.indexOf('sarayfreital-')===0;}).map(function(k){return caches.delete(k);}));}).then(function(){return self.clients.claim();}));});
 self.addEventListener('fetch',function(e){

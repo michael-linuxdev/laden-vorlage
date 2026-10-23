@@ -5,6 +5,7 @@ lokal.json
 __pycache__/
 maskottchen/vorschau.*
 druck/*.png
-docs/druck/
+docs/*/druck/
 druck/flyer-vorschau.png
 .fotos-cache/
+_bild_*.html

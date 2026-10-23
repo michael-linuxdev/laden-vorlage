@@ -1,0 +1,1940 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<title>Fiamma Chef</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="../img/favicon-96.png" type="image/png">
+<link rel="apple-touch-icon" href="../img/app-180.png">
+<meta name="apple-mobile-web-app-title" content="Fiamma Chef">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#1E4D2B">
+<style>
+:root{--gelb:#F4E4C1;--tinte:#1E4D2B;--paprika:#C0392B;--blass:#FBF4E4;--linie:#e6dbe2;--gruen:#1f7a3d}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:#f7f3f6;color:var(--tinte);font:400 17px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+  padding-bottom:calc(150px + env(safe-area-inset-bottom))}
+button,input,select,textarea{font:inherit;color:inherit}
+header{position:sticky;top:0;z-index:20;background:var(--tinte);color:#fff;padding:calc(10px + env(safe-area-inset-top)) 16px 10px;
+  display:flex;align-items:center;gap:10px}
+header img{width:38px;height:38px}
+header>div{min-width:0}header h1{white-space:nowrap}header small{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+@media (max-width:400px){.sprache-wahl button{padding:0 7px;gap:4px}.hilfe-knopf{width:38px;height:38px}}
+header h1{margin:0;font-size:1.15rem}
+.hilfe-knopf{flex:none;width:42px;height:42px;border-radius:50%;border:2px solid var(--gelb);background:none;color:var(--gelb);font:700 1.2rem/1 inherit;cursor:pointer}
+.tour{position:fixed;inset:0;z-index:80}
+.tour-loch{position:fixed;border-radius:14px;box-shadow:0 0 0 4px var(--gelb),0 0 0 9999px rgba(30,10,25,.62);pointer-events:none;transition:all .25s}
+.tour-loch.ohne{box-shadow:0 0 0 9999px rgba(30,10,25,.62);width:0;height:0;left:50%;top:50%}
+.tour-karte{position:fixed;left:12px;right:12px;max-width:520px;margin:0 auto;background:#fff;color:var(--tinte);border-radius:18px;padding:16px;box-shadow:0 14px 40px rgba(0,0,0,.35)}
+.tour-karte h3{margin:0 0 6px;font-size:1.15rem}.tour-karte p{margin:0 0 12px;line-height:1.4}
+.tour-karte .tour-zahl{font-size:.8rem;font-weight:700;opacity:.6;margin-bottom:4px}
+.tour-karte .reihe{display:flex;gap:8px;align-items:center}.tour-karte .reihe .knopf.voll{margin-left:auto}
+@media (prefers-reduced-motion:reduce){.tour-loch{transition:none}}
+.antw{border-bottom:1px solid var(--linie);padding:10px 0}.antw:last-child{border-bottom:0}
+.antw-kopf{display:flex;align-items:center;gap:8px;justify-content:space-between}.antw-kopf code{background:var(--blass);padding:2px 6px;border-radius:6px;font-weight:700}
+.antw-text{white-space:pre-wrap;margin:6px 0 0;padding:8px 10px;background:#faf6f8;border-radius:10px;font-size:.95rem}
+@media print{body.antw-druck header,body.antw-druck nav.tabs,body.antw-druck .speichern,body.antw-druck .status,body.antw-druck #app>*:not(#antw-karte),body.antw-druck #antw-karte button,body.antw-druck #antw-karte .wahl{display:none!important}
+  body.antw-druck .antw{break-inside:avoid}}
+.sprache-wahl{display:flex;border:2px solid var(--gelb);border-radius:999px;overflow:hidden;flex:none}
+.sprache-wahl button{display:flex;align-items:center;gap:6px;min-height:42px;padding:0 10px;border:0;background:none;color:var(--gelb);font-weight:700;cursor:pointer;opacity:.6}
+.sprache-wahl button svg{width:26px;height:18px;border-radius:3px;box-shadow:0 0 0 1px rgba(255,255,255,.35);flex:none}
+.sprache-wahl button[aria-pressed=true]{background:var(--gelb);color:var(--tinte);opacity:1}
+header small{display:block;opacity:.75;font-size:.8rem}
+main{max-width:720px;margin:0 auto;padding:14px 14px 0}
+h2{font-size:1.3rem;margin:18px 4px 10px}
+.karte{background:#fff;border-radius:16px;padding:14px;margin:0 0 12px;box-shadow:0 1px 0 var(--linie)}
+.karte h3{margin:0 0 8px;font-size:1.08rem}
+.reihe{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.knopf{min-height:48px;padding:0 16px;border-radius:12px;border:2px solid var(--tinte);background:#fff;font-weight:700;cursor:pointer}
+.knopf.voll{background:var(--tinte);color:#fff}
+.knopf.gelb{background:var(--gelb);border-color:var(--tinte)}
+.knopf.rot{border-color:var(--paprika);color:var(--paprika)}
+.knopf.rot.voll{background:var(--paprika);color:#fff}
+.knopf.klein{min-height:40px;padding:0 12px;font-size:.92rem}
+.knopf:disabled{opacity:.45}
+.chip{display:inline-flex;align-items:center;gap:6px;min-height:36px;padding:0 6px 0 12px;border-radius:999px;background:var(--blass);
+  border:1px solid #e9d78d;font-size:.92rem;font-weight:600}
+.chip button{width:30px;height:30px;border:0;border-radius:50%;background:#fff;font-weight:700;cursor:pointer}
+.chip.aus{background:#fde3dc;border-color:#f2b7a8}
+.wahl{display:flex;gap:6px;flex-wrap:wrap}
+.wahl button{min-height:44px;padding:0 14px;border-radius:999px;border:2px solid var(--tinte);background:#fff;font-weight:700}
+.wahl button[aria-pressed=true]{background:var(--tinte);color:var(--gelb)}
+label{display:block;font-weight:700;font-size:.92rem;margin:10px 0 4px}
+input[type=text],input[type=date],input[type=search],select,textarea{width:100%;min-height:46px;border:2px solid #cdbfc8;border-radius:10px;padding:8px 10px;background:#fff}
+input:focus,select:focus,textarea:focus{outline:3px solid var(--gelb);border-color:var(--tinte)}
+/* iOS: Datumsfelder sonst breiter als die Karte */
+input[type=date]{-webkit-appearance:none;appearance:none;display:block;min-width:0;max-width:100%}
+input[type=date]::-webkit-date-and-time-value{text-align:left}
+.reihe > div{min-width:0}
+.karte > .reihe{margin-top:12px}
+.hinweis{font-size:.9rem;opacity:.8;margin:6px 4px}
+.fehler{color:var(--paprika);font-weight:700}
+.ok{color:var(--gruen);font-weight:700}
+#gs-druck{display:none}
+@media print{
+  body.gs-drucken>*:not(#gs-druck){display:none!important}
+  body.gs-drucken{padding:0;background:#fff}
+  body.gs-drucken #gs-druck{display:grid;grid-template-columns:1fr 1fr;grid-auto-rows:148mm;width:210mm}
+  #gs-druck .gs{position:relative;overflow:hidden;border:1px dashed #999;padding:12mm 10mm;background:#F4E4C1;color:#1E4D2B;text-align:center;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2mm;-webkit-print-color-adjust:exact;print-color-adjust:exact;break-inside:avoid}
+  #gs-druck img{width:38mm;height:auto}
+  #gs-druck p{margin:0}
+  #gs-druck .gs-titel{font:700 15pt Georgia,serif;text-transform:uppercase;letter-spacing:.08em}
+  #gs-druck .gs-wert{font:700 44pt Georgia,serif;line-height:1}
+  #gs-druck .gs-ort{font-weight:700;font-size:11pt}
+  #gs-druck .gs-nr{font:700 12pt ui-monospace,Menlo,monospace;background:#fff;padding:1.5mm 3mm;border-radius:2mm;margin-top:2mm}
+  #gs-druck .gs-klein{font-size:8pt;max-width:70mm}
+  @page{size:A4;margin:0}
+}
+.liste-gericht{display:flex;align-items:center;gap:10px;width:100%;text-align:left;background:#fff;border:0;border-bottom:1px solid var(--linie);
+  padding:12px 6px;min-height:56px;cursor:pointer}
+.liste-gericht .nr{width:42px;flex:none;font-weight:700;opacity:.7}
+.liste-gericht .nm{flex:1}
+.liste-gericht .pr{font-weight:700;white-space:nowrap}
+.liste-gericht.geloescht .nm{text-decoration:line-through;opacity:.5}
+.marke{display:inline-block;margin-left:6px;padding:0 8px;border-radius:999px;font-size:.75rem;font-weight:700;background:var(--gelb);vertical-align:middle}
+.marke.neu{background:#d6f0dc}.marke.weg{background:#fde3dc}
+.abschnitt{margin:14px 4px 4px;font-weight:700;font-size:.85rem;text-transform:uppercase;letter-spacing:.05em;opacity:.7}
+.tag{display:flex;gap:8px;align-items:center;padding:8px 4px;border-bottom:1px solid var(--linie)}
+.tag strong{width:30px;flex:none}
+.tag.anders{background:var(--blass);border-radius:8px}
+.tag input[type=checkbox]{width:26px;height:26px;flex:none;margin:0}
+.tag select{flex:1;min-width:0;min-height:44px;padding:4px 6px}
+.tag .geschl{flex:1;opacity:.6;font-weight:700}
+.schalter{display:flex;align-items:center;gap:8px;font-weight:700}
+.schalter input{width:24px;height:24px}
+nav.tabs{position:fixed;left:0;right:0;bottom:0;z-index:30;display:grid;grid-template-columns:repeat(5,1fr);background:#fff;
+  border-top:1px solid var(--linie);padding-bottom:env(safe-area-inset-bottom)}
+nav.tabs button{min-height:60px;border:0;background:none;font-weight:700;font-size:.85rem;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px}
+nav.tabs button span{font-size:1.35rem;line-height:1}
+nav.tabs button[aria-current=page]{color:var(--paprika)}
+nav.tabs button{position:relative}nav.tabs button.punkt::after{content:"";position:absolute;top:8px;left:calc(50% + 10px);width:10px;height:10px;border-radius:50%;background:var(--paprika);border:2px solid #fff}
+.anker{scroll-margin-top:84px}
+.sprung{display:flex;gap:8px;overflow-x:auto;padding:4px 0 8px;margin:0 -2px;scrollbar-width:none}.sprung::-webkit-scrollbar{display:none}
+.sprung .chip{flex:none;cursor:pointer;min-height:40px;border:1px solid var(--linie);background:#fff;font-weight:700}
+.menue{padding:4px 0}.menue-punkt{display:flex;align-items:center;gap:12px;width:100%;min-height:62px;padding:8px 14px;border:0;border-bottom:1px solid var(--linie);background:none;text-align:left;cursor:pointer;font:inherit;color:inherit}
+.menue-punkt:last-child{border-bottom:0}.mp-symbol{font-size:1.5rem;width:32px;text-align:center;flex:none}.mp-text{flex:1;display:flex;flex-direction:column}
+.mp-text small{color:#6b5a66;font-size:.85rem}.mp-pfeil{font-size:1.5rem;opacity:.45}
+.such-karte input{width:100%;min-height:48px;font-size:1rem}.such-treffer .menue-punkt{min-height:52px;padding:6px 4px}
+.zurueck-zeile{margin:4px 0 10px}
+.karte.blitz{outline:3px solid var(--gelb);transition:outline-color .4s}
+.speichern{position:fixed;left:10px;right:10px;bottom:calc(68px + env(safe-area-inset-bottom));z-index:31;display:flex;gap:10px;align-items:center;
+  background:var(--gelb);border:2px solid var(--tinte);border-radius:16px;padding:8px 8px 8px 14px;box-shadow:0 10px 24px -10px rgba(30,77,43,.6)}
+.speichern p{margin:0;flex:1;font-weight:700;font-size:.95rem;line-height:1.25}
+.status{position:fixed;left:10px;right:10px;bottom:calc(68px + env(safe-area-inset-bottom));z-index:32;background:var(--tinte);color:#fff;
+  border-radius:16px;padding:12px 14px;font-weight:700}
+.status.ok{background:var(--gruen)}.status.rot{background:var(--paprika)}
+.blatt{position:fixed;inset:0;z-index:50;background:rgba(30,77,43,.45);display:flex;align-items:flex-end;justify-content:center}
+.blatt > div{background:#fff;width:100%;max-width:720px;max-height:92%;overflow:auto;border-radius:20px 20px 0 0;padding:18px 16px calc(18px + env(safe-area-inset-bottom))}
+.blatt h3{margin:0 0 6px;font-size:1.2rem}
+.blatt .reihe{margin-top:14px}
+.gefahr-titel{color:var(--paprika)}
+.karte.gefahr{border:2px solid var(--paprika);background:#fff7f4}
+.checkliste summary{cursor:pointer;min-height:40px;display:flex;align-items:center;gap:4px;flex-wrap:wrap}
+.cl-punkt{padding:8px 0;border-bottom:1px solid var(--linie)}
+.karte.feiertag{border:2px solid var(--gelb);background:var(--blass)}
+.foto-bereich{margin-top:14px;padding-top:10px;border-top:1px solid var(--linie)}
+.foto-vorschau{display:block;width:100%;max-width:320px;aspect-ratio:4/3;object-fit:cover;border-radius:10px;margin:6px 0}
+.foto-datei{position:absolute;width:1px;height:1px;opacity:0}
+.gp-zeile{margin:8px 0}.gp-kopf{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:4px}
+.gp-zeile input,.gp-zeile textarea{width:100%;font-size:.95rem}
+.cl-punkt .schalter{font-weight:700;align-items:flex-start}
+.cl-punkt.erledigt .schalter span{text-decoration:line-through;opacity:.6}
+.cl-punkt input[type=text]{margin-left:32px;width:calc(100% - 32px);min-height:40px}
+table.zahlen{width:100%;border-collapse:collapse;margin:4px 0 10px}.zahlen th,.zahlen td{padding:7px 4px;border-bottom:1px solid var(--linie);text-align:right}
+.zahlen th:first-child,.zahlen td:first-child{text-align:left}.zahlen th[scope=row]{text-align:left;font-weight:400}
+.zahlen td{font-weight:700;font-variant-numeric:tabular-nums}.zahlen th[scope=col]{font-size:.78rem;white-space:nowrap;width:3.6em}
+@media (max-width:360px){.zahlen{font-size:.9rem}}
+.frueher{margin-top:12px;padding:8px 10px;background:var(--blass);border-radius:10px}.frueher .reihe{margin-top:6px}
+a.knopf{color:inherit}
+[hidden]{display:none!important}
+</style>
+</head>
+<body>
+<header><img src="../img/logo.svg" alt=""><div style="flex:1"><h1>Fiamma Chef</h1><small id="stand">Lädt …</small></div><button class="hilfe-knopf" id="hilfe" type="button" aria-label="Einführung starten" title="Einführung">?</button><div class="sprache-wahl" id="sprache" role="group" aria-label="Sprache / Dil" data-kein-ue><button type="button" data-ue-sp="de" title="Deutsch"><svg viewBox="0 0 30 20" aria-hidden="true"><rect width="30" height="7" fill="#000"/><rect y="6.67" width="30" height="6.67" fill="#DD0000"/><rect y="13.33" width="30" height="6.67" fill="#FFCE00"/></svg><span>DE</span></button><button type="button" data-ue-sp="tr" title="Türkçe"><svg viewBox="0 0 30 20" aria-hidden="true"><rect width="30" height="20" fill="#E30A17"/><circle cx="11" cy="10" r="5" fill="#fff"/><circle cx="12.25" cy="10" r="4" fill="#E30A17"/><polygon fill="#fff" points="14.20,10.00 15.83,9.44 15.86,7.72 16.89,9.10 18.54,8.59 17.55,10.00 18.54,11.41 16.89,10.90 15.86,12.28 15.83,10.56"/></svg><span>TR</span></button></div></header>
+<main id="app"></main>
+<div class="speichern" id="speichern" hidden><p id="speichern-text"></p>
+  <button class="knopf klein" id="verwerfen">Verwerfen</button><button class="knopf voll" id="speichern-knopf">Speichern</button></div>
+<div class="status" id="status" hidden></div>
+<nav class="tabs" id="tabs" hidden>
+  <button data-tab="heute" aria-current="page"><span>☀️</span>Heute</button>
+  <button data-tab="karte"><span>📋</span>Karte</button>
+  <button data-tab="preise"><span>💶</span>Preise</button>
+  <button data-tab="zeiten"><span>🕑</span>Zeiten</button>
+  <button data-tab="mehr"><span>☰</span>Mehr</button>
+</nav>
+<script>
+(function(){
+'use strict';
+var REPO="michael-linuxdev/laden-vorlage", DATEI="laeden/pirna/daten/anpassungen.json", API='https://api.github.com/repos/'+REPO;
+var TK='fiamma-chef-token', STD=null, ANP={}, ALT='{}', SHA=null, TAB='heute', LADEN='alle', SUCHE='';
+var app=document.getElementById('app');
+/* Sprache der Chef-App: Deutsch oder Türkisch. Übersetzt wird die fertige Anzeige (Texte, Platzhalter, Beschriftungen);
+   gespeicherte Daten, Gerichtsnamen und alles, was auf der Website oder dem Gutschein erscheint, bleiben deutsch. */
+var UE={
+" (beide Läden)": " (iki şube)",
+" (heute)": " (bugün)",
+" (jeden Tag)": " (her gün)",
+" (nur ": " (sadece ",
+" (sonst ": " (normalde ",
+" Min.": " dk.",
+" Preise anders als jetzt": " fiyat şimdikinden farklı",
+" Preise ändern sich)": " fiyat değişir)",
+" Stück": " adet",
+" Uhr": "",
+" anders": " farklı",
+" bitte so eingeben: 5,00": " şöyle girin: 5,00",
+" dauerhaft aus? (bis Sie es wieder entfernen)": " kalıcı olarak kapalı mı? (siz tekrar kaldırana kadar)",
+" entfernen?": " kaldırılsın mı?",
+" entfernt": " kaldırıldı",
+" erledigt": " tamam",
+" erst ab …": " ancak … itibaren",
+" geöffnet": " açık",
+" ist schon vergeben oder ungültig.": " zaten kullanılıyor veya geçersiz.",
+" offen": " açık",
+" rückgängig machen? („": " geri alınsın mı? („",
+" · Angaben zum Kopieren": " · Kopyalanacak bilgiler",
+" · Code ": " · Kod ",
+" · nur ": " · sadece ",
+" · offen: ": " · açık: ",
+" · wie jetzt": " · şimdiki gibi",
+" Änderung(en)": " değişiklik",
+" Änderungen": " değişiklik",
+" – bitte später noch einmal versuchen.": " – lütfen daha sonra tekrar deneyin.",
+" – noch nicht gespeichert": " – henüz kaydedilmedi",
+"). Bitte bei GoatCounter einen Schlüssel mit „Read statistics“ anlegen.": "). Lütfen GoatCounter'da „Read statistics“ yetkili bir anahtar oluşturun.",
+"). Bitte die ausführliche Statistik öffnen.": "). Lütfen ayrıntılı istatistiği açın.",
+"). Das kommt vor, solange erst wenige Besuche gezählt sind – später noch einmal ansehen.": "). Henüz az ziyaret sayıldığında bu olabilir – daha sonra tekrar bakın.",
+"). Schlüssel prüfen – oder die ausführliche Statistik öffnen.": "). Anahtarı kontrol edin – veya ayrıntılı istatistiği açın.",
+"+ Mittagstisch": "+ Öğle menüsü",
+"+ Neue Aktion": "+ Yeni kampanya",
+"+ Neues Gericht": "+ Yeni yemek",
+", bis Sie es wieder einschalten. Ausgeschaltetes kann auf der Seite nicht gewählt werden. Pommes/Reis aus: Gerichte gibt es ohne diese Beilage, je 0,50 € günstiger. Noch einmal antippen = wieder da.": ", siz tekrar açana kadar. Kapalı olanlar sitede seçilemez. Patates/pilav kapalı: yemekler bu garnitür olmadan, her biri 0,50 € daha ucuz. Tekrar dokunun = yeniden var.",
+"1 Änderung": "1 değişiklik",
+"1. Weihnachtstag": "Noel 1. gün",
+"2. Weihnachtstag": "Noel 2. gün",
+"30 Tage": "30 gün",
+"7 Tage": "7 gün",
+"API-Schlüssel": "API anahtarı",
+"API-Schlüssel von GoatCounter": "GoatCounter API anahtarı",
+"Ab 10 oder ab 11 Uhr? Google zeigt 11 Uhr.": "10'dan mı 11'den mi? Google 11 gösteriyor.",
+"Ab Uhrzeit …": "Saat … itibaren",
+"Ab wie vielen Portionen wie viel Vorlauf? Zum Beispiel „ab 10 Portionen am Vortag bestellen“. Kommt auf die Seite und den Gruppen-Flyer.": "Kaç porsiyondan itibaren ne kadar önceden? Örneğin „10 porsiyondan itibaren bir gün önce sipariş“. Siteye ve grup broşürüne yazılır.",
+"Abbrechen": "Vazgeç",
+"Abfrage: ": "Sorgu: ",
+"Abmelden": "Çıkış yap",
+"Adresse": "Adres",
+"Aktion löschen": "Kampanyayı sil",
+"Aktionspreis ": "Kampanya fiyatı ",
+"Aktionspreis für ": "Kampanya fiyatı: ",
+"Aktualisieren": "Yenile",
+"Alle Preise auf „": "Tüm fiyatlar „",
+"Alle Preise so": "Tüm fiyatlar böyle",
+"Allergene ergänzen und bestätigen": "Alerjenleri tamamla ve onayla",
+"Allergenmappe für die Theke": "Tezgâh için alerjen dosyası",
+"Alles auf Standard zurücksetzen": "Her şeyi standarda sıfırla",
+"Alles wie Stand ": "Her şey şu tarihteki gibi: ",
+"Als Aktion": "Kampanya olarak",
+"Als Mittagstisch (eigener Kasten oben)": "Öğle menüsü olarak (üstte ayrı kutu)",
+"Als eingelöst markieren": "Kullanıldı olarak işaretle",
+"Alter Stand nicht lesbar (": "Eski durum okunamadı (",
+"An diesem Tag": "Bu günde",
+"An welchen Tagen?": "Hangi günler?",
+"Andere Zeiten": "Farklı saatler",
+"Anrufe Altenberg": "Aramalar Altenberg",
+"Anrufe Freital": "Aramalar Freital",
+"Anschrift (Bahnhof 3 oder Dresdner Str. 23?), Firmenform, USt-IdNr. (falls vorhanden), E-Mail. Mehr als 10 Beschäftigte? Dann Hinweis zur Verbraucherschlichtung (§ 36 VSBG) nötig.": "Adres (Bahnhof 3 mü, Dresdner Str. 23 mü?), şirket türü, KDV no. (varsa), e-posta. 10'dan fazla çalışan? O zaman tüketici uzlaşması notu (§ 36 VSBG) gerekli.",
+"Antwort / Notiz": "Cevap / not",
+"Anzahl": "Adet",
+"Anzeige auf der Seite": "Sitede gösterim",
+"Auf diesem Gerät abmelden": "Bu cihazda çıkış yap",
+"Auf welchem Gerät im Laden öffnen wir die Bestellungen? Bondrucker gewünscht (ca. 40 €)?": "Dükkânda siparişleri hangi cihazda açıyoruz? Fiş yazıcısı isteniyor mu (yakl. 40 €)?",
+"Aufsteller ": "Masa standı ",
+"Aus": "Kapalı",
+"Ausführliche Statistik": "Ayrıntılı istatistik",
+"Automatisch": "Otomatik",
+"Außerdem: Kategorie „Döner-Restaurant“, Fotos vom Laden und von Gerichten hochladen, auf Bewertungen antworten. Halal nur angeben, wenn es bestätigt ist.": "Ayrıca: kategori „Döner restoranı“, dükkân ve yemek fotoğrafları yükleyin, yorumlara cevap verin. Helal sadece onaylıysa belirtin.",
+"Bei der Uhrzeit muss „bis“ nach „von“ liegen.": "Saatte „bitiş“, „başlangıç“tan sonra olmalı.",
+"Bei viel Betrieb: Online-Bestellungen können erst später abgeholt werden. Gilt nur heute.": "Yoğunlukta: online siparişler daha geç teslim alınabilir. Sadece bugün geçerli.",
+"Beide": "İkisi",
+"Beide Läden": "İki şube",
+"Beide gemeinsam (dann Vereinbarung als gemeinsam Verantwortliche, Art. 26 DSGVO) oder jeder für seinen Laden?": "İkisi birlikte mi (o zaman ortak sorumlu sözleşmesi, Art. 26 DSGVO) yoksa herkes kendi şubesi için mi?",
+"Beide geschlossen": "İkisi de kapalı",
+"Beschreibung": "Açıklama",
+"Beschreibung (max. 750 Zeichen)": "Açıklama (en fazla 750 karakter)",
+"Besondere Tage": "Özel günler",
+"Bestellung geteilt": "Sipariş paylaşıldı",
+"Besucher": "Ziyaretçi",
+"Besucher und Bestellungen": "Ziyaretçiler ve siparişler",
+"Besucherzählung: Auftragsverarbeitung": "Ziyaretçi sayımı: veri işleme sözleşmesi",
+"Bild zum Posten: ": "Paylaşım görseli: ",
+"Bildschirm ": "Ekran ",
+"Bildschirm im Laden": "Dükkândaki ekran",
+"Bis 14 Tage im Voraus, frühestens 20 Minuten nach der Bestellung – passt das?": "14 güne kadar önceden, en erken siparişten 20 dakika sonra – uygun mu?",
+"Bitte Text und gültigen Zeitraum angeben.": "Lütfen metin ve geçerli bir dönem girin.",
+"Bitte ein Datum ab heute wählen.": "Lütfen bugünden itibaren bir tarih seçin.",
+"Bitte einen Namen eingeben, z. B. „Döner 5 €“.": "Lütfen bir isim girin, örn. „Döner 5 €“.",
+"Bitte einen Namen eingeben.": "Lütfen bir isim girin.",
+"Bitte einen gültigen Zeitraum wählen.": "Lütfen geçerli bir dönem seçin.",
+"Bitte mindestens ein Gericht hinzufügen.": "Lütfen en az bir yemek ekleyin.",
+"Bitte zuerst speichern oder verwerfen.": "Lütfen önce kaydedin veya vazgeçin.",
+"Buß- und Bettag": "Tövbe ve Dua Günü",
+"Chef-App und Abläufe": "Şef uygulaması ve işleyiş",
+"Christi Himmelfahrt": "Hz. İsa'nın Göğe Yükselişi",
+"Code": "Kod",
+"Das Bild lässt sich nicht öffnen.": "Resim açılamıyor.",
+"Datenschutzerklärung vom Anwalt prüfen lassen": "Gizlilik politikasını avukata kontrol ettir",
+"Datum": "Tarih",
+"Dauerhaft aus": "Kalıcı kapalı",
+"Den Stand ": "Fiyat listesi ",
+"Den echten Saray-Koch als Datei; ersetzt die nachgezeichnete Figur auf Seite, App-Symbol und Druck": "Gerçek Saray aşçısı dosya olarak; sitedeki, uygulama simgesindeki ve baskıdaki çizimin yerine geçer",
+"Der Schlüssel wird nicht angenommen (": "Anahtar kabul edilmiyor (",
+"Der Zugang ist nur auf diesem Gerät gespeichert. Nach dem Abmelden braucht es einen neuen Zugangslink von Michael.": "Erişim sadece bu cihazda kayıtlı. Çıkış yaptıktan sonra Michael'dan yeni bir erişim bağlantısı gerekir.",
+"Der Zugang ist ungültig oder abgelaufen.": "Erişim geçersiz veya süresi dolmuş.",
+"Di": "Sal",
+"Die Abfahrten gelten bis 12.12.2026. Danach trägt Michael den neuen Fahrplan ein.": "Kalkış saatleri 12.12.2026'ya kadar geçerli. Sonra Michael yeni tarifeyi girer.",
+"Do": "Per",
+"Domain": "Alan adı",
+"Domain saraydöner.de": "Alan adı saraydöner.de",
+"Drucken": "Yazdır",
+"Dürfen wir Fotos machen? Wann passt es?": "Fotoğraf çekebilir miyiz? Ne zaman uygun?",
+"Echtes Logo": "Gerçek logo",
+"Eingelöst – bitte speichern.": "Kullanıldı – lütfen kaydedin.",
+"Einmal einrichten: bei GoatCounter unter „API“ einen Schlüssel mit Leserechten erstellen und hier eintragen. Er bleibt nur auf diesem Gerät.": "Bir kez kurun: GoatCounter'da „API“ altında okuma yetkili bir anahtar oluşturup buraya girin. Sadece bu cihazda kalır.",
+"Einrichten": "Kur",
+"Eintrag entfernen": "Kaydı kaldır",
+"Einweisung": "Eğitim",
+"Entfernen": "Kaldır",
+"Entfernen fehlgeschlagen (": "Kaldırma başarısız (",
+"Entfernt …": "Kaldırılıyor …",
+"Entwurf steht. Vor dem Freischalten von einem Anwalt prüfen lassen – mit Impressum und gemeinsamer Verantwortung beider Inhaber.": "Taslak hazır. Yayına almadan önce avukata kontrol ettirin – künye ve iki sahibin ortak sorumluluğu dahil.",
+"Erste Sonderaktion": "İlk kampanya",
+"Erstellen und drucken": "Oluştur ve yazdır",
+"Es gibt noch keine gespeicherte Änderung": "Henüz kaydedilmiş değişiklik yok",
+"Feiertage": "Resmî tatiller",
+"Feiertage demnächst": "Yaklaşan tatiller",
+"Fernseher mit HDMI und Fire-TV-Stick (ca. 40 €), Adresse unter Mehr → Bildschirm im Laden als Startseite einstellen.": "HDMI'lı televizyon ve Fire TV Stick (yakl. 40 €); Diğer → Dükkândaki ekran altındaki adresi başlangıç sayfası yapın.",
+"Flyer (A4, Wickelfalz)": "Broşür (A4, üç katlı)",
+"Flyer Firmen, Vereine, Feiern (A5)": "Broşür firmalar, kulüpler, kutlamalar (A5)",
+"Flyer und Aufsteller": "Broşür ve masa standı",
+"Foto ": "Fotoğraf ",
+"Foto aufnehmen oder auswählen": "Fotoğraf çek veya seç",
+"Foto des Gerichts": "Yemeğin fotoğrafı",
+"Foto entfernen": "Fotoğrafı kaldır",
+"Foto entfernt – in ca. 3 Minuten auch auf der Seite.": "Fotoğraf kaldırıldı – yakl. 3 dakika sonra sitede de.",
+"Foto gespeichert ✓ – in ca. 3 Minuten auf der Seite.": "Fotoğraf kaydedildi ✓ – yakl. 3 dakika sonra sitede.",
+"Foto von Nr. ": "Fotoğraf No. ",
+"Foto wird vorbereitet …": "Fotoğraf hazırlanıyor …",
+"Fotos der Gerichte": "Yemek fotoğrafları",
+"Fr": "Cum",
+"Freischalten": "Yayına alma",
+"Freital 11–22 Uhr, Altenberg? Reformationstag 31.10., Buß- und Bettag 18.11.": "Freital 11–22, Altenberg? Reformasyon Günü 31.10., Tövbe ve Dua Günü 18.11.",
+"Frühere Preise": "Eski fiyatlar",
+"Für welchen Laden?": "Hangi şube için?",
+"Ganztags": "Tüm gün",
+"Gelb markierte Tage weichen vom Standard ab.": "Sarı işaretli günler standarttan farklı.",
+"Gemeinsam bestellt": "Birlikte sipariş",
+"Gericht hinzufügen: Name oder Nummer": "Yemek ekle: isim veya numara",
+"Gericht suchen": "Yemek ara",
+"Gerichte und Aktionspreise": "Yemekler ve kampanya fiyatları",
+"Gesamt": "Toplam",
+"Geschenkgutscheine": "Hediye çekleri",
+"Geschlossen": "Kapalı",
+"Gespeichert ✓ Die Seite wird jetzt neu gebaut – ca. 2–3 Minuten …": "Kaydedildi ✓ Site şimdi yeniden oluşturuluyor – yakl. 2–3 dakika …",
+"Gespeichert ✓ In ca. 3 Minuten ist die Seite aktuell.": "Kaydedildi ✓ Yakl. 3 dakika içinde site güncel.",
+"Gespeichert ✓ – Veröffentlichung dauert länger als üblich.": "Kaydedildi ✓ – Yayınlama her zamankinden uzun sürüyor.",
+"Gilt die Karte vom 01.02.2024 noch? In beiden Läden gleich?": "01.02.2024 tarihli menü hâlâ geçerli mi? İki şubede aynı mı?",
+"GitHub antwortet nicht (": "GitHub cevap vermiyor (",
+"GoatCounter erlaubt den Abruf aus der App nicht (": "GoatCounter uygulamadan sorguya izin vermiyor (",
+"GoatCounter hat noch keine Zahlen geliefert (": "GoatCounter henüz sayı göndermedi (",
+"Google und Fotos": "Google ve fotoğraflar",
+"Google-Unternehmensprofil": "Google işletme profili",
+"Größere Bestellungen": "Büyük siparişler",
+"Gutschein einlösen": "Hediye çeki kullan",
+"Gutscheine erstellt – jetzt speichern!": "Hediye çekleri oluşturuldu – şimdi kaydedin!",
+"Gutscheine mit Nummer und Code drucken (4 pro A4-Blatt). Bezahlt wird bar an der Theke. Danach unten speichern, sonst gelten sie nicht. Ausgegeben: ": "Numaralı ve kodlu hediye çekleri yazdırın (A4 sayfaya 4 adet). Ödeme tezgâhta nakit. Sonra aşağıda kaydedin, yoksa geçersiz olurlar. Verilen: ",
+"Gültig in": "Geçerli olduğu yer",
+"Heiligabend (kein Feiertag)": "Noel arifesi (tatil değil)",
+"Heute": "Bugün",
+"Heute aus": "Bugün yok",
+"Heute aus, Zutaten, Wartezeit, besondere Tage, Aktionen, Hinweis, Drucken, Rückgängig": "Bugün yok, malzemeler, bekleme süresi, özel günler, kampanyalar, duyuru, yazdırma, geri alma",
+"Heutige Preise als Stand festlegen": "Bugünkü fiyatları liste olarak kaydet",
+"Hinweis entfernen": "Duyuruyu kaldır",
+"Hinweis hinzufügen": "Duyuru ekle",
+"Hinweis oben auf der Seite": "Sitenin üstündeki duyuru",
+"Hochladen fehlgeschlagen (": "Yükleme başarısız (",
+"Holt den Stand vor dem letzten Speichern zurück.": "Son kaydetmeden önceki durumu geri getirir.",
+"Höchstens drei eigene Stände – zum Festlegen bitte erst einen löschen.": "En fazla üç kendi liste – yenisi için önce birini silin.",
+"Immer mit den aktuellen Preisen (nach dem Speichern ca. 3 Minuten warten). Für die Druckerei oder den eigenen Drucker.": "Her zaman güncel fiyatlarla (kaydettikten sonra yakl. 3 dakika bekleyin). Matbaa veya kendi yazıcınız için.",
+"Impressum Altenberg (Ahmet)": "Künye Altenberg (Ahmet)",
+"Impressum Freital (Khan)": "Künye Freital (Khan)",
+"In der Google-Maps-App oder auf business.google.com anmelden, das Profil des Ladens öffnen und diese Angaben vergleichen. Abweichungen übernehmen.": "Google Haritalar uygulamasında veya business.google.com'da oturum açın, dükkânın profilini açın ve bu bilgileri karşılaştırın. Farkları düzeltin.",
+"In jeder WhatsApp-Bestellung steht unten ein Link „Für die Küche“. Antippen öffnet die Bestellung groß zum Abhaken, sortiert nach Abholzeit, mit Bon-Druck. Gespeichert wird nur auf dem Gerät im Laden.": "Her WhatsApp siparişinin altında „Für die Küche“ bağlantısı var. Dokununca sipariş büyük açılır, işaretlenebilir, teslim saatine göre sıralı, fiş yazdırma ile. Sadece dükkândaki cihazda kaydedilir.",
+"Ja": "Evet",
+"Ja, rückgängig": "Evet, geri al",
+"Ja, zurücksetzen": "Evet, sıfırla",
+"Ja, übernehmen": "Evet, uygula",
+"Jeden Tag": "Her gün",
+"Jemand anderes hat inzwischen gespeichert. Bitte neu laden und noch einmal ändern.": "Bu arada başka biri kaydetti. Lütfen yeniden yükleyin ve tekrar değiştirin.",
+"Jetzt an": "Şimdi açık",
+"Jetzt festlegen": "Şimdi belirle",
+"Karfreitag": "Kutsal Cuma",
+"Karte": "Menü",
+"Kasten oben auf der Seite: „Nach der Piste – vorbestellen und warm abholen“, mit Knopf für Skikurse und Gruppen. Automatisch vom 1. Dezember bis 15. März.": "Sitenin üstünde kutu: „Pistten sonra – önceden sipariş ver, sıcak teslim al“, kayak kursları ve gruplar için düğmeyle. Otomatik olarak 1 Aralık – 15 Mart.",
+"Kategorie": "Kategori",
+"Kommt irgendwann Kartenzahlung dazu?": "İleride kartla ödeme gelecek mi?",
+"Kopieren": "Kopyala",
+"Kopiert ✓": "Kopyalandı ✓",
+"Küchenansicht": "Mutfak görünümü",
+"Küchenansicht öffnen": "Mutfak görünümünü aç",
+"Laden": "Şube",
+"Laden fehlgeschlagen: ": "Yükleme başarısız: ",
+"Laufende Kosten": "Sürekli giderler",
+"Letzte Änderung rückgängig": "Son değişikliği geri al",
+"Letzte Änderung vom ": "Son değişiklik: ",
+"Link zum Bestellen (Speisekarte)": "Sipariş bağlantısı (menü)",
+"Lädt …": "Yükleniyor …",
+"Lädt … (": "Yükleniyor … (",
+"Löschen": "Sil",
+"Mehr": "Diğer",
+"Merkmale": "Özellikler",
+"Mi": "Çar",
+"Michael richtet den Zugang einmal pro Gerät ein. Danach diese Seite zum Home-Bildschirm hinzufügen.": "Michael erişimi her cihaz için bir kez kurar. Sonra bu sayfayı ana ekrana ekleyin.",
+"Mit GoatCounter einen Vertrag zur Auftragsverarbeitung klären (oder Zählung abschalten).": "GoatCounter ile veri işleme sözleşmesi yapın (veya sayımı kapatın).",
+"Mittagstisch": "Öğle menüsü",
+"Mo": "Pzt",
+"Name": "İsim",
+"Name (steht oben auf der Seite)": "İsim (sitenin üstünde görünür)",
+"Name oder Nummer suchen": "İsim veya numara ara",
+"Neu: h = Fisch (Nr. 71, 87, 97, 136, 154) und i = Ei in der Soße. Es fehlen noch Angaben für Extra-Portion, Fladenbrot und die Milchgetränke (Kaffee mit Milch, Kakao).": "Yeni: h = balık (No. 71, 87, 97, 136, 154) ve i = sostaki yumurta. Ekstra porsiyon, pide ekmeği ve sütlü içecekler (sütlü kahve, kakao) için bilgiler eksik.",
+"Neue Sonderaktion": "Yeni kampanya",
+"Neuer Hinweis": "Yeni duyuru",
+"Neuer Mittagstisch": "Yeni öğle menüsü",
+"Neues Foto …": "Yeni fotoğraf …",
+"Neues Gericht": "Yeni yemek",
+"Neujahr": "Yılbaşı",
+"Noch keine Gerichte.": "Henüz yemek yok.",
+"Normal": "Normal",
+"Normal geöffnet": "Normal açık",
+"Notiz: ": "Not: ",
+"Nr. ": "No. ",
+"Nr., z. B. G26-001": "No., örn. G26-001",
+"Nummer ": "Numara ",
+"Nummer (muss frei sein; nur die angezeigte Nummer ändert sich)": "Numara (boş olmalı; sadece gösterilen numara değişir)",
+"Nummer (optional, muss frei sein)": "Numara (isteğe bağlı, boş olmalı)",
+"Nur Barzahlung": "Sadece nakit",
+"Nur benutzen, wenn Sie sicher sind.": "Sadece eminseniz kullanın.",
+"Nur zu bestimmten Uhrzeiten": "Sadece belirli saatlerde",
+"Online ✓ Die Seite ist aktuell.": "Online ✓ Site güncel.",
+"Original-Logo von Saray Döner als Datei (am besten SVG oder PDF, sonst großes PNG) – auch für Flyer und Aufsteller": "Saray Döner'in orijinal logosu dosya olarak (tercihen SVG veya PDF, yoksa büyük PNG) – broşür ve stant için de",
+"Original-Maskottchen": "Orijinal maskot",
+"Ostermontag": "Paskalya Pazartesisi",
+"Pfingstmontag": "Pentekost Pazartesisi",
+"Plakat: ": "Afiş: ",
+"Pommes oder Reis aus = 0,50 € weniger": "Patates veya pilav yok = 0,50 € daha az",
+"Preis": "Fiyat",
+"Preis bitte so eingeben: 7,50": "Fiyatı şöyle girin: 7,50",
+"Preis-Stände": "Fiyat listeleri",
+"Preise der Karte": "Menü fiyatları",
+"Probedruck ansehen, Anzahl, selbst drucken oder Druckerei?": "Deneme baskısına bakın, adet, kendimiz mi basarız matbaa mı?",
+"Prüfen": "Kontrol et",
+"Querformat wirkt am besten; die Seite schneidet auf 4:3 zu. Das Foto wird sofort gespeichert.": "Yatay en iyi görünür; site 4:3 olarak keser. Fotoğraf hemen kaydedilir.",
+"Reformationstag": "Reformasyon Günü",
+"Regel entfernen": "Kuralı kaldır",
+"Rund 4 US-$ im Monat. Nötig, damit Seite und Chef-Daten in einem privaten Repository liegen können. Wer zahlt?": "Ayda yaklaşık 4 US-$. Site ve şef verilerinin özel bir depoda durması için gerekli. Kim öder?",
+"Rückgängig machen …": "Geri al …",
+"Sa": "Cmt",
+"Schlüssel entfernen": "Anahtarı kaldır",
+"Seite ansehen": "Siteye bak",
+"Setzt Preise, Gerichte, Öffnungszeiten, Sperren, Zutaten, Aktionen und Hinweise auf den ursprünglichen Stand zurück. Die Checkliste „Vor dem Freischalten“ und die Gutscheine bleiben erhalten.": "Fiyatları, yemekleri, çalışma saatlerini, kapatmaları, malzemeleri, kampanyaları ve duyuruları ilk haline döndürür. „Yayına almadan önce“ kontrol listesi ve hediye çekleri korunur.",
+"So": "Paz",
+"So in Ordnung?": "Böyle uygun mu?",
+"Sonderaktion ändern": "Kampanyayı değiştir",
+"Sonderaktionen": "Kampanyalar",
+"Speichern": "Kaydet",
+"Speichern fehlgeschlagen (": "Kaydetme başarısız (",
+"Speichert …": "Kaydediliyor …",
+"Speisekarte": "Menü",
+"Speisekarte für einen Fernseher: wechselt alle 14 Sekunden die Seite, zeigt Aktionen, Mittagstisch und „heute aus“ von selbst. Adresse im Browser des Fernsehers (z. B. Fire-TV-Stick, App „Silk“) als Startseite speichern.": "Televizyon için menü: her 14 saniyede sayfa değişir, kampanyaları, öğle menüsünü ve „bugün yok“u kendiliğinden gösterir. Adresi televizyonun tarayıcısında (örn. Fire TV Stick, „Silk“ uygulaması) başlangıç sayfası yapın.",
+"Stand ": "Liste ",
+"Standard wiederherstellen": "Standardı geri yükle",
+"Standardzeiten für ": "Standart saatler: ",
+"Suchen": "Ara",
+"Sucht die letzte Änderung …": "Son değişiklik aranıyor …",
+"Tag der Arbeit": "İşçi Bayramı",
+"Tag der Deutschen Einheit": "Alman Birliği Günü",
+"Tag hinzufügen": "Gün ekle",
+"Telefon": "Telefon",
+"Tschechisch, Türkisch, Russisch und Arabisch sind maschinennah übersetzt. Je eine Person mit der Muttersprache kurz drüberschauen lassen (Seite → Sprache wählen).": "Çekçe, Türkçe, Rusça ve Arapça makineye yakın çevrildi. Her dil için anadili olan biri kısaca baksın (site → dil seç).",
+"Tüten-Aufkleber (24 × 70×37 mm)": "Poşet etiketi (24 × 70×37 mm)",
+"Uhrzeit": "Saat",
+"Uhrzeit (z. B. Mittagsangebot)": "Saat (örn. öğle kampanyası)",
+"Uhrzeit bis": "Bitiş saati",
+"Uhrzeit von": "Başlangıç saati",
+"Ungespeicherte Änderungen verwerfen?": "Kaydedilmemiş değişikliklerden vazgeçilsin mi?",
+"Verfügbar": "Var",
+"Verwaltungszugriff, Link zur Seite, Zeiten angleichen, Barzahlung eintragen": "Yönetici erişimi, site bağlantısı, saatleri eşitle, nakit ödemeyi gir",
+"Verwerfen": "Vazgeç",
+"Veröffentlichen hat nicht geklappt. Bitte Michael Bescheid geben.": "Yayınlama olmadı. Lütfen Michael'a haber verin.",
+"Vollständiger Name, Anschrift, E-Mail, Firmenform, USt-IdNr. (falls vorhanden), Beschäftigtenzahl (§ 36 VSBG).": "Tam isim, adres, e-posta, şirket türü, KDV no. (varsa), çalışan sayısı (§ 36 VSBG).",
+"Vor dem Freischalten": "Yayına almadan önce",
+"Vorbestellung": "Ön sipariş",
+"Wartezeit heute": "Bugünkü bekleme süresi",
+"Was gibt es heute nicht?": "Bugün ne yok?",
+"Website": "Web sitesi",
+"Website öffnen": "Siteyi aç",
+"Welche Nummer nimmt Bestellungen an?": "Siparişleri hangi numara alıyor?",
+"Welche Werte? Restbetrag als neuer Gutschein? Gültig 3 Jahre bis Jahresende (gesetzlich).": "Hangi değerler? Kalan tutar yeni çek olarak mı? 3 yıl, yıl sonuna kadar geçerli (yasal).",
+"Welcher Laden?": "Hangi şube?",
+"Wer bestätigt die Bestellungen?": "Siparişleri kim onaylıyor?",
+"Wer betreibt die Website?": "Siteyi kim işletiyor?",
+"Wer hat Zugang zu Domain und DNS? Wo liegt die alte Seite?": "Alan adı ve DNS'e kimin erişimi var? Eski site nerede?",
+"Wer schaut während der Öffnungszeiten aufs Handy und antwortet?": "Çalışma saatlerinde telefona kim bakıp cevap veriyor?",
+"Wer zahlt die Domain, auf wen läuft sie?": "Alan adını kim ödüyor, kimin adına?",
+"Wert": "Değer",
+"Wie ist an diesen Tagen geöffnet? Einmal antippen, dann steht es auf der Seite.": "Bu günlerde nasıl açığız? Bir kez dokunun, sitede görünür.",
+"Wie sonntags": "Pazar gibi",
+"Wieder anzeigen": "Tekrar göster",
+"Wird hochgeladen …": "Yükleniyor …",
+"Wirklich alle Änderungen löschen und den Standard wiederherstellen?": "Tüm değişiklikler gerçekten silinip standart geri yüklensin mi?",
+"Z. B. Heiligabend, Feiertag, Betriebsferien. Gilt nur an diesem Datum – die Seite zeigt es an und bietet passende Abholzeiten an.": "Örn. Noel arifesi, tatil, işletme tatili. Sadece bu tarihte geçerli – site bunu gösterir ve uygun teslim saatleri sunar.",
+"Z. B. „Döner 5 €, Dürüm 6 €“ für eine Woche oder jeden Mittwoch. Die Seite zeigt den alten Preis durchgestrichen und rechnet mit dem Aktionspreis.": "Örn. bir hafta veya her çarşamba „Döner 5 €, Dürüm 6 €“. Site eski fiyatı üstü çizili gösterir ve kampanya fiyatıyla hesaplar.",
+"Zahlen": "Rakamlar",
+"Zahlen konnten nicht geladen werden (": "Rakamlar yüklenemedi (",
+"Zahlungsarten": "Ödeme yöntemleri",
+"Zeiten": "Saatler",
+"Zugang auf diesem Gerät": "Bu cihazdaki erişim",
+"Zugang auf diesem Gerät löschen?": "Bu cihazdaki erişim silinsin mi?",
+"Zugang einrichten": "Erişimi kur",
+"Zugangsschlüssel": "Erişim anahtarı",
+"Zugzeiten Altenberg": "Altenberg tren saatleri",
+"Zum Beispiel Mittagsangebot oder „Döner 5 €“": "Örneğin öğle kampanyası veya „Döner 5 €“",
+"Zur Google-Bewertung": "Google yorumuna",
+"Zutaten": "Malzemeler",
+"alles erledigt ✓": "hepsi tamam ✓",
+"dauerhaft aus": "kalıcı kapalı",
+"jeden Tag (sonst nur heute)": "her gün (yoksa sadece bugün)",
+"keine (Standard)": "yok (standart)",
+"z. B. 7,50": "örn. 7,50",
+"z. B. Döner 5 €, Dürüm 6 €": "örn. Döner 5 €, Dürüm 6 €",
+"z. B. Heute ab 18 Uhr geschlossen": "örn. Bugün 18'den itibaren kapalı",
+"Änderungen sind nach dem Speichern in ca. 2–3 Minuten online.": "Değişiklikler kaydettikten yakl. 2–3 dakika sonra online.",
+"Änderungen: ": "Değişiklikler: ",
+"Öffnungszeiten": "Çalışma saatleri",
+"Öffnungszeiten Altenberg samstags": "Altenberg cumartesi çalışma saatleri",
+"Öffnungszeiten für diesen Tag noch nicht festgelegt.": "Bu gün için çalışma saatleri henüz belirlenmedi.",
+"Übernehmen": "Uygula",
+"Übersetzungen gegenlesen lassen": "Çevirileri kontrol ettir",
+"“ löschen?": "“ silinsin mi?",
+"“ setzen? (": "“ olarak ayarlansın mı? (",
+"„bis“ muss nach „von“ liegen.": "„Bitiş“, „başlangıç“tan sonra olmalı.",
+"⚠️ Gefahrenbereich": "⚠️ Tehlikeli bölge",
+"✓ Gültig: ": "✓ Geçerli: ",
+"✗ Abgelaufen am ": "✗ Süresi doldu: ",
+"✗ Code passt nicht zur Nummer.": "✗ Kod numarayla uyuşmuyor.",
+"✗ Diese Nummer gibt es nicht.": "✗ Bu numara yok.",
+"✗ Schon eingelöst am ": "✗ Zaten kullanıldı: ",
+"❄️ Wintersaison Altenberg": "❄️ Altenberg kış sezonu",
+"🎁 Geschenkgutscheine": "🎁 Hediye çekleri",
+"📺 Bildschirm im Laden": "📺 Dükkândaki ekran",
+"🧾 Küchenansicht": "🧾 Mutfak görünümü",
+"Hähnchen": "Tavuk",
+"Fisch": "Balık",
+"Salate": "Salatalar",
+"Für Kinder": "Çocuklar için",
+"Box & Teller": "Kutu ve tabak",
+"Soßen": "Soslar",
+"Knoblauch": "Sarımsak",
+"Kräuter": "Otlu",
+"Salat und Gemüse": "Salata ve sebze",
+"Eisbergsalat": "Göbek marul",
+"Tomate": "Domates",
+"Gurken": "Salatalık",
+"Zwiebel": "Soğan",
+"Rotkohl": "Kırmızı lahana",
+"Weißkohl": "Beyaz lahana",
+"Paprika": "Biber",
+"Champignon": "Mantar",
+"Peperoni": "Acı biber",
+"Ananas": "Ananas",
+"Oliven": "Zeytin",
+"Brokkoli": "Brokoli",
+"Mais": "Mısır",
+"Beilagen": "Garnitürler",
+"Pommes": "Patates kızartması",
+"Reis": "Pilav",
+"Käse": "Peynir",
+"Halloumikäse": "Hellim",
+"Fetakäse": "Beyaz peynir",
+"Fleisch, Fisch, Ei": "Et, balık, yumurta",
+"Dönerfleisch": "Döner eti",
+"Hähnchen-Dönerfleisch": "Tavuk döner eti",
+"Schinken": "Jambon",
+"Thunfisch": "Ton balığı",
+"Ei": "Yumurta",
+"Sprache": "Dil",
+"bis": "bitiş",
+"von": "başlangıç",
+"{n} von {n} offen": "{n} / {n} açık",
+" (gedruckte Karte) gibt es immer. Dazu bis zu drei eigene Stände, z. B. vor einer Preiserhöhung. Einzelne Preise holen Sie beim Gericht unter „Frühere Preise“ zurück.": " (basılı menü) her zaman var. Ayrıca en fazla üç kendi liste, örn. bir zamdan önce. Tek tek fiyatları yemeğin altında „Eski fiyatlar“dan geri alırsınız.",
+"Antippen = aus ": "Dokun = kapalı ",
+"Antippen = aus": "Dokun = kapalı",
+"(beide Läden)": "(iki şube)",
+"in Freital,": "Freital'de,",
+"in Altenberg,": "Altenberg'de,",
+"geöffnet": "açık",
+"Für das Schaufenster (nach außen): nur Aktionen, Mittagstisch, Empfehlungen und ein großer QR-Code zum Vorbestellen.": "Vitrin için (dışarıya dönük): sadece kampanyalar, öğle menüsü, öneriler ve ön sipariş için büyük bir QR kod.",
+"Schaufenster ": "Vitrin ",
+"„Bestätigen“ und „Ist fertig“ schreiben dem Gast eine fertige WhatsApp-Antwort in seiner Sprache – nur noch seinen Chat antippen und senden. Unten: Tagesabschluss mit Bestellungen, Summe und den beliebtesten Gerichten.": "„Bestätigen“ ve „Ist fertig“ misafire kendi dilinde hazır bir WhatsApp cevabı yazar – sadece sohbetini seçip gönderin. Altta: siparişler, toplam ve en çok sipariş edilen yemeklerle gün sonu özeti.",
+"Vorerst gehen Bestellungen an Khans privates Handy (01573 3729521). Später durch das Laden-Handy ersetzen – welche Nummer?": "Şimdilik siparişler Khan'ın özel telefonuna gidiyor (01573 3729521). Sonra dükkân telefonuyla değiştirilecek – hangi numara?",
+"🏢 Firmen-Codes": "🏢 Firma kodları",
+"Rabatt für Betriebe in der Nähe, z. B. 10 % beim Mittagessen. Der Gast gibt den Code beim Bestellen ein; der Rabatt gilt nicht auf Aktionspreise und steht in der WhatsApp-Nachricht. Den Code nach dem Anlegen notieren – er wird nicht gespeichert.": "Yakındaki işletmeler için indirim, örn. öğle yemeğinde %10. Misafir kodu sipariş verirken girer; indirim kampanya fiyatlarına uygulanmaz ve WhatsApp mesajında yazar. Kodu oluşturduktan sonra not edin – kaydedilmez.",
+"Firma, z. B. Elbtal GmbH": "Firma, örn. Elbtal GmbH",
+"Code, z. B. ELBTAL10": "Kod, örn. ELBTAL10",
+"Neuer Code: Firma": "Yeni kod: firma",
+"Code (Buchstaben und Ziffern)": "Kod (harf ve rakam)",
+"Rabatt": "İndirim",
+"Wann?": "Ne zaman?",
+"Wo?": "Nerede?",
+"Nur mittags 11–14 Uhr": "Sadece öğle 11–14",
+"Code anlegen": "Kod oluştur",
+"Bitte die Firma eintragen.": "Lütfen firmayı girin.",
+"Der Code braucht mindestens 4 Buchstaben oder Ziffern.": "Kod en az 4 harf veya rakam olmalı.",
+"Diesen Code gibt es schon.": "Bu kod zaten var.",
+"Notiert": "Not ettim",
+"Code für „": "Kod: „",
+" angelegt – notieren, der Firma geben, dann speichern.": " oluşturuldu – not edin, firmaya verin, sonra kaydedin.",
+"Code ": "Kod ",
+"🔥 Heute viel los (Hinweis + 15 Min.)": "🔥 Bugün çok yoğun (duyuru + 15 dk.)",
+"„Viel los“ wieder aus": "„Yoğun“ tekrar kapat",
+". Bitte jetzt notieren – er wird nicht gespeichert.": ". Lütfen şimdi not edin – kaydedilmez.",
+"Code für ": "Kod: ",
+"Eine Website oder zwei?": "Tek site mi, iki site mi?",
+"Eine gemeinsame Seite für Freital und Altenberg (so wie jetzt) oder je Laden eine eigene Seite mit eigener Adresse, eigenem Impressum und eigener Chef-App?": "Freital ve Altenberg için ortak tek bir site mi (şimdiki gibi), yoksa her şube için kendi adresi, künyesi ve şef uygulaması olan ayrı bir site mi?",
+"Ideen für später": "Sonraki fikirler",
+"Stammkarte digital": "Dijital sadakat kartı",
+"Nach 10 Bestellungen über die Seite ein Getränk gratis – ohne Konto, gezählt auf dem Handy des Gastes; die Küchenansicht zeigt „10. Bestellung – Getränk gratis“. Machen wir das?": "Siteden 10 siparişten sonra bir içecek bedava – hesap olmadan, misafirin telefonunda sayılır; mutfak görünümü „10. sipariş – içecek bedava“ gösterir. Yapalım mı?",
+"Firmen-Rabattcodes": "Firma indirim kodları",
+"⏸ Bestell-Pause": "⏸ Sipariş molası",
+"Stoppt Online-Bestellungen für heute, wenn der Laden voll ist. Anrufen und Vorbestellen für andere Tage geht weiter. Wirkt nach dem Speichern in ca. 2–3 Minuten.": "Dükkân doluyken bugünkü online siparişleri durdurur. Telefonla sipariş ve başka günler için ön sipariş devam eder. Kaydettikten yakl. 2–3 dakika sonra etkili olur.",
+" · pausiert bis ": " · mola: ",
+"Pause beenden": "Molayı bitir",
+"Pause {n} Min.": "{n} dk. mola",
+"Preisschilder Getränke (8 je A4)": "İçecek fiyat etiketleri (A4'te 8 adet)",
+"Ohne Besteck, ohne Tüte": "Çatal bıçaksız, poşetsiz",
+"Zwei Häkchen im Bestellzettel; spart Material, die Küche sieht es auf dem Bon.": "Sipariş listesinde iki onay kutusu; malzeme tasarrufu, mutfak fişte görür.",
+"Vorlauf bei großen Bestellungen automatisch": "Büyük siparişlerde otomatik hazırlık süresi",
+"Ab z. B. 10 Gerichten bietet der Bestellzettel nur Abholzeiten mit genug Vorlauf an (z. B. 1 Stunde).": "Örn. 10 yemekten itibaren sipariş listesi sadece yeterli hazırlık süresi olan teslim saatleri sunar (örn. 1 saat).",
+"Familien- und Party-Boxen": "Aile ve parti kutuları",
+"+ Neue Box": "+ Yeni kutu",
+"Neue Box": "Yeni kutu",
+"Box ändern": "Kutuyu değiştir",
+"Box löschen": "Kutuyu sil",
+"Feste Pakete zum Festpreis, z. B. „Familienbox: 2 Döner, 2 Kindermenüs, Pommes groß – 29 €“. Erscheinen oben auf der Seite und lassen sich mit einem Tipp bestellen.": "Sabit fiyatlı paketler, örn. „Aile kutusu: 2 döner, 2 çocuk menüsü, büyük patates – 29 €“. Sitenin üstünde görünür ve tek dokunuşla sipariş edilir.",
+"Name (steht auf der Seite)": "İsim (sitede görünür)",
+"Festpreis": "Sabit fiyat",
+"Inhalt": "İçerik",
+"Zusatz": "Ek bilgi",
+"ab (optional)": "başlangıç (isteğe bağlı)",
+"bis (optional)": "bitiş (isteğe bağlı)",
+"z. B. Familienbox": "örn. Aile kutusu",
+"z. B. 29,00": "örn. 29,00",
+"optional, z. B. für 4 Personen": "isteğe bağlı, örn. 4 kişilik",
+"Einzeln zusammen: ": "Tek tek toplam: ",
+"Preis bitte so eingeben: 29,00": "Fiyatı şöyle girin: 29,00",
+"🏖 Urlaub / Betriebsferien": "🏖 Tatil / işletme tatili",
+"Einmal von–bis eintragen: an allen Tagen geschlossen, auf der Seite steht ein Hinweis, Vorbestellungen sind dann nicht möglich.": "Bir kez başlangıç–bitiş girin: tüm günler kapalı, sitede duyuru çıkar, o günler için ön sipariş yapılamaz.",
+"Urlaub eintragen": "Tatili gir",
+"Bitte einen gültigen Zeitraum ab heute wählen.": "Lütfen bugünden itibaren geçerli bir dönem seçin.",
+" Tage eingetragen – bitte speichern.": " gün girildi – lütfen kaydedin.",
+"Aushang A3 (ganze Karte)": "A3 afiş (tüm menü)",
+"WhatsApp-Status: Empfehlungen": "WhatsApp durumu: öneriler",
+"WhatsApp-Status: ": "WhatsApp durumu: ",
+"📦 ": "📦 ",
+"weniger": "daha az",
+"mehr": "daha fazla",
+"🚫 Heute spontan geschlossen?": "🚫 Bugün beklenmedik şekilde kapalı mı?",
+"Für Krankheit, Stromausfall oder Lieferprobleme: Der Laden ist heute zu, oben steht ein Hinweis, Bestellungen für heute gehen nicht mehr. Wirkt nach dem Speichern in ca. 2–3 Minuten.": "Hastalık, elektrik kesintisi veya tedarik sorunları için: dükkân bugün kapalı, üstte duyuru çıkar, bugün için sipariş verilemez. Kaydettikten yakl. 2–3 dakika sonra etkili.",
+" heute geschlossen": " bugün kapalı",
+" doch geöffnet": " yine de açık",
+"📈 Preise anpassen": "📈 Fiyatları ayarla",
+"Alle Preise oder eine Kategorie auf einmal erhöhen. Vorher steht die Liste alt → neu da; der heutige Stand wird automatisch als Preis-Stand gesichert.": "Tüm fiyatları veya bir kategoriyi bir kerede artırın. Önce eski → yeni liste görünür; bugünkü durum otomatik olarak fiyat listesi olarak kaydedilir.",
+"+ Betrag": "+ Tutar",
+"+ Prozent": "+ Yüzde",
+"Wie?": "Nasıl?",
+"Was?": "Ne?",
+"Alle": "Hepsi",
+"Preise übernehmen": "Fiyatları uygula",
+" Gerichte, z. B.:": " yemek, örn.:",
+" Preise geändert – bitte prüfen und speichern.": " fiyat değişti – lütfen kontrol edip kaydedin.",
+". Der heutige Stand wird vorher gesichert.": ". Bugünkü durum önce kaydedilir.",
+"Speisekarte (bei Google unter „Speisekarte“ → „Speisekarte bearbeiten“)": "Menü (Google'da „Menü“ → „Menüyü düzenle“)",
+"Gericht des Tages automatisch": "Otomatik günün yemeği",
+"Jeden Tag ein anderes Gericht aus einer festen Liste oben auf der Seite, mit kleinem Rabatt – ohne tägliches Einstellen.": "Her gün sabit bir listeden başka bir yemek sitenin üstünde, küçük indirimle – her gün ayar yapmadan.",
+"🧪 Testbestellung": "🧪 Test siparişi",
+"Zum Ausprobieren und Einweisen: öffnet die Seite mit einem Test-Döner im Bestellzettel. Laden wählen, per WhatsApp schicken, im Laden den Link „Für die Küche“ antippen. Alles ist als TEST markiert.": "Denemek ve eğitim için: siteyi sipariş listesinde test döneriyle açar. Şube seçin, WhatsApp ile gönderin, dükkânda „Für die Küche“ bağlantısına dokunun. Her şey TEST olarak işaretlidir.",
+"Testbestellung starten": "Test siparişini başlat",
+"Vorerst abgeschaltet. Falls sie wiederkommen: als fester Firmenpreis pro Gericht (z. B. Döner 6 €, Dürüm 7 €) statt Prozent – für Barzahlung am einfachsten. Nur mit Kontrolle an der Theke (Bestellung auf Firmennamen oder Firmenausweis).": "Şimdilik kapalı. Geri gelirse: yüzde yerine yemek başına sabit firma fiyatı (örn. Döner 6 €, Dürüm 7 €) – nakit ödeme için en kolayı. Sadece tezgâhta kontrolle (firma adına sipariş veya firma kimliği).",
+"📅 Was kommt (4 Wochen)": "📅 Neler geliyor (4 hafta)",
+"Nichts Besonderes geplant.": "Özel bir şey planlanmadı.",
+" geschlossen": " kapalı",
+" beginnt": " başlıyor",
+" letzter Tag": " son gün",
+" läuft bis ": " devam ediyor, bitiş: ",
+"❄️ Wintersaison Altenberg beginnt": "❄️ Altenberg kış sezonu başlıyor",
+"❄️ Wintersaison Altenberg endet": "❄️ Altenberg kış sezonu bitiyor",
+"🚆 Zugzeiten Altenberg laufen aus – neuen Fahrplan eintragen lassen": "🚆 Altenberg tren saatleri bitiyor – yeni tarifeyi girdirin",
+"📣 Hinweis: ": "📣 Duyuru: ",
+" ab heute": " bugünden itibaren",
+"Aushang A5 „Hier vorbestellen“ (6 Sprachen)": "A5 afiş „Burada ön sipariş“ (6 dil)",
+"Preise": "Fiyatlar",
+"‹ Mehr": "‹ Diğer",
+"Springen zu": "Git",
+"Suchen: Urlaub, Preis, Gutschein …": "Ara: tatil, fiyat, hediye çeki …",
+"Was möchten Sie tun?": "Ne yapmak istiyorsunuz?",
+"Nichts gefunden. Anderes Wort versuchen.": "Bulunamadı. Başka bir kelime deneyin.",
+"Werbung & Druck": "Reklam ve baskı",
+"Einrichtung": "Kurulum",
+"Notfall": "Acil durum",
+"Flyer, Aufsteller, Aushänge, Status-Bilder": "El ilanı, masa standı, afişler, durum görselleri",
+"Öffnungszeiten und Speisekarte zum Kopieren": "Kopyalamak için çalışma saatleri ve menü",
+"Bildschirm, Schaufenster, Küche": "Ekran, vitrin, mutfak",
+"Links für die Geräte im Laden, Testbestellung": "Dükkandaki cihazlar için bağlantılar, test siparişi",
+"Checkliste": "Kontrol listesi",
+"{n} Fragen offen": "{n} soru açık",
+"Website ansehen": "Web sitesine bak",
+"So sehen Gäste die Seite": "Misafirler sayfayı böyle görüyor",
+"Stand vor dem letzten Speichern": "Son kaydetmeden önceki durum",
+"Gefahrenbereich": "Tehlikeli alan",
+"Standard wiederherstellen, abmelden": "Varsayılana dön, çıkış yap",
+"Anpassen": "Ayarla",
+"Verlauf": "Geçmiş",
+"Stände": "Kayıtlar",
+"Gutscheine": "Hediye çekleri",
+"Firmen-Codes": "Firma kodları",
+"Aktionen": "Kampanyalar",
+"Boxen": "Kutular",
+"Was kommt": "Neler geliyor",
+"Urlaub": "Tatil",
+"Winter": "Kış",
+"Viertelstunde": "Çeyrek saat",
+"Laden heute spontan zu": "Dükkan bugün aniden kapalı",
+"Wartezeit, Bestell-Pause, viel los": "Bekleme süresi, sipariş molası, yoğunluk",
+"Sonderaktionen und Mittagstisch": "Kampanyalar ve öğle menüsü",
+"Speisekarte: Gerichte, Namen, Fotos": "Menü: yemekler, isimler, fotoğraflar",
+"Preise anpassen": "Fiyatları ayarla",
+"Preis-Verlauf": "Fiyat geçmişi",
+"Was kommt (4 Wochen)": "Neler geliyor (4 hafta)",
+"Besondere Tage und Feiertage": "Özel günler ve bayramlar",
+"Urlaub / Betriebsferien": "Tatil / işletme tatili",
+"Wintersaison Altenberg": "Kış sezonu Altenberg",
+"Vorbestellungen je Viertelstunde": "Çeyrek saat başına ön sipariş",
+"🕒 Vorbestellungen je Viertelstunde": "🕒 Çeyrek saat başına ön sipariş",
+"Sind für eine Viertelstunde so viele Bestellungen da, sperrt die Küchenansicht diese Zeit online. Gäste bekommen dann automatisch die nächste freie Zeit vorgeschlagen.": "Bir çeyrek saat için bu kadar sipariş olunca mutfak ekranı bu saati internette kapatır. Misafirlere otomatik olarak bir sonraki boş saat önerilir.",
+"Keine Grenze": "Sınır yok",
+"Freigeben": "Aç",
+"🕘 Preis-Verlauf": "🕘 Fiyat geçmişi",
+"Noch keine Preisänderungen. Ab jetzt steht hier jede Änderung mit Datum – mit „Zurück“ holen Sie den alten Preis wieder.": "Henüz fiyat değişikliği yok. Bundan sonra her değişiklik tarihiyle burada görünür – „Geri“ ile eski fiyatı geri alırsınız.",
+"Jede gespeicherte Preisänderung mit Datum. „Zurück“ setzt den alten Preis wieder ein – danach speichern.": "Kaydedilen her fiyat değişikliği tarihiyle. „Geri“ eski fiyatı geri getirir – sonra kaydedin.",
+"↩ Zurück": "↩ Geri",
+"Alle zurück": "Hepsini geri al",
+"Ja, zurück": "Evet, geri al",
+"1 Preis": "1 fiyat",
+"{n} Preise": "{n} fiyat",
+"Preis wurde seitdem wieder geändert": "Fiyat o zamandan beri yine değişti",
+"Fenster-Aushang A4 quer (großer QR, nach außen)": "Vitrin afişi A4 yatay (büyük QR, dışarıya dönük)",
+"Setzt Preise, Gerichte, Öffnungszeiten, Sperren, Zutaten, Aktionen und Hinweise auf den ursprünglichen Stand zurück. Die Checkliste „Vor dem Freischalten“, Gutscheine, Firmen-Codes und der Preis-Verlauf bleiben erhalten.": "Fiyatları, yemekleri, çalışma saatlerini, kapatmaları, malzemeleri, kampanyaları ve duyuruları ilk haline döndürür. „Yayına almadan önce“ kontrol listesi, hediye çekleri, firma kodları ve fiyat geçmişi korunur.",
+"Willkommen in der Chef-App!": "Chef uygulamasına hoş geldiniz!",
+"In 2 Minuten zeigen wir die wichtigsten Knöpfe. Sie können die Einführung jederzeit wieder starten: oben mit „?“.": "2 dakikada en önemli düğmeleri gösteriyoruz. Tanıtımı istediğiniz zaman yukarıdaki „?“ ile yeniden başlatabilirsiniz.",
+"Krank, Wasserschaden, Stromausfall? Ein Tipp – auf der Website steht dann „heute geschlossen“. Ein zweiter Tipp nimmt es zurück.": "Hastalık, su baskını, elektrik kesintisi? Bir dokunuş – web sitesinde „bugün kapalı“ yazar. İkinci dokunuş geri alır.",
+"Viel los?": "Çok mu yoğun?",
+"Wartezeit +15, +30 oder +45 Minuten für heute – oder eine Bestell-Pause bis zu einer Uhrzeit.": "Bugün için bekleme süresi +15, +30 veya +45 dakika – ya da belirli bir saate kadar sipariş molası.",
+"Etwas ist aus": "Bir şey bitti",
+"Kein Hähnchen mehr? Bei dem Gericht „Heute aus“ tippen. Morgen ist es von selbst wieder da.": "Tavuk mu bitti? O yemekte „Bugün yok“ düğmesine dokunun. Yarın kendiliğinden geri gelir.",
+"Gerichte, Preise und Fotos ändern, Sonderaktionen und Mittagstisch anlegen.": "Yemekleri, fiyatları ve fotoğrafları değiştirin, kampanya ve öğle menüsü oluşturun.",
+"Alle Preise auf einmal erhöhen, frühere Preise zurückholen, Gutscheine drucken.": "Tüm fiyatları bir kerede artırın, eski fiyatları geri alın, hediye çeki yazdırın.",
+"Öffnungszeiten, Feiertage und Urlaub. Oben steht, was in den nächsten 4 Wochen kommt.": "Çalışma saatleri, bayramlar ve tatil. Üstte önümüzdeki 4 haftada neler olduğu yazar.",
+"Ganz wichtig: Speichern": "Çok önemli: Kaydet",
+"Jede Änderung erscheint erst hier unten. Erst mit „Speichern“ kommt sie auf die Website – nach 2–3 Minuten ist sie online.": "Her değişiklik önce burada altta görünür. Ancak „Kaydet“ ile web sitesine geçer – 2–3 dakika sonra yayında.",
+"Drucken, Zahlen, WhatsApp-Antworten, Checkliste – und oben ein Suchfeld: einfach „Urlaub“ oder „Gutschein“ eintippen.": "Yazdırma, rakamlar, WhatsApp cevapları, kontrol listesi – üstte de arama alanı: „tatil“ veya „hediye“ yazmanız yeterli.",
+"Deutsch oder Türkisch": "Almanca veya Türkçe",
+"Hier die Sprache der App umschalten. Die Website und die Gerichtsnamen bleiben davon unberührt.": "Uygulamanın dilini buradan değiştirin. Web sitesi ve yemek isimleri değişmez.",
+"Fertig!": "Tamam!",
+"Mehr braucht es für den Alltag nicht. Bei Fragen: Michael anrufen. Die Einführung finden Sie wieder oben unter „?“.": "Günlük iş için bu kadarı yeterli. Sorularınız için Michael'ı arayın. Tanıtımı yukarıda „?“ altında yine bulursunuz.",
+"Beenden": "Bitir",
+"‹ Zurück": "‹ Geri",
+"Weiter ›": "İleri ›",
+"Los geht’s": "Başlayalım",
+"Einführung": "Tanıtım",
+"Einführung starten": "Tanıtımı başlat",
+"Die wichtigsten Knöpfe in 2 Minuten – jederzeit wieder": "2 dakikada en önemli düğmeler – istediğiniz zaman tekrar",
+"WhatsApp-Antworten": "WhatsApp cevapları",
+"💬 WhatsApp-Antworten": "💬 WhatsApp cevapları",
+"Begrüßung, Abwesenheit, Kurzantworten zum Kopieren": "Karşılama, uzakta mesajı, hızlı cevaplar – kopyalamak için",
+"Fertige Texte für WhatsApp Business auf dem Laden-Handy. Einrichten unter WhatsApp Business → Einstellungen → Unternehmenstools: Begrüßungsnachricht, Abwesenheitsnachricht (Zeitplan: „Außerhalb der Geschäftszeiten“) und Schnellantworten. Bei Schnellantworten das Kürzel eintragen – im Chat dann „/“ tippen.": "Dükkan telefonundaki WhatsApp Business için hazır metinler. Kurulum: WhatsApp Business → Ayarlar → İşletme araçları: karşılama mesajı, uzakta mesajı (zamanlama: „Çalışma saatleri dışında“) ve hızlı cevaplar. Hızlı cevaplarda kısaltmayı girin – sohbette „/“ yazın.",
+"Schnellantworten": "Hızlı cevaplar",
+"✓ Kopiert": "✓ Kopyalandı",
+"Öffnungszeiten und Link kommen aus der Chef-App. Ändern sie sich (oder kommt die neue Domain), die Texte hier neu kopieren.": "Çalışma saatleri ve bağlantı Chef uygulamasından gelir. Değişirse (veya yeni alan adı gelirse) metinleri buradan yeniden kopyalayın.",
+"🖨 Als Blatt drucken": "🖨 Sayfa olarak yazdır"
+},UE_SP='';try{UE_SP=localStorage.getItem('fiamma-chef-sprache')||'';}catch(e){}
+if(UE_SP!=='tr'&&UE_SP!=='de')UE_SP=/^tr/i.test(navigator.language||'')?'tr':'de';
+var UE_FR=Object.keys(UE).filter(function(k){return /^[\s)“,.·(]|[\s„(,]$/.test(k)&&k.trim().length>=2;}).sort(function(a,b){return b.length-a.length;});
+function ue(t){
+  if(UE_SP!=='tr'||!t)return t;var k=t.trim();if(!k)return t;
+  if(UE[k]!=null)return t.replace(k,UE[k]);
+  var z=[],nk=k.replace(/\d+(?:[.,:]\d+)*/g,function(m){z.push(m);return '{n}';});
+  if(z.length&&UE[nk]!=null){var i=0;return t.replace(k,UE[nk].replace(/\{n\}/g,function(){return z[i++];}));}
+  var tg=/^(Mo|Di|Mi|Do|Fr|Sa|So)([ ,])(.*)$/.exec(k);   /* „Mi, 18.11. Feiertag“, „Mo von“ */
+  if(tg&&UE[tg[1]])return t.replace(k,UE[tg[1]]+tg[2]+ue(tg[3]));
+  var pd=/^(.*\d\.\s)(.+)$/.exec(k);if(pd&&UE[pd[2]]!=null)return t.replace(k,pd[1]+UE[pd[2]]);
+  for(var i2=0;i2<UE_FR.length;i2++){var f=UE_FR[i2];if(/\s$/.test(f)&&k.indexOf(f)===0&&UE[k.slice(f.length)]!=null)return t.replace(k,UE[f]+UE[k.slice(f.length)]);}
+  var r=t;UE_FR.forEach(function(f){if(r.indexOf(f)>-1)r=r.split(f).join(UE[f]);});return r;
+}
+function ueAus(n){for(var x=n.nodeType===1?n:n.parentNode;x&&x.nodeType===1;x=x.parentNode){var tn=x.tagName;
+  if(tn==='TEXTAREA'||tn==='SCRIPT'||tn==='STYLE'||x.id==='gs-druck'||x.hasAttribute('data-kein-ue'))return true;}return false;}
+function ueKnoten(n){
+  if(n.nodeType===3){if(n._ue===n.data||ueAus(n))return;var t=ue(n.data);n._ue=t;if(t!==n.data)n.data=t;return;}
+  if(n.nodeType!==1||ueAus(n))return;
+  ['placeholder','aria-label','title'].forEach(function(a){var v=n.getAttribute(a);if(v==null)return;n._uea=n._uea||{};if(n._uea[a]===v)return;var t=ue(v);n._uea[a]=t;if(t!==v)n.setAttribute(a,t);});
+  for(var c=n.firstChild;c;c=c.nextSibling)ueKnoten(c);
+}
+if(UE_SP==='tr'){document.documentElement.lang='tr';
+  new MutationObserver(function(ms){ms.forEach(function(m){if(m.type==='characterData')ueKnoten(m.target);else if(m.type==='attributes')ueKnoten(m.target);
+    else m.addedNodes.forEach(ueKnoten);});}).observe(document.body,{subtree:true,childList:true,characterData:true,attributes:true,attributeFilter:['placeholder','aria-label','title']});
+  ueKnoten(document.body);}
+/* Sprachwahl mit Flaggen: 🇩🇪 DE | 🇹🇷 TR, die aktive ist hervorgehoben */
+[].forEach.call(document.querySelectorAll('[data-ue-sp]'),function(b){var l=b.dataset.ueSp;b.setAttribute('aria-pressed',String(UE_SP===l));
+  b.addEventListener('click',function(){if(UE_SP===l)return;if(STD&&geaendert()){status(UE_SP==='tr'?'Lütfen önce kaydedin veya iptal edin.':'Bitte zuerst speichern oder verwerfen.','rot',3000);return;}
+    try{localStorage.setItem('fiamma-chef-sprache',l);}catch(e){}location.reload();});});
+
+/* ---------- Hilfen ---------- */
+function el(tag,attrs,kinder){var e=document.createElement(tag);attrs=attrs||{};
+  Object.keys(attrs).forEach(function(k){var v=attrs[k];if(v==null||v===false)return;
+    if(k==='text')e.textContent=v;else if(k.slice(0,2)==='on')e.addEventListener(k.slice(2),v);else if(k==='class')e.className=v;else e.setAttribute(k,v===true?'':v);});
+  (kinder||[]).forEach(function(c){if(c!=null)e.appendChild(typeof c==='string'?document.createTextNode(c):c);});return e;}
+/* Läden aus der Konfiguration: Name je Kennung, Auswahl „Beide/Alle + Läden“ (bei nur einem Laden keine Auswahl) */
+function LN(id){var l=STD.laeden.filter(function(x){return x.id===id;})[0];return l?l.name:id;}
+function LW(leer,alleText){if(STD.laeden.length<2)return [];return [[leer,alleText||(STD.laeden.length===2?'Beide':'Alle')]].concat(STD.laeden.map(function(l){return [l.id,l.name];}));}
+function heute(off){return new Intl.DateTimeFormat('en-CA',{timeZone:'Europe/Berlin',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date(Date.now()+(off||0)*864e5));}
+function datumDE(iso){var p=iso.split('-');return p[2]+'.'+p[1]+'.';}
+function kopie(o){return JSON.parse(JSON.stringify(o));}
+function b64enc(s){return btoa(unescape(encodeURIComponent(s)));}
+function b64dec(s){return decodeURIComponent(escape(atob(s.replace(/\s/g,''))));}
+function preisNorm(v){v=String(v).trim().replace('€','').trim().replace('.',',');if(/^\d{1,3}$/.test(v))v+=',00';if(/^\d{1,3},\d$/.test(v))v+='0';return /^\d{1,3},\d{2}$/.test(v)?v:null;}
+function zeitListe(von,bis,schritt){var r=[];for(var m=von;m<=bis;m+=schritt)r.push(('0'+Math.floor(m/60)).slice(-2)+':'+('0'+m%60).slice(-2));return r;}
+function frage(text,ja,nein){return new Promise(function(ok){var b=el('div',{class:'blatt'},[el('div',{},[el('h3',{text:text}),
+  el('div',{class:'reihe'},[el('button',{class:'knopf',text:nein||'Abbrechen',onclick:function(){b.remove();ok(false);}}),
+  el('button',{class:'knopf voll',text:ja||'Ja',onclick:function(){b.remove();ok(true);}})])])]);document.body.appendChild(b);});}
+function status(text,art,dauer){var s=document.getElementById('status');s.textContent=text;s.className='status'+(art?' '+art:'');s.hidden=false;
+  clearTimeout(status.t);if(dauer)status.t=setTimeout(function(){s.hidden=true;},dauer);}
+function token(){try{return localStorage.getItem(TK)||'';}catch(e){return '';}}
+function api(pfad,opt){opt=opt||{};opt.headers=Object.assign({'Accept':'application/vnd.github+json','Authorization':'Bearer '+token()},opt.headers||{});
+  return fetch(pfad.indexOf('http')===0?pfad:API+pfad,opt);}
+
+/* ---------- Daten ---------- */
+function gerichte(){ /* aktuelle Karte = Standard + Änderungen, für die Anzeige */
+  var res=[],ae=ANP.gerichte||{},weg=ANP.geloescht||[];
+  STD.gruppen.forEach(function(g){g.abschnitte.forEach(function(a){
+    a.gerichte.forEach(function(x){var o=ae[x.k]||{};res.push({k:x.k,g:g,a:a,nr:o.nr!=null?o.nr:x.nr,name:o.name!=null?o.name:x.name,desc:o.desc!=null?o.desc:x.desc,
+      preise:o.preise||x.preise,std:x,geaendert:!!ae[x.k],geloescht:weg.indexOf(x.k)>-1,neu:false});});
+    (ANP.neu||[]).forEach(function(n,i){if(n.gruppe===g.id&&n.abschnitt===a.titel)res.push({k:'neu:'+i,g:g,a:a,nr:n.nr||'',name:n.name,desc:n.desc||'',preise:n.preise,neu:true,index:i});});
+  });});
+  return res;
+}
+function schl(x){return x.neu?(x.nr||x.g.id+'|'+x.a.titel+'|'+x.name):x.k;}   /* gleicher Schlüssel wie build.py */
+function preisSetzen(x,p){
+  if(x.neu){ANP.neu[x.index].preise=p.slice();return;}
+  ANP.gerichte=ANP.gerichte||{};var o=ANP.gerichte[x.k]||{};
+  if(JSON.stringify(p)===JSON.stringify(x.std.preise))delete o.preise;else o.preise=p.slice();
+  if(Object.keys(o).length)ANP.gerichte[x.k]=o;else delete ANP.gerichte[x.k];
+}
+function staende(){ /* [{name, preise:{schlüssel:[…]}, grund:true}] – Grundstand = gedruckte Karte */
+  var grund={name:'Stand '+STD.grundstand,grund:true,preise:{}};
+  STD.gruppen.forEach(function(g){g.abschnitte.forEach(function(a){a.gerichte.forEach(function(x){grund.preise[x.k]=x.preise;});});});
+  return [grund].concat(ANP.staende||[]);
+}
+function aufraeumen(o){ /* leere Teile und abgelaufene Tagesregeln entfernen */
+  var t=heute();
+  if(o.verfuegbarkeit)o.verfuegbarkeit=o.verfuegbarkeit.filter(function(r){return !r.datum||r.datum>=t;});
+  if(o.hinweise)o.hinweise=o.hinweise.filter(function(h){return h.bis>=t;});
+  if(o.codes)o.codes=o.codes.filter(function(c){return !c.bis||c.bis>=t;});
+  if(o.pakete)o.pakete=o.pakete.filter(function(p){return !p.bis||p.bis>=t;});
+  if(o.pause){var hm=new Intl.DateTimeFormat('en-GB',{timeZone:'Europe/Berlin',hour:'2-digit',minute:'2-digit',hourCycle:'h23'}).format(new Date());
+    Object.keys(o.pause).forEach(function(l){var p=o.pause[l];if(!p||p.bis<t+'T'+hm)delete o.pause[l];});}
+  if(o.aktionen)o.aktionen=o.aktionen.filter(function(a){return a.bis>=t;});
+  if(o.feiertage_ok)o.feiertage_ok=o.feiertage_ok.filter(function(d){return d>=t;});
+  if(o.sonderzeiten)Object.keys(o.sonderzeiten).forEach(function(d){if(d<t||!Object.keys(o.sonderzeiten[d]).length)delete o.sonderzeiten[d];});
+  if(o.voll)Object.keys(o.voll).forEach(function(l){var v=o.voll[l]||{};Object.keys(v).forEach(function(d){if(d<t||!(v[d]||[]).length)delete v[d];});if(!Object.keys(v).length)delete o.voll[l];});
+  if(o.wartezeit)Object.keys(o.wartezeit).forEach(function(l){var w=o.wartezeit[l];if(!w||w.datum<t||!w.min)delete o.wartezeit[l];});
+  Object.keys(o).forEach(function(k){var v=o[k];if(v==null||(Array.isArray(v)&&!v.length)||(typeof v==='object'&&!Array.isArray(v)&&!Object.keys(v).length))delete o[k];});
+  if(o.zeiten)Object.keys(o.zeiten).forEach(function(l){if(!Object.keys(o.zeiten[l]).length)delete o.zeiten[l];});
+  if(o.zeiten&&!Object.keys(o.zeiten).length)delete o.zeiten;
+  return o;
+}
+function geaendert(){return JSON.stringify(aufraeumen(kopie(ANP)))!==ALT;}
+function zaehlen(){var a=aufraeumen(kopie(ANP)),b=JSON.parse(ALT),n=0;
+  ['gerichte','zeiten','sonderzeiten','wartezeit','checkliste','pause','slot_max','voll'].forEach(function(k){var x=a[k]||{},y=b[k]||{};Object.keys(Object.assign({},x,y)).forEach(function(i){if(JSON.stringify(x[i])!==JSON.stringify(y[i]))n++;});});
+  if((a.winter||'')!==(b.winter||''))n++;
+  ['geloescht','neu','verfuegbarkeit','hinweise','aktionen','staende','feiertage_ok','gutscheine','codes','pakete'].forEach(function(k){var x=(a[k]||[]).map(JSON.stringify),y=(b[k]||[]).map(JSON.stringify);
+    n+=x.filter(function(i){return y.indexOf(i)<0;}).length+y.filter(function(i){return x.indexOf(i)<0;}).length;});return n;}
+function leiste(){var mt=document.querySelector('nav.tabs [data-tab="mehr"]');if(mt&&STD){var o=clOffen(true);mt.classList.toggle('punkt',!!o);mt.title=o?o+' Pflicht-Fragen auf der Checkliste offen':'';}
+  var n=geaendert()?Math.max(1,zaehlen()):0;document.getElementById('speichern').hidden=!n;
+  document.getElementById('speichern-text').textContent=(n===1?'1 Änderung':n+' Änderungen')+' – noch nicht gespeichert';}
+
+/* ---------- Laden & Speichern ---------- */
+function laden(){
+  status('Lädt …');
+  return Promise.all([fetch('standard.json',{cache:'no-store'}).then(function(r){return r.json();}),
+    api('/contents/'+DATEI+'?ref=main',{cache:'no-store'})]).then(function(x){
+    STD=x[0];var r=x[1];
+    if(r.status===401||r.status===403)throw new Error('zugang');
+    if(r.status===404){SHA=null;return {};}
+    if(!r.ok)throw new Error('GitHub antwortet nicht ('+r.status+')');
+    return r.json().then(function(d){SHA=d.sha;return JSON.parse(b64dec(d.content)||'{}');});
+  }).then(function(d){ANP=d&&typeof d==='object'?d:{};ALT=JSON.stringify(aufraeumen(kopie(ANP)));
+    document.getElementById('status').hidden=true;document.getElementById('tabs').hidden=false;
+    document.getElementById('stand').textContent='Änderungen: '+(Object.keys(ANP).length?'vorhanden':'keine (Standard)');zeichnen();tourAutomatisch();});
+}
+/* Preis-Verlauf: beim Speichern jede Preisänderung mit Datum festhalten (höchstens 300 Einträge, 2 Jahre) */
+function preisMap(a){var m={},ae=a.gerichte||{},weg=a.geloescht||[];
+  STD.gruppen.forEach(function(g){g.abschnitte.forEach(function(ab){
+    ab.gerichte.forEach(function(x){if(weg.indexOf(x.k)>-1)return;var o=ae[x.k]||{};m[x.k]={n:((o.nr!=null?o.nr:x.nr)?(o.nr!=null?o.nr:x.nr)+' ':'')+(o.name!=null?o.name:x.name),p:o.preise||x.preise};});
+    (a.neu||[]).forEach(function(n){if(n.gruppe===g.id&&n.abschnitt===ab.titel)m[n.nr||g.id+'|'+ab.titel+'|'+n.name]={n:(n.nr?n.nr+' ':'')+n.name,p:n.preise};});});});
+  return m;}
+function verlaufNachtragen(alt,neu){
+  var a=preisMap(alt),b=preisMap(neu),d=heute(),s=Date.now(),ein=[];
+  Object.keys(b).forEach(function(k){if(a[k]&&JSON.stringify(a[k].p)!==JSON.stringify(b[k].p))ein.push({d:d,s:s,k:k,n:b[k].n,alt:a[k].p.slice(),neu:b[k].p.slice()});});
+  if(!ein.length)return;var grenze=(+d.slice(0,4)-2)+d.slice(4);
+  neu.preisverlauf=(neu.preisverlauf||[]).filter(function(e){return e.d>=grenze;}).concat(ein).slice(-300);}
+function speichern(nachricht){
+  var neu=aufraeumen(kopie(ANP));verlaufNachtragen(JSON.parse(ALT),neu);var inhalt=JSON.stringify(neu,null,2)+'\n';
+  status('Speichert …');
+  var body={message:nachricht||('Chef-App: '+Math.max(1,zaehlen())+' Änderung(en)'),content:b64enc(inhalt),branch:'main'};if(SHA)body.sha=SHA;
+  return api('/contents/'+DATEI,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)}).then(function(r){
+    if(r.status===409||r.status===422)throw new Error('konflikt');
+    if(!r.ok)throw new Error('Speichern fehlgeschlagen ('+r.status+')');return r.json();
+  }).then(function(d){SHA=d.content.sha;ANP=neu;ALT=JSON.stringify(neu);leiste();zeichnen();
+    document.getElementById('stand').textContent='Änderungen: '+(Object.keys(ANP).length?'vorhanden':'keine (Standard)');
+    beobachten(d.commit&&d.commit.sha);
+  }).catch(function(e){
+    if(e.message==='konflikt'){status('Jemand anderes hat inzwischen gespeichert. Bitte neu laden und noch einmal ändern.','rot');}
+    else status(e.message+' – bitte später noch einmal versuchen.','rot');
+  });
+}
+function beobachten(sha){ /* Fortschritt des GitHub-Workflows anzeigen (braucht „Actions: Read“) */
+  var start=Date.now();status('Gespeichert ✓ Die Seite wird jetzt neu gebaut – ca. 2–3 Minuten …','ok');
+  (function pruefen(){
+    if(Date.now()-start>8*60e3){status('Gespeichert ✓ – Veröffentlichung dauert länger als üblich.','ok',8000);return;}
+    api('/actions/runs?branch=main&per_page=5',{cache:'no-store'}).then(function(r){return r.ok?r.json():null;}).then(function(d){
+      if(!d){status('Gespeichert ✓ In ca. 3 Minuten ist die Seite aktuell.','ok',8000);return;}
+      var run=(d.workflow_runs||[]).filter(function(w){return !sha||w.head_sha===sha;})[0];
+      if(run&&run.status==='completed'){
+        if(run.conclusion==='success')status('Online ✓ Die Seite ist aktuell.','ok',8000);
+        else status('Veröffentlichen hat nicht geklappt. Bitte Michael Bescheid geben.','rot');
+        return;}
+      setTimeout(pruefen,10000);
+    }).catch(function(){setTimeout(pruefen,15000);});
+  })();
+}
+
+/* ---------- Ansichten ---------- */
+function zeichnen(){app.textContent='';({heute:heuteTab,karte:karteTab,preise:preiseTab,zeiten:zeitenTab,mehr:mehrTab})[TAB]();leiste();}
+/* Navigation: 5 Reiter unten; „Mehr“ ist ein Menü mit Unterseiten (‹ Mehr führt zurück). Die Unterseite bleibt gemerkt,
+   solange die App offen ist; ein zweiter Tipp auf „Mehr“ zeigt wieder das Menü. Start ist immer „Heute“. */
+var SEITE='';
+function zuTab(t,seite,ziel){TAB=t;if(seite!=null)SEITE=seite;
+  [].forEach.call(document.querySelectorAll('nav.tabs [data-tab]'),function(x){if(x.dataset.tab===t)x.setAttribute('aria-current','page');else x.removeAttribute('aria-current');});
+  zeichnen();var a=ziel&&document.getElementById(ziel);
+  if(a){a.scrollIntoView();var k=a.nextElementSibling;if(k){k.classList.add('blitz');setTimeout(function(){k.classList.remove('blitz');},1600);}}else window.scrollTo(0,0);}
+function anker(id){app.appendChild(el('div',{id:id,class:'anker'}));}
+function sprung(liste){app.appendChild(el('nav',{class:'sprung','aria-label':'Springen zu'},liste.map(function(x){
+  return el('button',{class:'chip','data-sprung':x[1],text:x[0],onclick:function(){var a=document.getElementById(x[1]);if(a)a.scrollIntoView({behavior:'smooth'});}});})));}
+function clOffen(nurMuss){var cl=ANP.checkliste||{},n=0;CHECKLISTE.forEach(function(g){g[1].forEach(function(x){if((!nurMuss||x[3])&&!(cl[x[0]]&&cl[x[0]].ok))n++;});});return n;}
+var MEHR=[
+  ['Werbung & Druck',[
+    ['drucken','🖨️','Drucken','Flyer, Aufsteller, Aushänge, Status-Bilder',druckKarte],
+    ['google','🔎','Google-Unternehmensprofil','Öffnungszeiten und Speisekarte zum Kopieren',googleKarte],
+    ['laden','📺','Bildschirm, Schaufenster, Küche','Links für die Geräte im Laden, Testbestellung',ladenSeitenKarte]]],
+  ['Zahlen',[['zahlen','📊','Zahlen','Besucher und Bestellungen',zahlenKarte]]],
+  ['Einrichtung',[
+    ['einfuehrung','🎓','Einführung','Die wichtigsten Knöpfe in 2 Minuten – jederzeit wieder',null,true],
+    ['antworten','💬','WhatsApp-Antworten','Begrüßung, Abwesenheit, Kurzantworten zum Kopieren',antwortenKarte],
+    ['checkliste','✅','Checkliste','Vor dem Freischalten',checklisteKarte],
+    ['website','🌐','Website ansehen','So sehen Gäste die Seite',seiteAnsehenKarte]]],
+  ['Notfall',[
+    ['rueckgaengig','↩️','Letzte Änderung rückgängig','Stand vor dem letzten Speichern',rueckKarte],
+    ['gefahr','⚠️','Gefahrenbereich','Standard wiederherstellen, abmelden',gefahrKarte]]]];
+/* Suche „Was möchten Sie tun?“: [Titel, Stichwörter (auch türkisch), Reiter, Unterseite, Sprungziel] */
+var ZIELE=[
+  ['Laden heute spontan zu','zu geschlossen spontan krank heute kapalı kapat','heute','','a-zu'],
+  ['Wartezeit, Bestell-Pause, viel los','wartezeit warten pause stopp viel los voll bekleme süre mola yoğun','heute','','a-warte'],
+  ['Hinweis oben auf der Seite','hinweis banner info nachricht text duyuru not','heute','','a-hinweis'],
+  ['Was gibt es heute nicht?','aus ausverkauft sperren nicht verfügbar alle huhn falafel döner pizza yok tükendi','heute','','a-nicht'],
+  ['Zutaten','zutat zutaten gemüse käse soße malzeme peynir sos','heute','','a-zutaten'],
+  ['Sonderaktionen und Mittagstisch','aktion angebot mittag mittagstisch rabatt günstiger kampanya indirim öğle','karte','','a-aktionen'],
+  ['Familien- und Party-Boxen','box boxen paket familie party feier kutu aile parti','karte','','a-boxen'],
+  ['Speisekarte: Gerichte, Namen, Fotos','gericht gerichte speisekarte neu name foto nummer löschen menü yemek fotoğraf','karte','','a-karte'],
+  ['Preise anpassen','preis preise erhöhen teurer prozent fiyat zam','preise','','a-anpassen'],
+  ['Preis-Verlauf','verlauf zurück früher alter preis rückgängig geçmiş eski fiyat','preise','','a-verlauf'],
+  ['Preis-Stände','stand stände preis-stände sichern fiyat durum','preise','','a-staende'],
+  ['Geschenkgutscheine','gutschein gutscheine geschenk einlösen hediye çeki kupon','preise','','a-gutscheine'],
+  ['Was kommt (4 Wochen)','woche vorschau kommt demnächst plan hafta önizleme','zeiten','','a-kommt'],
+  ['Öffnungszeiten','öffnungszeiten zeiten offen uhrzeit çalışma saatleri','zeiten','','a-oeffnung'],
+  ['Besondere Tage und Feiertage','besondere tage feiertag heiligabend silvester ostern özel gün bayram tatil günü','zeiten','','a-sonder'],
+  ['Urlaub / Betriebsferien','urlaub ferien betriebsurlaub zu geschlossen tatil izin','zeiten','','a-urlaub'],
+  ['Wintersaison','winter saison ski kış sezon','zeiten','','a-winter'],
+  ['Vorbestellungen je Viertelstunde','viertelstunde slot slots ausgebucht voll vorbestellung grenze dolu ön sipariş','zeiten','','a-slots']];
+MEHR.forEach(function(g){g[1].forEach(function(x){ZIELE.push([x[2],x[2].toLowerCase()+' '+x[3].toLowerCase()+' '+({drucken:'flyer plakat aushang aufsteller status pdf yazdır afiş',google:'google maps profil harita',laden:'tv fernseher bildschirm schaufenster küche bon test ekran mutfak vitrin',
+  zahlen:'zahlen statistik besucher umsatz istatistik ziyaretçi',checkliste:'checkliste fragen offen freischalten liste kontrol',einfuehrung:'einführung tutorial hilfe anleitung erklärung tur yardım eğitim',antworten:'whatsapp business antwort begrüßung abwesenheit kurzantwort schnellantwort mesaj cevap karşılama',website:'website seite ansehen web site',rueckgaengig:'rückgängig zurück fehler geri al',gefahr:'standard zurücksetzen abmelden token sıfırla çıkış'}[x[0]]||''),'mehr',x[0],'']);});});
+function sucheMehr(){
+  var q=el('input',{type:'search',id:'mehr-suche',placeholder:'Suchen: Urlaub, Preis, Gutschein …','aria-label':'Was möchten Sie tun?',autocomplete:'off'}),erg=el('div',{class:'such-treffer'});
+  function zeigen(){erg.textContent='';var w=q.value.trim().toLowerCase().split(/\s+/).filter(Boolean);if(!w.length)return;
+    var t=ZIELE.filter(function(z){if(z[4]==='a-winter'&&!STD.winter)return false;var h=(z[0]+' '+z[1]+' '+ue(z[0])).toLowerCase();return w.every(function(x){return h.indexOf(x)>-1;});}).slice(0,8);
+    if(!t.length){erg.appendChild(el('p',{class:'hinweis',text:'Nichts gefunden. Anderes Wort versuchen.'}));return;}
+    t.forEach(function(z){erg.appendChild(el('button',{class:'menue-punkt','data-ziel':z[3]||z[4],onclick:function(){zuTab(z[2],z[3],z[4]);}},
+      [el('span',{class:'mp-text'},[el('b',{text:z[0]}),el('small',{text:{heute:'Heute',karte:'Karte',preise:'Preise',zeiten:'Zeiten',mehr:'Mehr'}[z[2]]})]),el('span',{class:'mp-pfeil',text:'›'})]));});}
+  q.addEventListener('input',zeigen);
+  app.appendChild(el('div',{class:'karte such-karte'},[q,erg]));
+}
+function mehrTab(){
+  var e=null;MEHR.forEach(function(g){g[1].forEach(function(x){if(x[0]===SEITE)e=x;});});
+  if(e&&e[5]){SEITE='';e=null;setTimeout(tourStarten,0);}
+  if(e){app.appendChild(el('div',{class:'zurueck-zeile'},[el('button',{class:'knopf klein',id:'zurueck',text:'‹ Mehr',onclick:function(){SEITE='';zeichnen();window.scrollTo(0,0);}})]));e[4]();return;}
+  app.appendChild(el('h2',{text:'Mehr'}));
+  sucheMehr();
+  MEHR.forEach(function(g){app.appendChild(el('p',{class:'abschnitt',text:g[0]}));var k=el('div',{class:'karte menue'});
+    g[1].forEach(function(x){var info=x[3];if(x[0]==='checkliste'){var o=clOffen();info=o?o+' Fragen offen':'alles erledigt ✓';}
+      k.appendChild(el('button',{class:'menue-punkt','data-seite':x[0],onclick:function(){if(x[5]){tourStarten();return;}SEITE=x[0];zeichnen();window.scrollTo(0,0);}},
+        [el('span',{class:'mp-symbol',text:x[1]}),el('span',{class:'mp-text'},[el('b',{text:x[2]}),el('small',{text:info})]),el('span',{class:'mp-pfeil',text:'›'})]));});
+    app.appendChild(k);});
+}
+/* ---------- Einführung (Tutorial): beim ersten Öffnen, danach über „?“ oben oder Mehr → Einführung ---------- */
+var TOUR=[
+  {t:'heute',h:'Willkommen in der Chef-App!',x:'In 2 Minuten zeigen wir die wichtigsten Knöpfe. Sie können die Einführung jederzeit wieder starten: oben mit „?“.'},
+  {t:'heute',z:'#a-zu + *',h:'Laden heute spontan zu',x:'Krank, Wasserschaden, Stromausfall? Ein Tipp – auf der Website steht dann „heute geschlossen“. Ein zweiter Tipp nimmt es zurück.'},
+  {t:'heute',z:'#a-warte + *',h:'Viel los?',x:'Wartezeit +15, +30 oder +45 Minuten für heute – oder eine Bestell-Pause bis zu einer Uhrzeit.'},
+  {t:'heute',z:'.sperr-karte',h:'Etwas ist aus',x:'Kein Hähnchen mehr? Bei dem Gericht „Heute aus“ tippen. Morgen ist es von selbst wieder da.'},
+  {t:'heute',z:'nav.tabs [data-tab="karte"]',h:'Karte',x:'Gerichte, Preise und Fotos ändern, Sonderaktionen und Mittagstisch anlegen.'},
+  {t:'heute',z:'nav.tabs [data-tab="preise"]',h:'Preise',x:'Alle Preise auf einmal erhöhen, frühere Preise zurückholen, Gutscheine drucken.'},
+  {t:'heute',z:'nav.tabs [data-tab="zeiten"]',h:'Zeiten',x:'Öffnungszeiten, Feiertage und Urlaub. Oben steht, was in den nächsten 4 Wochen kommt.'},
+  {t:'heute',z:'#speichern',zeige:'speichern',h:'Ganz wichtig: Speichern',x:'Jede Änderung erscheint erst hier unten. Erst mit „Speichern“ kommt sie auf die Website – nach 2–3 Minuten ist sie online.'},
+  {t:'heute',z:'nav.tabs [data-tab="mehr"]',h:'Mehr',x:'Drucken, Zahlen, WhatsApp-Antworten, Checkliste – und oben ein Suchfeld: einfach „Urlaub“ oder „Gutschein“ eintippen.'},
+  {t:'heute',z:'#sprache',h:'Deutsch oder Türkisch',x:'Hier die Sprache der App umschalten. Die Website und die Gerichtsnamen bleiben davon unberührt.'},
+  {t:'heute',h:'Fertig!',x:'Mehr braucht es für den Alltag nicht. Bei Fragen: Michael anrufen. Die Einführung finden Sie wieder oben unter „?“.'}];
+var TOUR_K='fiamma-chef-tour';
+function tourStarten(){var i=0,box=el('div',{class:'tour',id:'tour',role:'dialog','aria-modal':'true','aria-label':'Einführung'}),loch=el('div',{class:'tour-loch'}),karte=el('div',{class:'tour-karte'});
+  box.appendChild(loch);box.appendChild(karte);document.body.appendChild(box);
+  function ende(){try{localStorage.setItem(TOUR_K,'1');}catch(e){}box.remove();window.removeEventListener('resize',lage);leiste();zuTab('heute');}
+  function lage(){var s=TOUR[i],z=s.z&&document.querySelector(s.z);
+    if(!z||z.hidden||!z.getClientRects().length){loch.className='tour-loch ohne';loch.removeAttribute('style');karte.style.top='';karte.style.bottom='';karte.style.top='30%';return;}
+    var r=z.getBoundingClientRect(),p=6;loch.className='tour-loch';
+    loch.style.left=(r.left-p)+'px';loch.style.top=(r.top-p)+'px';loch.style.width=(r.width+2*p)+'px';loch.style.height=(r.height+2*p)+'px';
+    if(r.top+r.height/2>window.innerHeight/2){karte.style.bottom='';karte.style.top=Math.max(12,r.top-p-12-karte.offsetHeight)+'px';}
+    else{karte.style.bottom='';karte.style.top=Math.min(window.innerHeight-karte.offsetHeight-12,r.bottom+p+12)+'px';}}
+  function zeigen(){var s=TOUR[i];if(TAB!==s.t)zuTab(s.t);leiste();
+    if(s.zeige==='speichern'){document.getElementById('speichern').hidden=false;if(!geaendert())document.getElementById('speichern-text').textContent='1 Änderung – noch nicht gespeichert';}
+    karte.textContent='';
+    karte.appendChild(el('div',{class:'tour-zahl',text:(i+1)+' / '+TOUR.length}));
+    karte.appendChild(el('h3',{text:s.h}));karte.appendChild(el('p',{text:s.x}));
+    var r=el('div',{class:'reihe'});
+    if(i<TOUR.length-1)r.appendChild(el('button',{class:'knopf klein',id:'tour-ende',text:'Beenden',onclick:ende}));
+    if(i>0)r.appendChild(el('button',{class:'knopf klein',id:'tour-zurueck',text:'‹ Zurück',onclick:function(){i--;zeigen();}}));
+    r.appendChild(el('button',{class:'knopf voll',id:'tour-weiter',text:i<TOUR.length-1?'Weiter ›':'Los geht’s',onclick:function(){if(i<TOUR.length-1){i++;zeigen();}else ende();}}));
+    karte.appendChild(r);
+    var z=s.z&&document.querySelector(s.z);if(z&&z.scrollIntoView&&!z.closest('nav.tabs,header,.speichern'))z.scrollIntoView({block:'center'});
+    setTimeout(lage,30);var w=document.getElementById('tour-weiter');if(w)w.focus();}
+  window.addEventListener('resize',lage);zeigen();}
+function tourAutomatisch(){var g='';try{g=localStorage.getItem(TOUR_K)||'';}catch(e){}if(!g)setTimeout(tourStarten,300);}
+
+/* ---------- WhatsApp-Business-Antworten (Deutsch/Türkisch) zum Kopieren ---------- */
+var ANTW_LADEN='',ANTW_SP='de';
+var ANTW={
+  de:{tage:['So','Mo','Di','Mi','Do','Fr','Sa'],zu:'geschlossen',
+    gruss:['Begrüßungsnachricht','Hallo und willkommen bei {name} {ort}! 🥙 Am schnellsten bestellen Sie über unsere Seite: {url} – dort Essen wählen und die Bestellung hier per WhatsApp schicken. Wir bestätigen sie kurz.'],
+    weg:['Abwesenheitsnachricht','Danke für Ihre Nachricht! Gerade haben wir geschlossen. Unsere Öffnungszeiten: {zeiten}. Vorbestellen geht jederzeit über {url} – wir bestätigen, sobald wir wieder da sind. Ihr {name} {ort}'],
+    kurz:[['danke','Bestellung angenommen','Danke, Ihre Bestellung ist angenommen! Wir sagen Bescheid, wenn sie fertig ist. Bitte bar bezahlen.'],
+      ['fertig','Bestellung fertig','Ihre Bestellung ist fertig und liegt für Sie bereit. Bis gleich!'],
+      ['aus','Ausverkauft','Das ist heute leider aus. Möchten Sie etwas anderes dafür? Zum Beispiel: '],
+      ['warten','Viel los','Gerade ist viel los – Ihre Bestellung ist in ca. 30 Minuten fertig. Passt das für Sie?'],
+      ['zu','Heute geschlossen','Heute haben wir leider geschlossen. Morgen sind wir gern wieder für Sie da! Vorbestellen: {url}'],
+      ['adresse','Adresse','{name} {ort}: {adresse}. Route: {maps}'],
+      ['zeiten','Öffnungszeiten','Unsere Öffnungszeiten in {ort}: {zeiten}'],
+      ['karte','Speisekarte','Unsere Speisekarte mit allen Preisen: {url}'],
+      ['gruppe','Große Bestellung','Sehr gern! Für größere Bestellungen bitte etwas Vorlauf – schicken Sie uns Uhrzeit und Anzahl, wir melden uns.']]},
+  tr:{tage:['Paz','Pzt','Sal','Çar','Per','Cum','Cmt'],zu:'kapalı',
+    gruss:['Karşılama mesajı','Merhaba, {name} {ort} şubemize hoş geldiniz! 🥙 En hızlı sipariş sayfamızdan: {url} – yemeğinizi seçin ve siparişi buradan WhatsApp ile gönderin. Kısa sürede onaylıyoruz.'],
+    weg:['Uzakta mesajı','Mesajınız için teşekkürler! Şu anda kapalıyız. Çalışma saatlerimiz: {zeiten}. {url} üzerinden her zaman ön sipariş verebilirsiniz – açılır açılmaz onaylıyoruz. {name} {ort}'],
+    kurz:[['danke','Sipariş alındı','Teşekkürler, siparişiniz alındı! Hazır olunca haber veriyoruz. Lütfen nakit ödeyin.'],
+      ['fertig','Sipariş hazır','Siparişiniz hazır, sizi bekliyor. Görüşmek üzere!'],
+      ['aus','Tükendi','Bu ürün bugün maalesef tükendi. Yerine başka bir şey ister misiniz? Örneğin: '],
+      ['warten','Çok yoğun','Şu an çok yoğunuz – siparişiniz yaklaşık 30 dakika içinde hazır olur. Sizin için uygun mu?'],
+      ['zu','Bugün kapalı','Bugün maalesef kapalıyız. Yarın yine hizmetinizdeyiz! Ön sipariş: {url}'],
+      ['adresse','Adres','{name} {ort}: {adresse}. Yol tarifi: {maps}'],
+      ['zeiten','Çalışma saatleri','{ort} şubemizin çalışma saatleri: {zeiten}'],
+      ['karte','Menü','Tüm fiyatlarıyla menümüz: {url}'],
+      ['gruppe','Büyük sipariş','Memnuniyetle! Büyük siparişler için lütfen biraz önceden haber verin – saati ve kişi sayısını yazın, size dönüş yapalım.']]}};
+function antwZeiten(l,sp){var z=Object.assign({},l.zeiten,((ANP.zeiten||{})[l.id])||{}),T=ANTW[sp].tage,teile=[],W=[1,2,3,4,5,6,0],start=0;
+  function wert(t){var v=z[String(t)];return v?v[0]+'–'+v[1]:ANTW[sp].zu;}
+  for(var i=1;i<=W.length;i++){if(i<W.length&&wert(W[i])===wert(W[start]))continue;
+    teile.push((i-1>start?T[W[start]]+'–'+T[W[i-1]]:T[W[start]])+' '+wert(W[start]));start=i;}
+  return teile.join(', ');}
+function kopieren(t,knopf){function ok(){var alt=knopf.textContent;knopf.textContent='✓ Kopiert';setTimeout(function(){knopf.textContent=alt;},1500);}
+  if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(t).then(ok,function(){window.prompt('Kopieren:',t);});else{window.prompt('Kopieren:',t);}}
+function antwortenKarte(){
+  if(!ANTW_LADEN)ANTW_LADEN=STD.laeden[0].id;var l=STD.laeden.filter(function(x){return x.id===ANTW_LADEN;})[0]||STD.laeden[0],A=ANTW[ANTW_SP];
+  var url=STD.seite+'#speisekarte',adr=l.strasse+', '+l.plz+' '+l.ort,w={name:STD.name,ort:l.name,url:url,zeiten:antwZeiten(l,ANTW_SP),adresse:adr,maps:'https://maps.google.com/?q='+encodeURIComponent(STD.name+', '+adr)};
+  function f(t){return t.replace(/\{(\w+)\}/g,function(_,k){return w[k]!=null?w[k]:'';});}
+  var k=el('div',{class:'karte',id:'antw-karte'},[el('h3',{text:'💬 WhatsApp-Antworten'}),
+    el('p',{class:'hinweis',text:'Fertige Texte für WhatsApp Business auf dem Laden-Handy. Einrichten unter WhatsApp Business → Einstellungen → Unternehmenstools: Begrüßungsnachricht, Abwesenheitsnachricht (Zeitplan: „Außerhalb der Geschäftszeiten“) und Schnellantworten. Bei Schnellantworten das Kürzel eintragen – im Chat dann „/“ tippen.'})]);
+  k.appendChild(el('div',{class:'wahl'},STD.laeden.map(function(x){return el('button',{'aria-pressed':String(x.id===l.id),'data-antw-laden':x.id,text:x.name,onclick:function(){ANTW_LADEN=x.id;zeichnen();}});})));
+  k.appendChild(el('div',{class:'wahl'},[['de','Deutsch'],['tr','Türkçe']].map(function(x){return el('button',{'aria-pressed':String(x[0]===ANTW_SP),'data-antw-sp':x[0],'data-kein-ue':'',text:x[1],onclick:function(){ANTW_SP=x[0];zeichnen();}});})));
+  function eintrag(kurz,titel,text){var t=f(text),kn=el('button',{class:'knopf klein',text:'Kopieren',onclick:function(){kopieren(t,kn);}});
+    k.appendChild(el('div',{class:'antw'},[el('div',{class:'antw-kopf'},[el('b',{'data-kein-ue':'',text:titel}),kurz?el('code',{'data-kein-ue':'',text:'/'+kurz}):null,kn]),el('p',{class:'antw-text','data-kein-ue':'',text:t})]));}
+  eintrag('',A.gruss[0],A.gruss[1]);eintrag('',A.weg[0],A.weg[1]);
+  k.appendChild(el('p',{class:'abschnitt',text:'Schnellantworten'}));
+  A.kurz.forEach(function(x){eintrag(x[0],x[1],x[2]);});
+  k.appendChild(el('p',{class:'hinweis',text:'Öffnungszeiten und Link kommen aus der Chef-App. Ändern sie sich (oder kommt die neue Domain), die Texte hier neu kopieren.'}));
+  k.appendChild(el('div',{class:'reihe'},[el('button',{class:'knopf',text:'🖨 Als Blatt drucken',onclick:function(){document.body.classList.add('antw-druck');
+    function weg(){document.body.classList.remove('antw-druck');window.removeEventListener('afterprint',weg);}window.addEventListener('afterprint',weg);window.print();}})]));
+  app.appendChild(k);
+}
+function preiseTab(){
+  sprung([['Anpassen','a-anpassen'],['Verlauf','a-verlauf'],['Stände','a-staende'],['Gutscheine','a-gutscheine']].concat(STD.firmen_codes?[['Firmen-Codes','a-codes']]:[]));
+  app.appendChild(el('h2',{text:'Preise'}));
+  anker('a-anpassen');preisKarte();anker('a-verlauf');verlaufKarte();anker('a-staende');staendeKarte();anker('a-gutscheine');gutscheinKarte();
+  if(STD.firmen_codes){anker('a-codes');codeKarte();}
+}
+
+function regelText(r){var t=r.ab?'ab '+r.ab+' Uhr':r.bis?'bis '+r.bis+' Uhr':(r.datum?'aus':'dauerhaft aus');
+  t+=r.datum?(r.datum===heute()?' (heute)':' ('+datumDE(r.datum)+')'):(r.ab||r.bis?' (jeden Tag)':'');
+  if(r.laden&&STD.laeden.length>1)t+=' · '+LN(r.laden);return t;}
+function regelNeu(was,art,zeit,immer){var r={was:was};if(art==='ab')r.ab=zeit;if(!immer)r.datum=heute();if(LADEN!=='alle')r.laden=LADEN;
+  ANP.verfuegbarkeit=(ANP.verfuegbarkeit||[]).filter(function(x){return !(x.was===was&&(x.laden||'alle')===LADEN);});
+  ANP.verfuegbarkeit.push(r);zeichnen();}
+function wartezeitKarte(){
+  var t=heute(),k=el('div',{class:'karte'},[el('h3',{text:'Wartezeit heute'}),
+    el('p',{class:'hinweis',text:'Bei viel Betrieb: Online-Bestellungen können erst später abgeholt werden. Gilt nur heute.'})]);
+  STD.laeden.forEach(function(l){var w=(ANP.wartezeit||{})[l.id],akt=w&&w.datum===t?w.min:0;
+    k.appendChild(el('p',{style:'margin:10px 0 4px;font-weight:700',text:l.name}));
+    k.appendChild(el('div',{class:'wahl'},[0,15,30,45].map(function(m){
+      return el('button',{'aria-pressed':String(akt===m),text:m?'+'+m+' Min.':'Normal',onclick:function(){
+        ANP.wartezeit=ANP.wartezeit||{};if(m)ANP.wartezeit[l.id]={datum:t,min:m};else delete ANP.wartezeit[l.id];zeichnen();}});})));
+  });
+  /* Bestell-Pause: Online-Bestellungen für heute kurz stoppen (Anrufen geht weiter) */
+  var jetztHM=new Intl.DateTimeFormat('en-GB',{timeZone:'Europe/Berlin',hour:'2-digit',minute:'2-digit',hourCycle:'h23'}).format(new Date()),jm=(+jetztHM.slice(0,2))*60+(+jetztHM.slice(3));
+  k.appendChild(el('h3',{style:'margin-top:16px',text:'⏸ Bestell-Pause'}));
+  k.appendChild(el('p',{class:'hinweis',text:'Stoppt Online-Bestellungen für heute, wenn der Laden voll ist. Anrufen und Vorbestellen für andere Tage geht weiter. Wirkt nach dem Speichern in ca. 2–3 Minuten.'}));
+  STD.laeden.forEach(function(l){var p=(ANP.pause||{})[l.id],aktiv=p&&p.bis.slice(0,10)===t&&p.bis.slice(11)>jetztHM;
+    k.appendChild(el('p',{style:'margin:10px 0 4px;font-weight:700',text:l.name+(aktiv?' · pausiert bis '+p.bis.slice(11)+' Uhr':'')}));
+    var kn=[30,60].map(function(m){return el('button',{class:'knopf klein','data-pause':l.id+'-'+m,text:'Pause '+m+' Min.',onclick:function(){
+      var z=Math.min(jm+m,23*60+59);ANP.pause=ANP.pause||{};ANP.pause[l.id]={bis:t+'T'+('0'+Math.floor(z/60)).slice(-2)+':'+('0'+z%60).slice(-2)};zeichnen();}});});
+    if(aktiv)kn.push(el('button',{class:'knopf klein rot',text:'Pause beenden',onclick:function(){delete ANP.pause[l.id];zeichnen();}}));
+    k.appendChild(el('div',{class:'reihe'},kn));});
+  /* Ein Tipp für volle Tage (Neuschnee in Altenberg, Ferien, Fußball): Hinweis oben + Wartezeit */
+  var VIEL='Heute ist viel los – bitte vorbestellen, dann ist Ihr Essen pünktlich fertig.';
+  var an=(ANP.hinweise||[]).some(function(h){return h.text===VIEL&&h.von===t;});
+  k.appendChild(el('div',{class:'reihe',style:'margin-top:14px'},[el('button',{class:'knopf'+(an?'':' gelb'),id:'viel-los',text:an?'„Viel los“ wieder aus':'🔥 Heute viel los (Hinweis + 15 Min.)',onclick:function(){
+    if(an){ANP.hinweise=(ANP.hinweise||[]).filter(function(h){return !(h.text===VIEL&&h.von===t);});
+      STD.laeden.forEach(function(l){var w=(ANP.wartezeit||{})[l.id];if(w&&w.datum===t&&w.min===15)delete ANP.wartezeit[l.id];});}
+    else{ANP.hinweise=(ANP.hinweise||[]).concat([{text:VIEL,en:'Busy today – please pre-order so your food is ready on time.',von:t,bis:t}]);
+      ANP.wartezeit=ANP.wartezeit||{};STD.laeden.forEach(function(l){if(LADEN==='alle'||LADEN===l.id){var w=ANP.wartezeit[l.id];if(!w||w.datum!==t||w.min<15)ANP.wartezeit[l.id]={datum:t,min:15};}});}
+    zeichnen();}})]));
+  return k;
+}
+/* Heute spontan geschlossen (Krankheit, Stromausfall …): ein Tipp je Laden, ein Tipp zurück */
+function zuKarte(){
+  var t=heute(),k=el('div',{class:'karte'},[el('h3',{text:'🚫 Heute spontan geschlossen?'}),
+    el('p',{class:'hinweis',text:'Für Krankheit, Stromausfall oder Lieferprobleme: Der Laden ist heute zu, oben steht ein Hinweis, Bestellungen für heute gehen nicht mehr. Wirkt nach dem Speichern in ca. 2–3 Minuten.'})]);
+  var reihe=el('div',{class:'reihe'});
+  STD.laeden.forEach(function(l){var sz=(ANP.sonderzeiten||{})[t],zu=!!sz&&(l.id in sz)&&sz[l.id]===null&&(ANP.hinweise||[]).some(function(h){return h.spontan===l.id&&h.von===t;});
+    reihe.appendChild(el('button',{class:'knopf'+(zu?' rot voll':' rot'),'data-zu':l.id,text:zu?l.name+' doch geöffnet':l.name+' heute geschlossen',onclick:function(){
+      ANP.sonderzeiten=ANP.sonderzeiten||{};ANP.hinweise=ANP.hinweise||[];
+      if(zu){delete ANP.sonderzeiten[t][l.id];ANP.hinweise=ANP.hinweise.filter(function(h){return !(h.spontan===l.id&&h.von===t);});}
+      else{(ANP.sonderzeiten[t]=ANP.sonderzeiten[t]||{})[l.id]=null;
+        ANP.hinweise.push({text:STD.name+(STD.laeden.length>1?' '+l.name:'')+' ist heute leider geschlossen. Wir sind bald wieder für Sie da.',en:STD.name+(STD.laeden.length>1?' '+l.name:'')+' is unfortunately closed today. We will be back soon.',von:t,bis:t,spontan:l.id});}
+      zeichnen();}}));});
+  k.appendChild(reihe);return k;
+}
+function heuteTab(){
+  var bald=offeneFeiertage(14);
+  if(bald.length)app.appendChild(el('div',{class:'karte feiertag'},[el('b',{text:'📅 '+bald.map(function(f){return datumDE(f[0])+' '+f[1];}).join(', ')}),
+    el('p',{class:'hinweis',style:'margin:4px 0 8px',text:'Öffnungszeiten für diesen Tag noch nicht festgelegt.'}),
+    el('button',{class:'knopf klein voll',text:'Jetzt festlegen',onclick:function(){zuTab('zeiten',null,'a-sonder');}})]));
+  anker('a-zu');app.appendChild(zuKarte());
+  anker('a-warte');app.appendChild(wartezeitKarte());
+  anker('a-hinweis');hinweisKarte();
+  anker('a-nicht');app.appendChild(el('h2',{text:'Was gibt es heute nicht?'}));
+  app.appendChild(el('div',{class:'karte'},[el('h3',{text:'Für welchen Laden?'}),
+    el('div',{class:'wahl'},LW('alle').map(function(x){
+      return el('button',{'aria-pressed':String(LADEN===x[0]),text:x[1],onclick:function(){LADEN=x[0];zeichnen();}});}))]));
+  var t=heute();
+  STD.sperren.forEach(function(g){
+    var regeln=(ANP.verfuegbarkeit||[]).map(function(r,i){return {r:r,i:i};}).filter(function(x){return x.r.was===g.id&&(!x.r.datum||x.r.datum>=t);});
+    var k=el('div',{class:'karte sperr-karte'},[el('h3',{text:g.name}),
+      regeln.length?el('div',{class:'reihe'},regeln.map(function(x){return el('span',{class:'chip aus'},[regelText(x.r),
+        el('button',{'aria-label':'Regel entfernen',text:'✕',onclick:function(){ANP.verfuegbarkeit.splice(x.i,1);zeichnen();}})]);})):el('p',{class:'hinweis',text:'Verfügbar'}),
+      el('div',{class:'reihe',style:'margin-top:10px'},[
+        el('button',{class:'knopf rot',text:'Heute aus',onclick:function(){regelNeu(g.id,'aus',null,false);}}),
+        el('button',{class:'knopf',text:'Ab Uhrzeit …',onclick:function(){abUhrzeit(g);}}),
+        el('button',{class:'knopf klein',text:'Dauerhaft aus',onclick:function(){frage(g.name+' dauerhaft aus? (bis Sie es wieder entfernen)','Dauerhaft aus').then(function(j){if(j)regelNeu(g.id,'aus',null,true);});}})])]);
+    app.appendChild(k);
+  });
+  anker('a-zutaten');zutatenKarte();
+}
+function hinweisKarte(){ /* Hinweis-Band */
+  var t=heute();
+  app.appendChild(el('h2',{text:'Hinweis oben auf der Seite'}));
+  var hk=el('div',{class:'karte'});
+  (ANP.hinweise||[]).forEach(function(h,i){if(h.bis<t)return;hk.appendChild(el('p',{},[el('span',{class:'chip'},[h.text+' ('+datumDE(h.von)+'–'+datumDE(h.bis)+')',
+    el('button',{'aria-label':'Hinweis entfernen',text:'✕',onclick:function(){ANP.hinweise.splice(i,1);zeichnen();}})])]));});
+  var txt=el('input',{type:'text',id:'h-text',maxlength:'200',placeholder:'z. B. Heute ab 18 Uhr geschlossen'});
+  var von=el('input',{type:'date',id:'h-von',value:t}),bis=el('input',{type:'date',id:'h-bis',value:t});
+  hk.appendChild(el('label',{for:'h-text',text:'Neuer Hinweis'}));hk.appendChild(txt);
+  hk.appendChild(el('div',{class:'reihe'},[el('div',{style:'flex:1'},[el('label',{for:'h-von',text:'von'}),von]),el('div',{style:'flex:1'},[el('label',{for:'h-bis',text:'bis'}),bis])]));
+  hk.appendChild(el('div',{class:'reihe'},[el('button',{class:'knopf voll',text:'Hinweis hinzufügen',onclick:function(){
+    if(!txt.value.trim()||!von.value||!bis.value||bis.value<von.value){status('Bitte Text und gültigen Zeitraum angeben.','rot',4000);return;}
+    (ANP.hinweise=ANP.hinweise||[]).push({text:txt.value.trim(),von:von.value,bis:bis.value});zeichnen();}})]));
+  app.appendChild(hk);
+}
+function zutatenKarte(){ /* einzelne Zutaten ausschalten – auf der Seite dann nicht wählbar */
+  var t=heute();app.appendChild(el('h2',{text:'Zutaten'}));
+  var k=el('div',{class:'karte'},[el('p',{class:'hinweis',style:'margin:0 0 8px',text:'Antippen = aus '+(STD.laeden.length<2?'':LADEN==='alle'?(STD.laeden.length===2?'(beide Läden)':'(alle Läden)'):'in '+LN(LADEN))+', bis Sie es wieder einschalten. Ausgeschaltetes kann auf der Seite nicht gewählt werden. Pommes/Reis aus: Gerichte gibt es ohne diese Beilage, je 0,50 € günstiger. Noch einmal antippen = wieder da.'})]);
+  STD.zutaten.forEach(function(gr){
+    k.appendChild(el('p',{class:'abschnitt',style:'margin:10px 0 6px',text:gr[0]}));
+    k.appendChild(el('div',{class:'reihe'},gr[1].map(function(z){
+      var was='z:'+z,idx=(ANP.verfuegbarkeit||[]).map(function(r,i){return {r:r,i:i};}).filter(function(x){return x.r.was===was&&(x.r.laden||'alle')===LADEN&&(!x.r.datum||x.r.datum>=t);});
+      var aus=idx.length>0;
+      return el('button',{class:'knopf klein'+(aus?' rot voll':''),'aria-pressed':String(aus),'data-zutat':z,text:(aus?'✕ ':'')+z,onclick:function(){
+        if(aus){var weg=idx.map(function(x){return x.i;});ANP.verfuegbarkeit=ANP.verfuegbarkeit.filter(function(_,i){return weg.indexOf(i)<0;});zeichnen();}
+        else regelNeu(was,'aus',null,true);}});
+    })));
+  });
+  app.appendChild(k);
+}
+function abUhrzeit(g){
+  var sel=el('select',{id:'ab-zeit'},zeitListe(10*60,22*60,30).map(function(z){return el('option',{value:z,text:z+' Uhr'});}));sel.value='17:00';
+  var immer=el('input',{type:'checkbox',id:'ab-immer'});
+  var b=el('div',{class:'blatt'},[el('div',{},[el('h3',{text:g.name+' erst ab …'}),el('label',{for:'ab-zeit',text:'Uhrzeit'}),sel,
+    el('label',{class:'schalter'},[immer,'jeden Tag (sonst nur heute)']),
+    el('div',{class:'reihe'},[el('button',{class:'knopf',text:'Abbrechen',onclick:function(){b.remove();}}),
+      el('button',{class:'knopf voll',text:'Übernehmen',onclick:function(){b.remove();regelNeu(g.id,'ab',sel.value,immer.checked);}})])])]);
+  document.body.appendChild(b);
+}
+
+function slug(name,von){ /* gleiche Regel wie druck.py */
+  var t=name.toLowerCase().replace(/ä/g,'ae').replace(/ö/g,'oe').replace(/ü/g,'ue').replace(/ß/g,'ss').replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'').slice(0,40).replace(/-+$/,'');
+  return 'aktion-'+von+'-'+(t||'x');}
+function aktionText(a){var t=a.name+' · '+datumDE(a.von)+'–'+datumDE(a.bis);
+  if(a.tage&&a.tage.length)t+=' · '+a.tage.map(function(d){return TAGE[d];}).join(', ');
+  if(a.zeit_ab)t+=' · '+a.zeit_ab+'–'+a.zeit_bis+' Uhr';
+  if(a.laden&&STD.laeden.length>1)t+=' · nur '+LN(a.laden);if(a.art==='mittag')t='🍽 '+t;return t;}
+function karteTab(){
+  sprung([['Aktionen','a-aktionen'],['Boxen','a-boxen'],['Speisekarte','a-karte']]);
+  anker('a-aktionen');app.appendChild(el('h2',{text:'Sonderaktionen'}));
+  var ak=el('div',{class:'karte'}),t=heute();
+  (ANP.aktionen||[]).forEach(function(a,i){if(a.bis<t)return;
+    ak.appendChild(el('p',{},[el('button',{class:'chip',style:'cursor:pointer;padding-right:12px','data-aktion':i,onclick:function(){aktionBearbeiten(i);}},[aktionText(a)])]));});
+  if(!(ANP.aktionen||[]).some(function(a){return a.bis>=t;}))ak.appendChild(el('p',{class:'hinweis',style:'margin:0 0 8px',text:'Z. B. „Döner 5 €, Dürüm 6 €“ für eine Woche oder jeden Mittwoch. Die Seite zeigt den alten Preis durchgestrichen und rechnet mit dem Aktionspreis.'}));
+  ak.appendChild(el('div',{class:'reihe'},[el('button',{class:'knopf voll',text:'+ Neue Aktion',onclick:function(){aktionBearbeiten(null);}}),
+    el('button',{class:'knopf',text:'+ Mittagstisch',onclick:function(){aktionBearbeiten(null,{name:'Mittagstisch',art:'mittag',von:heute(),bis:heute(27),tage:[1,2,3,4,5],zeit_ab:'11:00',zeit_bis:'14:00',preise:{}});}})]));
+  app.appendChild(ak);
+  anker('a-boxen');paketKarte();
+  anker('a-karte');app.appendChild(el('h2',{text:'Speisekarte'}));
+  var such=el('input',{type:'search',placeholder:'Name oder Nummer suchen',value:SUCHE,'aria-label':'Suchen',oninput:function(){SUCHE=such.value;liste();}});
+  app.appendChild(el('div',{class:'reihe'},[el('div',{style:'flex:1'},[such]),el('button',{class:'knopf voll',text:'+ Neues Gericht',onclick:function(){bearbeiten(null);}})]));
+  var box=el('div');app.appendChild(box);
+  function liste(){box.textContent='';var q=SUCHE.trim().toLowerCase(),letzter='';
+    gerichte().forEach(function(x){
+      if(q&&(x.nr+' '+x.name).toLowerCase().indexOf(q)<0)return;
+      var titel=x.g.titel+(x.a.titel&&x.a.titel!==x.g.titel?' · '+x.a.titel:'');
+      if(titel!==letzter){box.appendChild(el('p',{class:'abschnitt',text:titel}));letzter=titel;}
+      box.appendChild(el('button',{class:'liste-gericht'+(x.geloescht?' geloescht':''),'data-k':x.k,onclick:function(){bearbeiten(x);}},[
+        el('span',{class:'nr',text:x.nr}),el('span',{class:'nm'},[x.name,x.neu?el('span',{class:'marke neu',text:'neu'}):null,
+          x.geaendert&&!x.geloescht?el('span',{class:'marke',text:'geändert'}):null,x.geloescht?el('span',{class:'marke weg',text:'gelöscht'}):null]),
+        el('span',{class:'pr',text:x.preise.join(' / ')+' €'})]));
+    });}
+  liste();
+}
+function bearbeiten(x){
+  var neu=!x,abschnitte=[];STD.gruppen.forEach(function(g){g.abschnitte.forEach(function(a){abschnitte.push({g:g,a:a});});});
+  var wahlAb=el('select',{id:'b-ab'},abschnitte.map(function(y,i){return el('option',{value:i,text:y.g.titel+(y.a.titel!==y.g.titel?' · '+y.a.titel:'')});}));
+  var nr=el('input',{type:'text',id:'b-nr',value:x?x.nr:'',maxlength:'5',inputmode:'text'}),name=el('input',{type:'text',id:'b-name',value:x?x.name:'',maxlength:'80'});
+  var desc=el('input',{type:'text',id:'b-desc',value:x?x.desc:'',maxlength:'200'}),preisBox=el('div');
+  function preisFelder(){preisBox.textContent='';var a=x?x.a:abschnitte[+wahlAb.value].a,gr=a.groessen&&a.groessen.length?a.groessen:[''];
+    gr.forEach(function(g,i){var f=el('input',{type:'text',inputmode:'decimal',id:'b-preis-'+i,value:x?x.preise[i]:'',placeholder:'z. B. 7,50'});
+      preisBox.appendChild(el('label',{for:'b-preis-'+i,text:'Preis'+(g?' '+g:'')+' (€)'}));preisBox.appendChild(f);});}
+  wahlAb.addEventListener('change',preisFelder);
+  var fehler=el('p',{class:'fehler',hidden:true});
+  var b=el('div',{class:'blatt'}),inhalt=el('div',{},[el('h3',{text:neu?'Neues Gericht':(x.nr?'Nr. '+x.nr+' ':'')+x.name}),
+    neu?el('div',{},[el('label',{for:'b-ab',text:'Kategorie'}),wahlAb]):null,
+    x&&!x.neu&&!x.std.nr?null:el('div',{},[el('label',{for:'b-nr',text:x&&!x.neu?'Nummer (muss frei sein; nur die angezeigte Nummer ändert sich)':'Nummer (optional, muss frei sein)'}),nr]),
+    el('label',{for:'b-name',text:'Name'}),name,el('label',{for:'b-desc',text:'Beschreibung'}),desc,preisBox,fehler]);
+  preisFelder();
+  if(x){var frueher=staende().filter(function(st){var p=st.preise[schl(x)];return p&&JSON.stringify(p)!==JSON.stringify(x.preise);});
+    if(frueher.length){var fb=el('div',{class:'frueher'},[el('label',{text:'Frühere Preise'})]);
+      frueher.forEach(function(st){var p=st.preise[schl(x)];
+        fb.appendChild(el('div',{class:'reihe'},[el('span',{style:'flex:1',text:st.name+': '+p.join(' / ')+' €'}),
+          el('button',{class:'knopf klein',text:'Übernehmen',onclick:function(){[].forEach.call(preisBox.querySelectorAll('input'),function(f,i){f.value=p[i]||p[0];});}})]));});
+      preisBox.after(fb);}}
+  function uebernehmen(){
+    var preise=[].map.call(preisBox.querySelectorAll('input'),function(f){return preisNorm(f.value);});
+    if(!name.value.trim()){fehler.textContent='Bitte einen Namen eingeben.';fehler.hidden=false;return;}
+    if(preise.some(function(p){return !p;})){fehler.textContent='Preis bitte so eingeben: 7,50';fehler.hidden=false;return;}
+    if(neu||x.neu){var n=nr.value.trim();
+      var belegt=gerichte().some(function(y){return (!x||y.k!==x.k)&&((y.nr&&y.nr===n)||(y.std&&y.std.nr===n));});
+      if(n&&(belegt||!/^[0-9A-Za-z]{1,5}$/.test(n))){fehler.textContent='Nummer '+n+' ist schon vergeben oder ungültig.';fehler.hidden=false;return;}
+      var ab=neu?abschnitte[+wahlAb.value]:{g:x.g,a:x.a},obj={gruppe:ab.g.id,abschnitt:ab.a.titel,nr:n,name:name.value.trim(),desc:desc.value.trim(),preise:preise,seit:(!neu&&ANP.neu[x.index].seit)||heute()};
+      ANP.neu=ANP.neu||[];if(neu)ANP.neu.push(obj);else ANP.neu[x.index]=obj;
+    }else{var s=x.std,o={};if(name.value.trim()!==s.name)o.name=name.value.trim();if(desc.value.trim()!==s.desc)o.desc=desc.value.trim();
+      if(s.nr){var n2=nr.value.trim();
+        if(n2!==s.nr){var belegt2=gerichte().some(function(y){return y.k!==x.k&&y.nr===n2;});
+          if(!/^[0-9A-Za-z]{1,5}$/.test(n2)||belegt2){fehler.textContent='Nummer '+n2+' ist schon vergeben oder ungültig.';fehler.hidden=false;return;}
+          o.nr=n2;}}
+      if(JSON.stringify(preise)!==JSON.stringify(s.preise))o.preise=preise;
+      ANP.gerichte=ANP.gerichte||{};if(Object.keys(o).length)ANP.gerichte[x.k]=o;else delete ANP.gerichte[x.k];}
+    b.remove();zeichnen();}
+  var knoepfe=[el('button',{class:'knopf',text:'Abbrechen',onclick:function(){b.remove();}})];
+  if(x&&x.neu)knoepfe.push(el('button',{class:'knopf rot',text:'Löschen',onclick:function(){ANP.neu.splice(x.index,1);b.remove();zeichnen();}}));
+  else if(x&&x.geloescht)knoepfe.push(el('button',{class:'knopf gelb',text:'Wieder anzeigen',onclick:function(){ANP.geloescht=ANP.geloescht.filter(function(k){return k!==x.k;});b.remove();zeichnen();}}));
+  else if(x)knoepfe.push(el('button',{class:'knopf rot',text:'Löschen',onclick:function(){(ANP.geloescht=ANP.geloescht||[]).push(x.k);b.remove();zeichnen();}}));
+  if(x&&x.geaendert)knoepfe.push(el('button',{class:'knopf klein',text:'Alles wie Stand '+STD.grundstand,onclick:function(){delete ANP.gerichte[x.k];b.remove();zeichnen();}}));
+  if(!x||!x.geloescht)knoepfe.push(el('button',{class:'knopf voll',text:'Übernehmen',onclick:uebernehmen}));
+  var fnr=x?(x.neu?x.nr:(x.std&&x.std.nr)):'';
+  if(fnr&&(!x.neu||(JSON.parse(ALT).neu||[]).some(function(n){return n.nr===fnr;})))inhalt.appendChild(fotoBereich(fnr,x.name));
+  inhalt.appendChild(el('div',{class:'reihe'},knoepfe));b.appendChild(inhalt);document.body.appendChild(b);name.focus();
+}
+
+/* ---------- Fotos der Gerichte: daten/fotos/nr-<Nummer>.jpg im Repo; die Seite zeigt sie verkleinert ---------- */
+function fotoPfad(nr){return "laeden/pirna/daten/fotos/"+'nr-'+nr+'.jpg';}
+function fotoSha(nr){return api('/contents/'+fotoPfad(nr)+'?ref=main',{cache:'no-store'}).then(function(r){
+  if(r.status===404)return null;if(!r.ok)throw new Error('GitHub antwortet nicht ('+r.status+')');return r.json().then(function(d){return d.sha;});});}
+function verkleinern(datei){ /* längste Seite 1600 px, JPEG – spart Speicher und Ladezeit */
+  return new Promise(function(ok,nein){var url=URL.createObjectURL(datei),bild=new Image();
+    bild.onload=function(){var f=Math.min(1,1600/Math.max(bild.naturalWidth,bild.naturalHeight)),c=document.createElement('canvas');
+      c.width=Math.round(bild.naturalWidth*f);c.height=Math.round(bild.naturalHeight*f);c.getContext('2d').drawImage(bild,0,0,c.width,c.height);URL.revokeObjectURL(url);
+      ok(c.toDataURL('image/jpeg',.85).split(',')[1]);};
+    bild.onerror=function(){nein(new Error('Das Bild lässt sich nicht öffnen.'));};bild.src=url;});}
+function fotoBereich(nr,name){
+  var vorhanden=(STD.fotos||[]).indexOf(nr)>-1||fotoBereich.neu[nr];
+  var vorschau=el('img',{class:'foto-vorschau',alt:'Foto '+name,hidden:!vorhanden});
+  if(fotoBereich.neu[nr])vorschau.src='data:image/jpeg;base64,'+fotoBereich.neu[nr];else if(vorhanden)vorschau.src='../img/gerichte/nr-'+nr+'-400.webp?'+Date.now();
+  var eingabe=el('input',{type:'file',accept:'image/*',id:'foto-datei',class:'foto-datei'}),meldung=el('p',{class:'hinweis',role:'status'});
+  var loeschen=el('button',{class:'knopf klein rot',text:'Foto entfernen',hidden:!vorhanden,onclick:function(){
+    frage('Foto von Nr. '+nr+' entfernen?','Entfernen').then(function(j){if(!j)return;meldung.textContent='Entfernt …';
+      fotoSha(nr).then(function(sha){if(!sha)return null;return api('/contents/'+fotoPfad(nr),{method:'DELETE',headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({message:'Chef-App: Foto Nr. '+nr+' entfernt',sha:sha,branch:'main'})}).then(function(r){if(!r.ok)throw new Error('Entfernen fehlgeschlagen ('+r.status+')');return r.json();});})
+      .then(function(d){delete fotoBereich.neu[nr];STD.fotos=(STD.fotos||[]).filter(function(f){return f!==nr;});vorschau.hidden=true;loeschen.hidden=true;
+        meldung.textContent='Foto entfernt – in ca. 3 Minuten auch auf der Seite.';if(d&&d.commit)beobachten(d.commit.sha);})
+      .catch(function(e){meldung.textContent=e.message;});});}});
+  eingabe.addEventListener('change',function(){var f=eingabe.files&&eingabe.files[0];if(!f)return;meldung.textContent='Foto wird vorbereitet …';
+    verkleinern(f).then(function(b64){meldung.textContent='Wird hochgeladen …';vorschau.src='data:image/jpeg;base64,'+b64;vorschau.hidden=false;
+      return fotoSha(nr).then(function(sha){var body={message:'Chef-App: Foto Nr. '+nr,content:b64,branch:'main'};if(sha)body.sha=sha;
+        return api('/contents/'+fotoPfad(nr),{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});})
+        .then(function(r){if(!r.ok)throw new Error('Hochladen fehlgeschlagen ('+r.status+')');return r.json();})
+        .then(function(d){fotoBereich.neu[nr]=b64;loeschen.hidden=false;meldung.textContent='Foto gespeichert ✓ – in ca. 3 Minuten auf der Seite.';beobachten(d.commit&&d.commit.sha);});})
+    .catch(function(e){meldung.textContent=e.message;});});
+  return el('div',{class:'foto-bereich'},[el('label',{for:'foto-datei',text:'Foto des Gerichts'}),vorschau,
+    el('div',{class:'reihe'},[el('label',{class:'knopf',for:'foto-datei',style:'display:inline-flex;align-items:center;margin:0',text:vorhanden?'Neues Foto …':'Foto aufnehmen oder auswählen'}),loeschen]),eingabe,meldung,
+    el('p',{class:'hinweis',text:'Querformat wirkt am besten; die Seite schneidet auf 4:3 zu. Das Foto wird sofort gespeichert.'})]);
+}
+fotoBereich.neu={};
+
+var TAGE=['So','Mo','Di','Mi','Do','Fr','Sa'],WOCHE=[1,2,3,4,5,6,0];
+function aktionBearbeiten(index,vorlage){
+  var alt=index==null?(vorlage||{name:'',von:heute(),bis:heute(6),preise:{}}):kopie(ANP.aktionen[index]),a=kopie(alt);
+  var alle=gerichte().filter(function(x){return !x.geloescht;}),nach={};alle.forEach(function(x){nach[schl(x)]=x;});
+  var b=el('div',{class:'blatt'}),inhalt=el('div');b.appendChild(inhalt);document.body.appendChild(b);
+  var name=el('input',{type:'text',id:'a-name',maxlength:'60',value:a.name,placeholder:'z. B. Döner 5 €, Dürüm 6 €'});
+  var von=el('input',{type:'date',id:'a-von',value:a.von}),bis=el('input',{type:'date',id:'a-bis',value:a.bis});
+  var tageBox=el('div',{class:'wahl'}),ladenBox=el('div',{class:'wahl'}),liste=el('div'),such=el('input',{type:'search',id:'a-such',placeholder:'Gericht hinzufügen: Name oder Nummer','aria-label':'Gericht suchen'}),treffer=el('div');
+  var fehler=el('p',{class:'fehler',hidden:true}),zeitBox=el('div',{class:'wahl'}),zl=zeitListe(6*60,24*60-30,30);
+  var zab=el('select',{id:'a-zab','aria-label':'Uhrzeit von'},zl.map(function(z){return el('option',{value:z,text:z});}));
+  var zbis=el('select',{id:'a-zbis','aria-label':'Uhrzeit bis'},zl.concat(['24:00']).map(function(z){return el('option',{value:z,text:z});}));
+  zab.value=a.zeit_ab||'11:00';zbis.value=a.zeit_bis||'14:00';var zeitReihe=el('div',{class:'reihe',hidden:!a.zeit_ab},[zab,'–',zbis,' Uhr']);
+  function zeitZeichnen(){zeitBox.textContent='';[[false,'Ganztags'],[true,'Nur zu bestimmten Uhrzeiten']].forEach(function(o){
+    zeitBox.appendChild(el('button',{'aria-pressed':String(!!a.zeit_ab===o[0]),text:o[1],onclick:function(){if(o[0]){a.zeit_ab=zab.value;a.zeit_bis=zbis.value;}else{delete a.zeit_ab;delete a.zeit_bis;}zeitReihe.hidden=!o[0];zeitZeichnen();}}));});}
+  function tageZeichnen(){tageBox.textContent='';var ts=a.tage||[];
+    tageBox.appendChild(el('button',{'aria-pressed':String(!ts.length),text:'Jeden Tag',onclick:function(){delete a.tage;tageZeichnen();}}));
+    WOCHE.forEach(function(d){tageBox.appendChild(el('button',{'aria-pressed':String(ts.indexOf(d)>-1),text:TAGE[d],onclick:function(){
+      var n=(a.tage||[]).slice(),i=n.indexOf(d);if(i>-1)n.splice(i,1);else n.push(d);if(n.length)a.tage=n;else delete a.tage;tageZeichnen();}}));});}
+  var artBox=el('div',{class:'wahl'});
+  function artZeichnen(){artBox.textContent='';[['','Als Aktion'],['mittag','Als Mittagstisch (eigener Kasten oben)']].forEach(function(o){
+    artBox.appendChild(el('button',{'aria-pressed':String((a.art||'')===o[0]),text:o[1],onclick:function(){if(o[0])a.art=o[0];else delete a.art;artZeichnen();}}));});}
+  function ladenZeichnen(){ladenBox.textContent='';LW('').forEach(function(o){
+    ladenBox.appendChild(el('button',{'aria-pressed':String((a.laden||'')===o[0]),text:o[1],onclick:function(){if(o[0])a.laden=o[0];else delete a.laden;ladenZeichnen();}}));});}
+  function listeZeichnen(){liste.textContent='';Object.keys(a.preise).forEach(function(k){var x=nach[k];if(!x)return;
+    var felder=x.preise.map(function(p,i){return el('input',{type:'text',inputmode:'decimal',value:a.preise[k][i]||'','aria-label':'Aktionspreis '+x.name+(x.a.groessen.length?' '+x.a.groessen[i]:''),
+      'data-ak':k,style:'width:92px;min-height:40px',oninput:function(ev){a.preise[k][i]=ev.target.value;}});});
+    liste.appendChild(el('div',{class:'tag'},[el('span',{style:'flex:1',text:(x.nr?x.nr+' ':'')+x.name+' (sonst '+x.preise.join(' / ')+' €)'})].concat(felder,
+      [el('button',{class:'knopf klein','aria-label':'Entfernen',text:'✕',onclick:function(){delete a.preise[k];listeZeichnen();}})])));});
+    if(!Object.keys(a.preise).length)liste.appendChild(el('p',{class:'hinweis',text:'Noch keine Gerichte.'}));}
+  such.addEventListener('input',function(){treffer.textContent='';var q=such.value.trim().toLowerCase();if(!q)return;
+    alle.filter(function(x){return (x.nr+' '+x.name).toLowerCase().indexOf(q)>-1&&!a.preise[schl(x)];}).slice(0,8).forEach(function(x){
+      treffer.appendChild(el('button',{class:'liste-gericht',onclick:function(){a.preise[schl(x)]=x.preise.map(function(){return '';});such.value='';treffer.textContent='';listeZeichnen();
+        var f=liste.querySelector('[data-ak="'+schl(x).replace(/"/g,'')+'"]');if(f)f.focus();}},[el('span',{class:'nr',text:x.nr}),el('span',{class:'nm',text:x.name}),el('span',{class:'pr',text:x.preise.join(' / ')+' €'})]));});});
+  function speichernA(){
+    a.name=name.value.trim();a.von=von.value;a.bis=bis.value;
+    if(a.zeit_ab){a.zeit_ab=zab.value;a.zeit_bis=zbis.value==='24:00'?'23:59':zbis.value;if(a.zeit_ab>=a.zeit_bis){fehler.textContent='Bei der Uhrzeit muss „bis“ nach „von“ liegen.';fehler.hidden=false;return;}}
+    if(!a.name){fehler.textContent='Bitte einen Namen eingeben, z. B. „Döner 5 €“.';fehler.hidden=false;return;}
+    if(!a.von||!a.bis||a.bis<a.von){fehler.textContent='Bitte einen gültigen Zeitraum wählen.';fehler.hidden=false;return;}
+    var ks=Object.keys(a.preise);if(!ks.length){fehler.textContent='Bitte mindestens ein Gericht hinzufügen.';fehler.hidden=false;return;}
+    for(var i=0;i<ks.length;i++){var ps=a.preise[ks[i]].map(preisNorm);if(ps.some(function(p){return !p;})){fehler.textContent='Aktionspreis für '+nach[ks[i]].name+' bitte so eingeben: 5,00';fehler.hidden=false;return;}a.preise[ks[i]]=ps;}
+    ANP.aktionen=ANP.aktionen||[];if(index==null)ANP.aktionen.push(a);else ANP.aktionen[index]=a;b.remove();zeichnen();}
+  var knoepfe=[el('button',{class:'knopf',text:'Abbrechen',onclick:function(){b.remove();}})];
+  if(index!=null)knoepfe.push(el('button',{class:'knopf rot',text:'Aktion löschen',onclick:function(){ANP.aktionen.splice(index,1);b.remove();zeichnen();}}));
+  knoepfe.push(el('button',{class:'knopf voll',text:'Übernehmen',onclick:speichernA}));
+  [el('h3',{text:index==null?(a.art==='mittag'?'Neuer Mittagstisch':'Neue Sonderaktion'):'Sonderaktion ändern'}),el('label',{for:'a-name',text:'Name (steht oben auf der Seite)'}),name,
+   el('div',{class:'reihe'},[el('div',{style:'flex:1'},[el('label',{for:'a-von',text:'von'}),von]),el('div',{style:'flex:1'},[el('label',{for:'a-bis',text:'bis'}),bis])]),
+   el('label',{text:'An welchen Tagen?'}),tageBox,el('label',{text:'Uhrzeit (z. B. Mittagsangebot)'}),zeitBox,zeitReihe,el('label',{text:'Welcher Laden?'}),ladenBox,el('label',{text:'Anzeige auf der Seite'}),artBox,
+   el('label',{text:'Gerichte und Aktionspreise'}),liste,such,treffer,fehler,el('div',{class:'reihe'},knoepfe)].forEach(function(n){inhalt.appendChild(n);});
+  tageZeichnen();ladenZeichnen();zeitZeichnen();artZeichnen();listeZeichnen();name.focus();
+}
+/* „Was kommt“: die nächsten 4 Wochen auf einen Blick – Feiertage, besondere Tage, Urlaub, Aktionen, Boxen, Hinweise, Wintersaison */
+function wasKommtKarte(){
+  var k=el('div',{class:'karte'},[el('h3',{text:'📅 Was kommt (4 Wochen)'})]),t=heute(),bis=heute(27),tage={};
+  function dazu(d,txt,art){if(d<t||d>bis)return;(tage[d]=tage[d]||[]).push([txt,art||'']);}
+  var j=+t.slice(0,4);feiertage(j).concat(feiertage(j+1)).forEach(function(f){dazu(f[0],'🎉 '+f[1],'fest');});
+  var SZ=ANP.sonderzeiten||{};Object.keys(SZ).forEach(function(d){Object.keys(SZ[d]).forEach(function(l){var w=SZ[d][l],n=(STD.laeden.filter(function(x){return x.id===l;})[0]||{}).name||l;
+    dazu(d,w===null?'🚫 '+n+' geschlossen':'🕑 '+n+' '+w[0]+'–'+w[1]+' Uhr','zu');});});
+  (ANP.aktionen||[]).forEach(function(a){var n=(a.art==='mittag'?'🍽 ':'🏷 ')+a.name;
+    if(a.von>=t)dazu(a.von,'▶ '+n+' beginnt'+(a.bis!==a.von?' (bis '+datumDE(a.bis)+')':''));else if(a.bis>=t)dazu(t,'… '+n+' läuft bis '+datumDE(a.bis));
+    if(a.bis!==a.von||a.von<t)dazu(a.bis,'■ '+n+' letzter Tag');});
+  (ANP.pakete||[]).forEach(function(p){if(p.von&&p.von>=t)dazu(p.von,'📦 Box „'+p.name+'“ ab heute');if(p.bis)dazu(p.bis,'📦 Box „'+p.name+'“ letzter Tag');});
+  (ANP.hinweise||[]).forEach(function(h){if(h.von>=t)dazu(h.von,'📣 Hinweis: '+h.text);});
+  if(STD.winter&&(ANP.winter||'auto')==='auto'){[j,j+1].forEach(function(y){dazu(y+'-12-01','❄️ Wintersaison '+LN(STD.winter)+' beginnt');dazu(y+'-03-15','❄️ Wintersaison '+LN(STD.winter)+' endet');});}
+  if(STD.zug_bis){dazu(STD.zug_bis,'🚆 Zugzeiten '+LN(STD.zug_laden)+' laufen aus – neuen Fahrplan eintragen lassen','zu');}
+  var ds=Object.keys(tage).sort();
+  if(!ds.length)k.appendChild(el('p',{class:'hinweis',text:'Nichts Besonderes geplant.'}));
+  ds.forEach(function(d){var wt=TAGE[new Date(d+'T12:00:00Z').getUTCDay()];
+    k.appendChild(el('div',{class:'tag','data-was-kommt':d},[el('strong',{style:'min-width:76px',text:wt+' '+datumDE(d)}),
+      el('div',{style:'flex:1'},tage[d].map(function(x){return el('div',{style:x[1]==='zu'?'color:var(--paprika);font-weight:700':'',text:x[0]});}))]));});
+  app.appendChild(k);
+}
+function zeitenTab(){
+  sprung([['Was kommt','a-kommt'],['Öffnungszeiten','a-oeffnung'],['Besondere Tage','a-sonder'],['Urlaub','a-urlaub']].concat(STD.winter?[['Winter','a-winter']]:[],[['Viertelstunde','a-slots']]));
+  anker('a-kommt');wasKommtKarte();
+  anker('a-oeffnung');app.appendChild(el('h2',{text:'Öffnungszeiten'}));
+  var zeiten=zeitListe(6*60,24*60-30,30);
+  STD.laeden.forEach(function(l){
+    var anp=((ANP.zeiten||{})[l.id])||{},k=el('div',{class:'karte'},[el('h3',{text:l.name})]);
+    WOCHE.forEach(function(t){
+      var std=l.zeiten[t]||null,akt=(String(t) in anp)?anp[t]:std,auf=!!akt;
+      var cb=el('input',{type:'checkbox','aria-label':TAGE[t]+' geöffnet'});cb.checked=auf;
+      var von=el('select',{'aria-label':TAGE[t]+' von'},zeiten.map(function(z){return el('option',{value:z,text:z});}));
+      var bis=el('select',{'aria-label':TAGE[t]+' bis'},zeiten.concat(['24:00']).map(function(z){return el('option',{value:z,text:z});}));
+      von.value=akt?akt[0]:(std?std[0]:'10:00');bis.value=akt?akt[1]:(std?std[1]:'22:00');von.disabled=bis.disabled=!auf;
+      function setzen(){var wert=cb.checked?[von.value,bis.value==='24:00'?'23:59':bis.value]:null;
+        if(wert&&wert[0]>=wert[1]){status('„bis“ muss nach „von“ liegen.','rot',3000);return;}
+        ANP.zeiten=ANP.zeiten||{};var z=ANP.zeiten[l.id]=ANP.zeiten[l.id]||{};
+        if(JSON.stringify(wert)===JSON.stringify(std))delete z[t];else z[t]=wert;zeichnen();}
+      [cb,von,bis].forEach(function(f){f.addEventListener('change',setzen);});
+      k.appendChild(el('div',{class:'tag'+(String(t) in anp?' anders':'')},[el('strong',{text:TAGE[t]}),cb].concat(
+        auf?[von,'–',bis]:[el('span',{class:'geschl',text:'geschlossen'})])));
+    });
+    if(Object.keys(anp).length)k.appendChild(el('div',{class:'reihe',style:'margin-top:10px'},[el('button',{class:'knopf klein',text:'Standardzeiten für '+l.name,onclick:function(){delete ANP.zeiten[l.id];zeichnen();}})]));
+    app.appendChild(k);
+  });
+  app.appendChild(el('p',{class:'hinweis',text:'Gelb markierte Tage weichen vom Standard ab.'}));
+  anker('a-sonder');sonderKarte();
+  anker('a-urlaub');urlaubKarte();
+  if(STD.winter){anker('a-winter');winterKarte();}
+  anker('a-slots');slotKarte();
+}
+/* Höchstzahl Vorbestellungen je Viertelstunde; ausgebuchte Zeiten (meldet die Küche) wieder freigeben */
+function slotKarte(){
+  var k=el('div',{class:'karte',id:'slot-karte'},[el('h3',{text:'🕒 Vorbestellungen je Viertelstunde'}),
+    el('p',{class:'hinweis',text:'Sind für eine Viertelstunde so viele Bestellungen da, sperrt die Küchenansicht diese Zeit online. Gäste bekommen dann automatisch die nächste freie Zeit vorgeschlagen.'})]);
+  STD.laeden.forEach(function(l){
+    var akt=(ANP.slot_max||{})[l.id];if(akt==null)akt=STD.slot_standard;
+    var w=el('div',{class:'wahl'});
+    [[0,'Keine Grenze'],[3,'3'],[4,'4'],[5,'5'],[6,'6'],[8,'8'],[10,'10']].forEach(function(o){w.appendChild(el('button',{'aria-pressed':String(akt===o[0]),'data-slot':l.id+'-'+o[0],text:o[1],onclick:function(){
+      ANP.slot_max=ANP.slot_max||{};if(o[0]===STD.slot_standard)delete ANP.slot_max[l.id];else ANP.slot_max[l.id]=o[0];zeichnen();}}));});
+    k.appendChild(el('label',{text:l.name}));k.appendChild(w);
+    var v=(ANP.voll||{})[l.id]||{},t=heute();
+    Object.keys(v).sort().filter(function(d){return d>=t;}).forEach(function(d){(v[d]||[]).forEach(function(z){
+      k.appendChild(el('div',{class:'tag'},[el('span',{style:'flex:1',text:'🔒 '+(d===t?'Heute':d.slice(8,10)+'.'+d.slice(5,7)+'.')+' '+z+' Uhr ausgebucht'}),
+        el('button',{class:'knopf klein',text:'Freigeben',onclick:function(){v[d]=v[d].filter(function(x){return x!==z;});if(!v[d].length)delete v[d];zeichnen();}})]));});});
+  });
+  app.appendChild(k);
+}
+/* Feiertage in Sachsen (plus Heiligabend und Silvester) für die nächsten Tage */
+function iso(d){return d.getUTCFullYear()+'-'+('0'+(d.getUTCMonth()+1)).slice(-2)+'-'+('0'+d.getUTCDate()).slice(-2);}
+function feiertage(jahr){
+  var a=jahr%19,b=Math.floor(jahr/100),c=jahr%100,d=Math.floor(b/4),e=b%4,f=Math.floor((b+8)/25),g=Math.floor((b-f+1)/3),
+      h=(19*a+b-d-g+15)%30,i=Math.floor(c/4),k=c%4,l=(32+2*e+2*i-h-k)%7,m=Math.floor((a+11*h+22*l)/451),
+      mon=Math.floor((h+l-7*m+114)/31),tag=((h+l-7*m+114)%31)+1,ostern=Date.UTC(jahr,mon-1,tag);
+  var plus=function(n){return iso(new Date(ostern+n*864e5));};
+  var bb=new Date(Date.UTC(jahr,10,22));while(bb.getUTCDay()!==3)bb=new Date(bb.getTime()-864e5);
+  return [[jahr+'-01-01','Neujahr'],[plus(-2),'Karfreitag'],[plus(1),'Ostermontag'],[jahr+'-05-01','Tag der Arbeit'],
+    [plus(39),'Christi Himmelfahrt'],[plus(50),'Pfingstmontag'],[jahr+'-10-03','Tag der Deutschen Einheit'],[jahr+'-10-31','Reformationstag'],
+    [iso(bb),'Buß- und Bettag'],[jahr+'-12-24','Heiligabend (kein Feiertag)'],[jahr+'-12-25','1. Weihnachtstag'],[jahr+'-12-26','2. Weihnachtstag'],
+    [jahr+'-12-31','Silvester (kein Feiertag)']];
+}
+function offeneFeiertage(tage){
+  var t=heute(),bis=heute(tage),j=+t.slice(0,4),SZ=ANP.sonderzeiten||{},ok=ANP.feiertage_ok||[];
+  return feiertage(j).concat(feiertage(j+1)).filter(function(f){return f[0]>=t&&f[0]<=bis&&!SZ[f[0]]&&ok.indexOf(f[0])<0;});
+}
+function feiertagKarte(){
+  var liste=offeneFeiertage(75);if(!liste.length)return;
+  var k=el('div',{class:'karte feiertag'},[el('h3',{text:'Feiertage demnächst'}),el('p',{class:'hinweis',style:'margin:0 0 6px',text:'Wie ist an diesen Tagen geöffnet? Einmal antippen, dann steht es auf der Seite.'})]);
+  liste.forEach(function(f){
+    var wt=['So','Mo','Di','Mi','Do','Fr','Sa'][new Date(f[0]+'T12:00:00Z').getUTCDay()];
+    k.appendChild(el('div',{class:'cl-punkt','data-feiertag':f[0]},[el('b',{text:wt+', '+datumDE(f[0])+' '+f[1]}),
+      el('div',{class:'reihe',style:'margin-top:6px'},[
+        el('button',{class:'knopf klein rot',text:'Beide geschlossen',onclick:function(){var e={};STD.laeden.forEach(function(l){e[l.id]=null;});(ANP.sonderzeiten=ANP.sonderzeiten||{})[f[0]]=e;zeichnen();}}),
+        el('button',{class:'knopf klein',text:'Wie sonntags',onclick:function(){var e={};STD.laeden.forEach(function(l){var z=Object.assign({},l.zeiten,(ANP.zeiten||{})[l.id]||{})['0'];e[l.id]=z?[z[0],z[1]]:null;});
+          (ANP.sonderzeiten=ANP.sonderzeiten||{})[f[0]]=e;zeichnen();}}),
+        el('button',{class:'knopf klein',text:'Normal geöffnet',onclick:function(){(ANP.feiertage_ok=ANP.feiertage_ok||[]).push(f[0]);zeichnen();}})])]));
+  });
+  app.appendChild(k);
+}
+function sonderKarte(){
+  app.appendChild(el('h2',{text:'Besondere Tage'}));
+  feiertagKarte();
+  var t=heute(),k=el('div',{class:'karte'},[el('p',{class:'hinweis',style:'margin:0 0 8px',text:'Z. B. Heiligabend, Feiertag, Betriebsferien. Gilt nur an diesem Datum – die Seite zeigt es an und bietet passende Abholzeiten an.'})]);
+  var SZ=ANP.sonderzeiten||{},namen={};STD.laeden.forEach(function(l){namen[l.id]=l.name;});
+  Object.keys(SZ).sort().forEach(function(d){if(d<t)return;Object.keys(SZ[d]).forEach(function(l){var w=SZ[d][l];
+    k.appendChild(el('p',{},[el('span',{class:'chip'},[datumDE(d)+' '+namen[l]+': '+(w?w[0]+'–'+w[1]+' Uhr':'geschlossen'),
+      el('button',{'aria-label':'Eintrag entfernen',text:'✕',onclick:function(){delete SZ[d][l];if(!Object.keys(SZ[d]).length)delete SZ[d];zeichnen();}})])]));});});
+  var zeiten=zeitListe(6*60,24*60-30,30),datum=el('input',{type:'date',id:'s-datum',value:heute(1),min:t});
+  var laden='alle',auf=false;
+  var wahlL=el('div',{class:'wahl'}),wahlA=el('div',{class:'wahl'});
+  var von=el('select',{id:'s-von','aria-label':'von'},zeiten.map(function(z){return el('option',{value:z,text:z});}));
+  var bis=el('select',{id:'s-bis','aria-label':'bis'},zeiten.concat(['24:00']).map(function(z){return el('option',{value:z,text:z});}));
+  von.value='10:00';bis.value='16:00';var zeitReihe=el('div',{class:'reihe',hidden:true},[von,'–',bis]);
+  function wahl(box,opts,akt,setz){box.textContent='';opts.forEach(function(o){box.appendChild(el('button',{'aria-pressed':String(akt()===o[0]),text:o[1],onclick:function(){setz(o[0]);wahl(box,opts,akt,setz);}}));});}
+  wahl(wahlL,LW('alle'),function(){return laden;},function(v){laden=v;});
+  wahl(wahlA,[[false,'Geschlossen'],[true,'Andere Zeiten']],function(){return auf;},function(v){auf=v;zeitReihe.hidden=!v;});
+  [el('label',{for:'s-datum',text:'Datum'}),datum,el('label',{text:'Laden'}),wahlL,el('label',{text:'An diesem Tag'}),wahlA,zeitReihe,
+   el('div',{class:'reihe'},[el('button',{class:'knopf voll',text:'Tag hinzufügen',onclick:function(){
+     var d=datum.value,w=auf?[von.value,bis.value==='24:00'?'23:59':bis.value]:null;
+     if(!d||d<t){status('Bitte ein Datum ab heute wählen.','rot',3000);return;}
+     if(w&&w[0]>=w[1]){status('„bis“ muss nach „von“ liegen.','rot',3000);return;}
+     ANP.sonderzeiten=ANP.sonderzeiten||{};var e=ANP.sonderzeiten[d]=ANP.sonderzeiten[d]||{};
+     (laden==='alle'?STD.laeden.map(function(l){return l.id;}):[laden]).forEach(function(l){e[l]=w;});zeichnen();}})])
+  ].forEach(function(x){k.appendChild(x);});
+  app.appendChild(k);
+}
+function zahlenKarte(){
+  if(!STD.zaehler)return;
+  var GK='fiamma-chef-goatcounter',schl='';try{schl=localStorage.getItem(GK)||'';}catch(e){}
+  var dash='https://'+STD.zaehler+'.goatcounter.com/',k=el('div',{class:'karte'},[el('h3',{text:'Besucher und Bestellungen'})]);
+  app.appendChild(el('h2',{text:'Zahlen'}));app.appendChild(k);
+  var link=el('a',{class:'knopf klein',href:dash,target:'_blank',rel:'noopener',style:'display:inline-flex;align-items:center;text-decoration:none',text:'Ausführliche Statistik'});
+  if(!schl){var f=el('input',{type:'text',id:'gc-schl',autocomplete:'off','aria-label':'API-Schlüssel','placeholder':'API-Schlüssel von GoatCounter'});
+    k.appendChild(el('p',{class:'hinweis',text:'Einmal einrichten: bei GoatCounter unter „API“ einen Schlüssel mit Leserechten erstellen und hier eintragen. Er bleibt nur auf diesem Gerät.'}));
+    k.appendChild(f);k.appendChild(el('div',{class:'reihe'},[el('button',{class:'knopf voll',text:'Speichern',onclick:function(){try{localStorage.setItem(GK,f.value.replace(/\s+/g,''));}catch(e){}zeichnen();}}),link]));return;}
+  var box=el('div',{},[el('p',{class:'hinweis',text:'Lädt …'})]);k.appendChild(box);
+  k.appendChild(el('div',{class:'reihe'},[el('button',{class:'knopf klein',text:'Aktualisieren',onclick:function(){zahlenKarte.cache=null;zeichnen();}}),link,el('button',{class:'knopf klein',text:'Schlüssel entfernen',onclick:function(){try{localStorage.removeItem(GK);}catch(e){}zeichnen();}})]));
+  function stunde(tage){var n=new Date(),h=+new Intl.DateTimeFormat('en-GB',{timeZone:'Europe/Berlin',hour:'2-digit',hourCycle:'h23'}).format(n);
+    var d=new Date(n);d.setUTCMinutes(0,0,0);d=new Date(d.getTime()-(h+24*tage)*36e5);return d.toISOString().replace('.000','');}
+  function holen(start){var ende=new Date();ende.setUTCMinutes(0,0,0);ende=new Date(ende.getTime()+36e5);
+    return fetch(dash+'api/v0/stats/hits?limit=100&start='+encodeURIComponent(start)+'&end='+encodeURIComponent(ende.toISOString().replace('.000','')),
+      {headers:{'Authorization':'Bearer '+schl,'Accept':'application/json'},cache:'no-store'})
+      .then(function(r){if(r.ok)return r.json();
+        return r.text().then(function(t){var m=t;try{var j=JSON.parse(t);m=j.error||JSON.stringify(j.errors||j);}catch(e){}
+          throw new Error(r.status+(m?': '+String(m).slice(0,160):''));});});}
+  function werte(d){var w={besuche:0};(d.hits||[]).forEach(function(h){if(h.event)w[h.path]=(w[h.path]||0)+h.count;else w.besuche+=h.count;});return w;}
+  /* gezählt wird seit Oktober 2026 – „Gesamt“ beginnt dort */
+  var spalten=[['Heute',stunde(0)],['7 Tage',stunde(6)],['30 Tage',stunde(29)],['Gesamt','2026-10-01T00:00:00Z']];
+  /* nacheinander abfragen (GoatCounter begrenzt die Anfragen pro Sekunde), bei 429 kurz warten; Ergebnis 5 Minuten merken */
+  function warten(ms){return new Promise(function(ok){setTimeout(ok,ms);});}
+  /* GoatCounter bremst schon bei wenigen Anfragen pro Sekunde – auch die Vorab-Anfrage des Browsers. Wird die gebremst,
+     meldet Safari nur „Load failed“. Darum: Abstand zwischen den Abfragen und bei 429 oder Netzfehler etwas warten und wiederholen. */
+  function holenGeduldig(start,versuch){versuch=versuch||0;return holen(start).catch(function(e){var m=String(e.message||e),t=/try again in ([\d.]+)ms/.exec(m);
+    var nochmal=/^429/.test(m)||e instanceof TypeError||/fetch|load|network/i.test(m);
+    if(nochmal&&versuch<5)return warten((t?Math.ceil(+t[1]):1500*(versuch+1))+400).then(function(){return holenGeduldig(start,versuch+1);});throw e;});}
+  var cache=zahlenKarte.cache&&Date.now()-zahlenKarte.cache.t<5*60e3&&zahlenKarte.cache.schl===schl?Promise.resolve(zahlenKarte.cache.x):
+    spalten.reduce(function(kette,sp,i){return kette.then(function(liste){
+      box.textContent='';box.appendChild(el('p',{class:'hinweis',text:'Lädt … ('+(i+1)+' von '+spalten.length+')'}));
+      return (i?warten(1200):Promise.resolve()).then(function(){return holenGeduldig(sp[1]);}).then(function(d){return liste.concat([d]);});});},Promise.resolve([]))
+      .then(function(x){zahlenKarte.cache={t:Date.now(),x:x,schl:schl};return x;});
+  cache.then(function(x){var w=x.map(werte);box.textContent='';
+    var z=[['Besucher',['besuche']]].concat(STD.laeden.map(function(l){return ['WhatsApp '+l.name,['whatsapp-'+l.id]];}),
+      STD.laeden.map(function(l){return ['Anrufe '+l.name,['anrufen-'+l.id]];}),[['Bestellung geteilt',['bestellung-teilen']],
+      ['Gemeinsam bestellt',['gemeinsam-bestellen']],['Zur Google-Bewertung',STD.laeden.map(function(l){return 'bewertung-'+l.id;})]]);
+    var sum=function(w,ks){return ks.reduce(function(s,k){return s+(w[k]||0);},0);};
+    var t=el('table',{class:'zahlen'},[el('tr',{},[el('th',{text:''})].concat(spalten.map(function(sp){return el('th',{scope:'col',text:sp[0]});})))]);
+    z.forEach(function(r){t.appendChild(el('tr',{},[el('th',{scope:'row',text:r[0]})].concat(w.map(function(x){return el('td',{text:String(sum(x,r[1]))});}))));});
+    box.appendChild(t);
+  }).catch(function(e){box.textContent='';
+    var m=String(e.message||e),t=/^404/.test(m)?'GoatCounter hat noch keine Zahlen geliefert ('+m+'). Das kommt vor, solange erst wenige Besuche gezählt sind – später noch einmal ansehen.'
+      :/^40[13]/.test(m)?'Der Schlüssel wird nicht angenommen ('+m+'). Bitte bei GoatCounter einen Schlüssel mit „Read statistics“ anlegen.'
+      :/fetch|network|load/i.test(m)?'GoatCounter erlaubt den Abruf aus der App nicht ('+m+'). Bitte die ausführliche Statistik öffnen.'
+      :'Zahlen konnten nicht geladen werden ('+m+'). Schlüssel prüfen – oder die ausführliche Statistik öffnen.';
+    box.appendChild(el('p',{class:'fehler',text:t}));
+    box.appendChild(el('p',{class:'hinweis',text:'Abfrage: '+dash+'api/v0/stats/hits'}));});
+}
+function kopierZeile(titel,wert,lang){
+  var k=el('button',{class:'knopf klein',text:'Kopieren',onclick:function(){
+    var fertig=function(){k.textContent='Kopiert ✓';setTimeout(function(){k.textContent='Kopieren';},1500);};
+    if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(wert).then(fertig,function(){t.select();});else t.select();}});
+  var t=el(lang?'textarea':'input',{readonly:true,'aria-label':titel,rows:lang?'5':null});t.value=wert;
+  return el('div',{class:'gp-zeile'},[el('div',{class:'gp-kopf'},[el('b',{text:titel}),k]),t]);
+}
+function googleKarteText(){var z=[],alt='';
+  gerichte().filter(function(x){return !x.geloescht;}).forEach(function(x){var k=x.g.titel+(x.a.titel!==x.g.titel?' – '+x.a.titel:'');if(k!==alt){z.push('');z.push(k);alt=k;}
+    var gr=x.a.groessen||[];z.push((x.nr?x.nr+' ':'')+x.name+(x.desc?' ('+x.desc+')':'')+': '+x.preise.map(function(p,i){return (gr[i]?gr[i]+' ':'')+p+' €';}).join(' / '));});
+  return z.join('\n').trim();}
+function googleKarte(){ /* Angaben fürs Google-Unternehmensprofil – zum Abgleichen und Kopieren */
+  var T=['So','Mo','Di','Mi','Do','Fr','Sa'],W=[1,2,3,4,5,6,0];
+  var d=el('details',{class:'karte checkliste'},[el('summary',{},[el('b',{text:'Google-Unternehmensprofil'}),' · Angaben zum Kopieren'])]);
+  d.appendChild(el('p',{class:'hinweis',text:'In der Google-Maps-App oder auf business.google.com anmelden, das Profil des Ladens öffnen und diese Angaben vergleichen. Abweichungen übernehmen.'}));
+  STD.laeden.forEach(function(l){
+    var z=Object.assign({},l.zeiten,(ANP.zeiten||{})[l.id]||{}),zeilen=[];
+    W.forEach(function(t){var w=z[String(t)];zeilen.push(T[t]+': '+(w?w[0]+'–'+w[1]:'geschlossen'));});
+    d.appendChild(el('p',{class:'abschnitt',text:STD.name+' '+l.name}));
+    [['Name',STD.name+' '+l.name],['Adresse',l.strasse+', '+l.plz+' '+l.ort],['Telefon',l.tel],
+     ['Website',STD.seite],['Link zum Bestellen (Speisekarte)',STD.seite+'?laden='+l.id+'#speisekarte'],
+     ['Öffnungszeiten',zeilen.join('\n'),1],
+     ['Zahlungsarten',l.bar?'Nur Barzahlung (bei Google unter „Zahlungen“: nur Bargeld)':'Bar'],
+     ['Beschreibung (max. 750 Zeichen)',STD.name+' in '+l.ort+' – '+STD.google_text+' '+
+       'Online vorbestellen: Gerichte auf der Website zusammenstellen und per WhatsApp schicken, dann ohne Warten abholen. '+
+       (l.extra?l.extra+' ':'')+'Bezahlung nur bar.',1],
+     ['Merkmale','Abholung: ja · Lieferung: nein · Vegetarische Gerichte: ja · Zahlungen: nur Bargeld'+(l.extra&&/draußen/.test(l.extra)?' · Sitzplätze im Freien: ja':'')],
+     ['Speisekarte (bei Google unter „Speisekarte“ → „Speisekarte bearbeiten“)',googleKarteText(),1]
+    ].forEach(function(x){d.appendChild(kopierZeile(x[0],x[1],x[2]));});
+  });
+  d.appendChild(el('p',{class:'hinweis',text:'Außerdem: Kategorie „Döner-Restaurant“, Fotos vom Laden und von Gerichten hochladen, auf Bewertungen antworten. Halal nur angeben, wenn es bestätigt ist.'}));
+  app.appendChild(d);
+}
+/* ---------- Familien- und Party-Boxen ---------- */
+function paketKarte(){
+  app.appendChild(el('h2',{text:'Familien- und Party-Boxen'}));
+  var k=el('div',{class:'karte'}),t=heute();
+  (ANP.pakete||[]).forEach(function(p,i){if(p.bis&&p.bis<t)return;
+    k.appendChild(el('p',{},[el('button',{class:'chip',style:'cursor:pointer;padding-right:12px','data-paket':i,onclick:function(){paketBearbeiten(i);},
+      text:'📦 '+p.name+' · '+p.preis+' €'+(p.bis?' · bis '+datumDE(p.bis):'')})]));});
+  if(!(ANP.pakete||[]).length)k.appendChild(el('p',{class:'hinweis',style:'margin:0 0 8px',text:'Feste Pakete zum Festpreis, z. B. „Familienbox: 2 Döner, 2 Kindermenüs, Pommes groß – 29 €“. Erscheinen oben auf der Seite und lassen sich mit einem Tipp bestellen.'}));
+  k.appendChild(el('div',{class:'reihe'},[el('button',{class:'knopf voll',id:'paket-neu',text:'+ Neue Box',onclick:function(){paketBearbeiten(null);}})]));
+  app.appendChild(k);
+}
+function paketBearbeiten(index){
+  var a=index==null?{name:'',preis:'',inhalt:[]}:kopie(ANP.pakete[index]);
+  var alle=gerichte().filter(function(x){return !x.geloescht&&!x.neu;}),nach={};alle.forEach(function(x){nach[schl(x)]=x;});
+  var b=el('div',{class:'blatt'}),inhalt=el('div');b.appendChild(inhalt);document.body.appendChild(b);
+  var name=el('input',{type:'text',id:'p-name',maxlength:'40',value:a.name,placeholder:'z. B. Familienbox'}),preis=el('input',{type:'text',id:'p-preis',inputmode:'decimal',value:a.preis,placeholder:'z. B. 29,00'});
+  var desc=el('input',{type:'text',id:'p-desc',maxlength:'120',value:a.desc||'',placeholder:'optional, z. B. für 4 Personen'});
+  var von=el('input',{type:'date',id:'p-von',value:a.von||''}),bis=el('input',{type:'date',id:'p-bis',value:a.bis||''});
+  var liste=el('div'),such=el('input',{type:'search',id:'p-such',placeholder:'Gericht hinzufügen: Name oder Nummer','aria-label':'Gericht suchen'}),treffer=el('div'),fehler=el('p',{class:'fehler',hidden:true}),summe=el('p',{class:'hinweis'});
+  function cent(p){return Math.round(parseFloat(String(p).replace(',','.'))*100)||0;}
+  function listeZeichnen(){liste.textContent='';var n=0;a.inhalt.forEach(function(x,i){var g=nach[x.k];if(!g)return;n+=cent(g.preise[0])*x.q;
+    liste.appendChild(el('div',{class:'tag'},[el('button',{class:'knopf klein',text:'−','aria-label':'weniger',onclick:function(){if(x.q>1)x.q--;else a.inhalt.splice(i,1);listeZeichnen();}}),
+      el('strong',{text:x.q+'×','data-p-menge':x.k}),el('button',{class:'knopf klein',text:'+','aria-label':'mehr',onclick:function(){if(x.q<20)x.q++;listeZeichnen();}}),
+      el('span',{style:'flex:1',text:(g.nr?g.nr+' ':'')+g.name+' ('+g.preise[0]+' €)'})]));});
+    if(!a.inhalt.length)liste.appendChild(el('p',{class:'hinweis',text:'Noch keine Gerichte.'}));
+    summe.textContent=n?'Einzeln zusammen: '+(n/100).toFixed(2).replace('.',',')+' €':'';}
+  such.addEventListener('input',function(){treffer.textContent='';var q=such.value.trim().toLowerCase();if(!q)return;
+    alle.filter(function(x){return (x.nr+' '+x.name).toLowerCase().indexOf(q)>-1;}).slice(0,8).forEach(function(x){
+      treffer.appendChild(el('button',{class:'liste-gericht',onclick:function(){var k2=schl(x),da=a.inhalt.filter(function(y){return y.k===k2;})[0];if(da)da.q++;else a.inhalt.push({k:k2,q:1});
+        such.value='';treffer.textContent='';listeZeichnen();}},[el('span',{class:'nr',text:x.nr}),el('span',{class:'nm',text:x.name}),el('span',{class:'pr',text:x.preise.join(' / ')+' €'})]));});});
+  function speichernP(){var p=preisNorm(preis.value);a.name=name.value.trim();fehler.hidden=true;
+    if(!a.name){fehler.textContent='Bitte einen Namen eingeben.';fehler.hidden=false;return;}
+    if(!p){fehler.textContent='Preis bitte so eingeben: 29,00';fehler.hidden=false;return;}
+    if(!a.inhalt.length){fehler.textContent='Bitte mindestens ein Gericht hinzufügen.';fehler.hidden=false;return;}
+    if(von.value&&bis.value&&bis.value<von.value){fehler.textContent='Bitte einen gültigen Zeitraum wählen.';fehler.hidden=false;return;}
+    var o={name:a.name,preis:p,inhalt:a.inhalt};if(desc.value.trim())o.desc=desc.value.trim();if(von.value)o.von=von.value;if(bis.value)o.bis=bis.value;
+    ANP.pakete=ANP.pakete||[];if(index==null)ANP.pakete.push(o);else ANP.pakete[index]=o;b.remove();zeichnen();}
+  var kn=[el('button',{class:'knopf',text:'Abbrechen',onclick:function(){b.remove();}})];
+  if(index!=null)kn.push(el('button',{class:'knopf rot',text:'Box löschen',onclick:function(){ANP.pakete.splice(index,1);b.remove();zeichnen();}}));
+  kn.push(el('button',{class:'knopf voll',text:'Übernehmen',onclick:speichernP}));
+  [el('h3',{text:index==null?'Neue Box':'Box ändern'}),el('label',{for:'p-name',text:'Name (steht auf der Seite)'}),name,el('label',{for:'p-preis',text:'Festpreis'}),preis,
+   el('label',{text:'Inhalt'}),liste,summe,such,treffer,el('label',{for:'p-desc',text:'Zusatz'}),desc,
+   el('div',{class:'reihe'},[el('div',{style:'flex:1'},[el('label',{for:'p-von',text:'ab (optional)'}),von]),el('div',{style:'flex:1'},[el('label',{for:'p-bis',text:'bis (optional)'}),bis])]),
+   fehler,el('div',{class:'reihe'},kn)].forEach(function(n){inhalt.appendChild(n);});
+  listeZeichnen();name.focus();
+}
+/* ---------- Urlaub / Betriebsferien als Zeitraum ---------- */
+function urlaubKarte(){
+  var k=el('div',{class:'karte'},[el('h3',{text:'🏖 Urlaub / Betriebsferien'}),
+    el('p',{class:'hinweis',text:'Einmal von–bis eintragen: an allen Tagen geschlossen, auf der Seite steht ein Hinweis, Vorbestellungen sind dann nicht möglich.'})]);
+  var laden='alle',lb=el('div',{class:'wahl'}),von=el('input',{type:'date',id:'u-von',value:heute(1)}),bis=el('input',{type:'date',id:'u-bis',value:heute(7)}),fehler=el('p',{class:'fehler',hidden:true});
+  function z(){lb.textContent='';LW('alle').forEach(function(o){lb.appendChild(el('button',{'aria-pressed':String(laden===o[0]),text:o[1],onclick:function(){laden=o[0];z();}}));});}
+  z();
+  [el('label',{text:'Welcher Laden?'}),lb,el('div',{class:'reihe'},[el('div',{style:'flex:1'},[el('label',{for:'u-von',text:'von'}),von]),el('div',{style:'flex:1'},[el('label',{for:'u-bis',text:'bis'}),bis])]),fehler,
+   el('div',{class:'reihe',style:'margin-top:10px'},[el('button',{class:'knopf voll',id:'u-eintragen',text:'Urlaub eintragen',onclick:function(){
+     fehler.hidden=true;var a=von.value,e2=bis.value;
+     if(!a||!e2||e2<a||a<heute()){fehler.textContent='Bitte einen gültigen Zeitraum ab heute wählen.';fehler.hidden=false;return;}
+     var tage=[],d=new Date(a+'T12:00:00Z');while(d.toISOString().slice(0,10)<=e2&&tage.length<62){tage.push(d.toISOString().slice(0,10));d=new Date(d.getTime()+864e5);}
+     ANP.sonderzeiten=ANP.sonderzeiten||{};var ls=laden==='alle'?STD.laeden.map(function(l){return l.id;}):[laden];
+     tage.forEach(function(t){var x=ANP.sonderzeiten[t]=ANP.sonderzeiten[t]||{};ls.forEach(function(l){x[l]=null;});});
+     var ort=laden==='alle'?'':' '+STD.laeden.filter(function(l){return l.id===laden;})[0].name,vh=new Date(new Date(a+'T12:00:00Z').getTime()-14*864e5).toISOString().slice(0,10);
+     ANP.hinweise=(ANP.hinweise||[]).concat([{text:'Betriebsferien: '+STD.name+ort+' ist vom '+gsDatum(a)+' bis '+gsDatum(e2)+' geschlossen.',en:'Holiday closure: '+STD.name+ort+' is closed from '+gsDatum(a)+' to '+gsDatum(e2)+'.',von:vh<heute()?heute():vh,bis:e2}]);
+     zeichnen();status(tage.length+' Tage eingetragen – bitte speichern.','ok',4000);}})])].forEach(function(n){k.appendChild(n);});
+  app.appendChild(k);
+}
+function winterKarte(){
+  var k=el('div',{class:'karte'},[el('h3',{text:'❄️ Wintersaison '+LN(STD.winter)}),
+    el('p',{class:'hinweis',text:'Kasten oben auf der Seite: „Nach der Piste – vorbestellen und warm abholen“, mit Knopf für Skikurse und Gruppen. Automatisch vom 1. Dezember bis 15. März.'})]),w=el('div',{class:'wahl'});
+  [['auto','Automatisch'],['an','Jetzt an'],['aus','Aus']].forEach(function(o){w.appendChild(el('button',{'aria-pressed':String((ANP.winter||'auto')===o[0]),'data-winter':o[0],text:o[1],
+    onclick:function(){if(o[0]==='auto')delete ANP.winter;else ANP.winter=o[0];zeichnen();}}));});
+  k.appendChild(w);app.appendChild(k);
+}
+/* ---------- Bildschirm im Laden und Küchenansicht ---------- */
+function ladenSeitenKarte(){
+  var k=el('div',{class:'karte'},[el('h3',{text:'📺 Bildschirm im Laden'}),
+    el('p',{class:'hinweis',text:'Speisekarte für einen Fernseher: wechselt alle 14 Sekunden die Seite, zeigt Aktionen, Mittagstisch und „heute aus“ von selbst. Adresse im Browser des Fernsehers (z. B. Fire-TV-Stick, App „Silk“) als Startseite speichern.'}),
+    el('div',{class:'reihe'},STD.laeden.map(function(l){return el('a',{class:'knopf',href:'../tv/?laden='+l.id,target:'_blank',rel:'noopener',style:'display:inline-flex;align-items:center;text-decoration:none',text:'Bildschirm '+l.name});})),
+    el('p',{class:'hinweis',text:'Für das Schaufenster (nach außen): nur Aktionen, Mittagstisch, Empfehlungen und ein großer QR-Code zum Vorbestellen.'}),
+    el('div',{class:'reihe'},STD.laeden.map(function(l){return el('a',{class:'knopf',href:'../tv/?laden='+l.id+'&modus=fenster',target:'_blank',rel:'noopener',style:'display:inline-flex;align-items:center;text-decoration:none',text:'Schaufenster '+l.name});}))]);
+  app.appendChild(k);
+  app.appendChild(el('div',{class:'karte'},[el('h3',{text:'🧪 Testbestellung'}),
+    el('p',{class:'hinweis',text:'Zum Ausprobieren und Einweisen: öffnet die Seite mit einem Test-Döner im Bestellzettel. Laden wählen, per WhatsApp schicken, im Laden den Link „Für die Küche“ antippen. Alles ist als TEST markiert.'}),
+    el('div',{class:'reihe'},[el('a',{class:'knopf',href:'../#testbestellung',target:'_blank',rel:'noopener',style:'display:inline-flex;align-items:center;text-decoration:none',text:'Testbestellung starten'})])]));
+  app.appendChild(el('div',{class:'karte'},[el('h3',{text:'🧾 Küchenansicht'}),
+    el('p',{class:'hinweis',text:'In jeder WhatsApp-Bestellung steht unten ein Link „Für die Küche“. Antippen öffnet die Bestellung groß zum Abhaken, sortiert nach Abholzeit, mit Bon-Druck. Gespeichert wird nur auf dem Gerät im Laden.'}),
+    el('p',{class:'hinweis',text:'„Bestätigen“ und „Ist fertig“ schreiben dem Gast eine fertige WhatsApp-Antwort in seiner Sprache – nur noch seinen Chat antippen und senden. Unten: Tagesabschluss mit Bestellungen, Summe und den beliebtesten Gerichten.'}),
+    el('div',{class:'reihe'},[el('a',{class:'knopf',href:'../kueche/',target:'_blank',rel:'noopener',style:'display:inline-flex;align-items:center;text-decoration:none',text:'Küchenansicht öffnen'})])]));
+}
+/* ---------- Geschenkgutscheine: Nummer + Code; im Repo steht nur ein Prüfwert (SHA-256), nie der Code ---------- */
+var GS_ZEICHEN='ACDEFGHJKLMNPQRTUVWXYZ2346789';
+function gsCode(){var a=new Uint32Array(6),c='';crypto.getRandomValues(a);for(var i=0;i<6;i++)c+=GS_ZEICHEN.charAt(a[i]%GS_ZEICHEN.length);return c;}
+function gsHash(nr,code){return crypto.subtle.digest('SHA-256',new TextEncoder().encode(nr.toUpperCase()+'|'+code.toUpperCase().replace(/[^A-Z0-9]/g,''))).then(function(b){
+  return Array.prototype.map.call(new Uint8Array(b),function(x){return ('0'+x.toString(16)).slice(-2);}).join('');});}
+function gsDatum(iso){var p=iso.split('-');return p[2]+'.'+p[1]+'.'+p[0];}
+function gsEuro(c){return (c/100).toFixed(2).replace('.',',').replace(',00','')+' €';}
+function gsDrucken(liste){
+  var alt=document.getElementById('gs-druck');if(alt)alt.remove();
+  var d=el('div',{id:'gs-druck',lang:'de'});
+  liste.forEach(function(g){var ort=STD.name+' '+(g.laden?LN(g.laden):STD.laeden.map(function(l){return l.name;}).join(' und '));
+    d.appendChild(el('div',{class:'gs'},[el('img',{src:'../img/saray-koch.svg',alt:''}),el('p',{class:'gs-titel',text:'Geschenkgutschein'}),el('p',{class:'gs-wert',text:gsEuro(g.wert)}),
+      el('p',{class:'gs-ort',text:ort}),el('p',{class:'gs-nr',text:'Nr. '+g.nr+' · Code '+g.code}),
+      el('p',{class:'gs-klein',text:'Gültig bis '+gsDatum(g.bis)+'. Einlösbar bei Abholung, nicht in bar auszahlbar. Ausgestellt am '+gsDatum(g.am)+'.'})]));});
+  document.body.appendChild(d);document.body.classList.add('gs-drucken');
+  function weg(){document.body.classList.remove('gs-drucken');window.removeEventListener('afterprint',weg);}
+  window.addEventListener('afterprint',weg);setTimeout(function(){window.print();},300);
+}
+function gutscheinKarte(){
+  var gs=ANP.gutscheine||[],wert=2000,anzahl=4,laden='',k=el('div',{class:'karte'});
+  var offen=gs.filter(function(g){return !g.eingeloest&&g.bis>=heute();}),summe=offen.reduce(function(s,g){return s+g.wert;},0);
+  k.appendChild(el('h3',{text:'🎁 Geschenkgutscheine'}));
+  k.appendChild(el('p',{class:'hinweis',text:'Gutscheine mit Nummer und Code drucken (4 pro A4-Blatt). Bezahlt wird bar an der Theke. Danach unten speichern, sonst gelten sie nicht. Ausgegeben: '+gs.length+' · offen: '+offen.length+' ('+gsEuro(summe)+')'}));
+  var wb=el('div',{class:'wahl'}),ab=el('div',{class:'wahl'}),lb=el('div',{class:'wahl'});
+  function z(){wb.textContent='';ab.textContent='';lb.textContent='';
+    [1000,1500,2000,2500,5000].forEach(function(w){wb.appendChild(el('button',{'aria-pressed':String(wert===w),'data-gs-wert':w,text:gsEuro(w),onclick:function(){wert=w;z();}}));});
+    [1,2,4,8].forEach(function(n){ab.appendChild(el('button',{'aria-pressed':String(anzahl===n),'data-gs-anzahl':n,text:n+' Stück',onclick:function(){anzahl=n;z();}}));});
+    LW('',STD.laeden.length===2?'Beide Läden':'Alle Läden').forEach(function(o){lb.appendChild(el('button',{'aria-pressed':String(laden===o[0]),text:o[1],onclick:function(){laden=o[0];z();}}));});}
+  z();
+  k.appendChild(el('label',{text:'Wert'}));k.appendChild(wb);k.appendChild(el('label',{text:'Anzahl'}));k.appendChild(ab);k.appendChild(el('label',{text:'Gültig in'}));k.appendChild(lb);
+  k.appendChild(el('div',{class:'reihe',style:'margin-top:12px'},[el('button',{class:'knopf voll',id:'gs-erstellen',text:'Erstellen und drucken',onclick:function(){
+    var j=heute().slice(2,4),max=0;(ANP.gutscheine||[]).forEach(function(g){var m=/^G(\d\d)-(\d+)$/.exec(g.nr);if(m&&m[1]===j)max=Math.max(max,+m[2]);});
+    var neu=[],bis=(+heute().slice(0,4)+3)+'-12-31';
+    for(var i=1;i<=anzahl;i++)neu.push({nr:'G'+j+'-'+('00'+(max+i)).slice(-3),code:gsCode(),wert:wert,am:heute(),bis:bis,laden:laden});
+    Promise.all(neu.map(function(g){return gsHash(g.nr,g.code);})).then(function(h){
+      ANP.gutscheine=(ANP.gutscheine||[]).concat(neu.map(function(g,i){var x={nr:g.nr,h:h[i],wert:g.wert,am:g.am,bis:g.bis};if(g.laden)x.laden=g.laden;return x;}));
+      gsDrucken(neu);zeichnen();status('Gutscheine erstellt – jetzt speichern!','ok',5000);});}})]));
+  /* Einlösen */
+  var nr=el('input',{type:'text',id:'gs-nr',placeholder:'Nr., z. B. G26-001',autocapitalize:'characters'}),code=el('input',{type:'text',id:'gs-code',placeholder:'Code',autocapitalize:'characters'}),erg=el('div',{id:'gs-ergebnis'});
+  k.appendChild(el('label',{for:'gs-nr',text:'Gutschein einlösen'}));
+  k.appendChild(el('div',{class:'reihe'},[el('div',{style:'flex:1 1 140px'},[nr]),el('div',{style:'flex:1 1 140px'},[code]),el('button',{class:'knopf',id:'gs-pruefen',text:'Prüfen',onclick:function(){
+    var n=nr.value.trim().toUpperCase(),g=(ANP.gutscheine||[]).filter(function(x){return x.nr===n;})[0];erg.textContent='';
+    if(!g){erg.appendChild(el('p',{class:'fehler',text:'✗ Diese Nummer gibt es nicht.'}));return;}
+    gsHash(n,code.value).then(function(h){
+      if(h!==g.h){erg.appendChild(el('p',{class:'fehler',text:'✗ Code passt nicht zur Nummer.'}));return;}
+      if(g.eingeloest){erg.appendChild(el('p',{class:'fehler',text:'✗ Schon eingelöst am '+gsDatum(g.eingeloest)+'.'}));return;}
+      if(g.bis<heute()){erg.appendChild(el('p',{class:'fehler',text:'✗ Abgelaufen am '+gsDatum(g.bis)+'.'}));return;}
+      erg.appendChild(el('p',{class:'ok',text:'✓ Gültig: '+gsEuro(g.wert)+(g.laden&&STD.laeden.length>1?' (nur '+LN(g.laden)+')':'')+', bis '+gsDatum(g.bis)}));
+      erg.appendChild(el('button',{class:'knopf voll',id:'gs-einloesen',text:'Als eingelöst markieren',onclick:function(){g.eingeloest=heute();zeichnen();status('Eingelöst – bitte speichern.','ok',4000);}}));});}})]));
+  k.appendChild(erg);
+  app.appendChild(k);
+}
+/* ---------- Firmen-Codes: Rabatt für Betriebe; im Repo nur der Prüfwert, der Code wird beim Anlegen einmal angezeigt ---------- */
+function codeHash(c){return crypto.subtle.digest('SHA-256',new TextEncoder().encode('saray|'+c)).then(function(b){
+  return Array.prototype.map.call(new Uint8Array(b),function(x){return ('0'+x.toString(16)).slice(-2);}).join('');});}
+function codeKarte(){
+  var k=el('div',{class:'karte'},[el('h3',{text:'🏢 Firmen-Codes'}),
+    el('p',{class:'hinweis',text:'Rabatt für Betriebe in der Nähe, z. B. 10 % beim Mittagessen. Der Gast gibt den Code beim Bestellen ein; der Rabatt gilt nicht auf Aktionspreise und steht in der WhatsApp-Nachricht. Den Code nach dem Anlegen notieren – er wird nicht gespeichert.'})]);
+  (ANP.codes||[]).forEach(function(c,i){
+    var t=c.name+' · '+c.prozent+' %'+(c.hinweis?' · '+c.hinweis:'')+(c.zeit_ab?' · '+c.zeit_ab+'–'+c.zeit_bis+' Uhr':'')+(c.laden&&STD.laeden.length>1?' · nur '+LN(c.laden):'')+(c.bis?' · bis '+gsDatum(c.bis):'');
+    k.appendChild(el('div',{class:'tag'},[el('span',{style:'flex:1;font-weight:700',text:t}),el('button',{class:'knopf klein rot',text:'Löschen',onclick:function(){
+      frage('Code für „'+c.name+'“ löschen?','Löschen').then(function(j){if(j){ANP.codes.splice(i,1);zeichnen();}});}})]));});
+  var firma=el('input',{type:'text',id:'c-firma',maxlength:'60',placeholder:'Firma, z. B. Elbtal GmbH'}),code=el('input',{type:'text',id:'c-code',maxlength:'16',placeholder:'Code, z. B. ELBTAL10',autocapitalize:'characters'});
+  var prozent=10,mittag=true,laden='',pb=el('div',{class:'wahl'}),mb=el('div',{class:'wahl'}),lb=el('div',{class:'wahl'}),fehler=el('p',{class:'fehler',hidden:true}),neuCode=el('div');
+  firma.addEventListener('input',function(){if(!code.dataset.selbst)code.value=(firma.value.toUpperCase().replace(/[^A-Z]/g,'').slice(0,8)||'')+(firma.value?prozent:'');});
+  code.addEventListener('input',function(){code.dataset.selbst='1';});
+  function z(){pb.textContent='';mb.textContent='';lb.textContent='';
+    [5,10,15,20].forEach(function(p){pb.appendChild(el('button',{'aria-pressed':String(prozent===p),'data-c-prozent':p,text:p+' %',onclick:function(){prozent=p;if(!code.dataset.selbst&&firma.value)code.value=firma.value.toUpperCase().replace(/[^A-Z]/g,'').slice(0,8)+p;z();}}));});
+    [[true,'Nur mittags 11–14 Uhr'],[false,'Ganztags']].forEach(function(o){mb.appendChild(el('button',{'aria-pressed':String(mittag===o[0]),text:o[1],onclick:function(){mittag=o[0];z();}}));});
+    LW('',STD.laeden.length===2?'Beide Läden':'Alle Läden').forEach(function(o){lb.appendChild(el('button',{'aria-pressed':String(laden===o[0]),text:o[1],onclick:function(){laden=o[0];z();}}));});}
+  z();
+  [el('label',{for:'c-firma',text:'Neuer Code: Firma'}),firma,el('label',{for:'c-code',text:'Code (Buchstaben und Ziffern)'}),code,el('label',{text:'Rabatt'}),pb,el('label',{text:'Wann?'}),mb,el('label',{text:'Wo?'}),lb,fehler,
+   el('div',{class:'reihe',style:'margin-top:12px'},[el('button',{class:'knopf voll',id:'c-anlegen',text:'Code anlegen',onclick:function(){
+     var c=code.value.toUpperCase().replace(/[^A-Z0-9]/g,''),n=firma.value.trim();fehler.hidden=true;
+     if(!n){fehler.textContent='Bitte die Firma eintragen.';fehler.hidden=false;return;}
+     if(c.length<4){fehler.textContent='Der Code braucht mindestens 4 Buchstaben oder Ziffern.';fehler.hidden=false;return;}
+     codeHash(c).then(function(h){if((ANP.codes||[]).some(function(x){return x.h===h;})){fehler.textContent='Diesen Code gibt es schon.';fehler.hidden=false;return;}
+       var x={h:h,name:n,prozent:prozent,hinweis:c.slice(0,2)+'…'+c.slice(-2),bis:(+heute().slice(0,4)+1)+heute().slice(4)};
+       if(mittag){x.zeit_ab='11:00';x.zeit_bis='14:00';}if(laden)x.laden=laden;
+       ANP.codes=(ANP.codes||[]).concat([x]);zeichnen();
+       status('Code '+c+' angelegt – notieren, der Firma geben, dann speichern.','ok',8000);
+       frage('Code für '+n+': '+c+'  ('+prozent+' %'+(mittag?', 11–14 Uhr':'')+'). Bitte jetzt notieren – er wird nicht gespeichert.','Notiert');});}})])]
+   .forEach(function(n){k.appendChild(n);});
+  app.appendChild(k);
+}
+/* Preis-Verlauf: wann welcher Preis geändert wurde; einzeln oder alle einer Änderung zurücknehmen */
+function verlaufKarte(){
+  var v=ANP.preisverlauf||[],k=el('div',{class:'karte',id:'verlauf-karte'},[el('h3',{text:'🕘 Preis-Verlauf'})]);
+  if(!v.length){k.appendChild(el('p',{class:'hinweis',text:'Noch keine Preisänderungen. Ab jetzt steht hier jede Änderung mit Datum – mit „Zurück“ holen Sie den alten Preis wieder.'}));app.appendChild(k);return;}
+  k.appendChild(el('p',{class:'hinweis',text:'Jede gespeicherte Preisänderung mit Datum. „Zurück“ setzt den alten Preis wieder ein – danach speichern.'}));
+  var jetzt={};gerichte().forEach(function(x){if(!x.geloescht)jetzt[schl(x)]=x;});
+  function zurueck(e){var x=jetzt[e.k];if(x&&JSON.stringify(x.preise)===JSON.stringify(e.neu)&&e.alt.length===x.preise.length){preisSetzen(x,e.alt);return 1;}return 0;}
+  function moeglich(e){var x=jetzt[e.k];return !!(x&&JSON.stringify(x.preise)===JSON.stringify(e.neu)&&e.alt.length===x.preise.length);}
+  var gruppen=[],nach={};v.forEach(function(e){if(!nach[e.s]){nach[e.s]=[];gruppen.push(e.s);}nach[e.s].push(e);});
+  gruppen.reverse().slice(0,8).forEach(function(s){
+    var l=nach[s],d=l[0].d,ok=l.filter(moeglich);
+    var kopf=el('div',{class:'reihe',style:'align-items:center;margin-top:12px'},[el('b',{style:'flex:1',text:d.slice(8,10)+'.'+d.slice(5,7)+'.'+d.slice(0,4)+' · '+(l.length===1?'1 Preis':l.length+' Preise')})]);
+    if(l.length>1)kopf.appendChild(el('button',{class:'knopf klein',text:'Alle zurück',disabled:!ok.length,onclick:function(){
+      frage(ok.length+' Preise auf den Stand vor dem '+d.slice(8,10)+'.'+d.slice(5,7)+'. zurücksetzen?','Ja, zurück').then(function(j){if(!j)return;var n=0;ok.forEach(function(e){n+=zurueck(e);});zeichnen();status(n+' Preise zurückgesetzt – bitte speichern.','ok',5000);});}}));
+    k.appendChild(kopf);
+    l.slice(0,6).forEach(function(e){k.appendChild(el('div',{class:'tag'},[el('span',{style:'flex:1',text:e.n+': '+e.alt.join(' / ')+' → '+e.neu.join(' / ')+' €'}),
+      el('button',{class:'knopf klein','data-zurueck':e.k,text:'↩ Zurück',disabled:!moeglich(e),title:moeglich(e)?'':'Preis wurde seitdem wieder geändert',onclick:function(){zurueck(e);zeichnen();status(e.n+': wieder '+e.alt.join(' / ')+' € – bitte speichern.','ok',5000);}})]));});
+    if(l.length>6)k.appendChild(el('p',{class:'hinweis',text:'… und '+(l.length-6)+' weitere'}));
+  });
+  app.appendChild(k);
+}
+/* Preiserhöhung mit Vorschau: Betrag oder Prozent, gerundet; vorher wird der heutige Stand gesichert */
+function preisKarte(){
+  var k=el('div',{class:'karte'},[el('h3',{text:'📈 Preise anpassen'}),el('p',{class:'hinweis',text:'Alle Preise oder eine Kategorie auf einmal erhöhen. Vorher steht die Liste alt → neu da; der heutige Stand wird automatisch als Preis-Stand gesichert.'})]);
+  var art='betrag',wert=50,grp='',mb=el('div',{class:'wahl'}),wb=el('div',{class:'wahl'}),gb=el('div',{class:'wahl'}),vorschau=el('div'),fehler=el('p',{class:'fehler',hidden:true});
+  function cent(p){return Math.round(parseFloat(String(p).replace(',','.'))*100);}
+  function txt(c){return (c/100).toFixed(2).replace('.',',');}
+  function neuPreis(p){var c=cent(p);if(art==='betrag')return c+wert;var n=c*(1+wert/100);return Math.round(n/10)*10;}
+  function betroffen(){return gerichte().filter(function(x){return !x.geloescht&&(!grp||x.g.id===grp);});}
+  function z(){mb.textContent='';wb.textContent='';gb.textContent='';vorschau.textContent='';
+    [['betrag','+ Betrag'],['prozent','+ Prozent']].forEach(function(o){mb.appendChild(el('button',{'aria-pressed':String(art===o[0]),text:o[1],onclick:function(){art=o[0];wert=art==='betrag'?50:5;z();}}));});
+    (art==='betrag'?[10,20,50,100]:[3,5,10]).forEach(function(v){wb.appendChild(el('button',{'aria-pressed':String(wert===v),'data-preis-wert':v,text:art==='betrag'?'+'+txt(v)+' €':'+'+v+' %',onclick:function(){wert=v;z();}}));});
+    [{id:'',titel:'Alle'}].concat(STD.gruppen).forEach(function(g){gb.appendChild(el('button',{'aria-pressed':String(grp===g.id),'data-preis-gruppe':g.id,text:g.titel,onclick:function(){grp=g.id;z();}}));});
+    var l=betroffen();vorschau.appendChild(el('p',{class:'hinweis',text:l.length+' Gerichte, z. B.:'}));
+    l.slice(0,6).forEach(function(x){vorschau.appendChild(el('div',{class:'tag'},[el('span',{style:'flex:1',text:(x.nr?x.nr+' ':'')+x.name}),
+      el('span',{text:x.preise.join(' / ')+' → '+x.preise.map(function(p){return txt(neuPreis(p));}).join(' / ')+' €'})]));});}
+  z();
+  [el('label',{text:'Wie?'}),mb,wb,el('label',{text:'Was?'}),gb,vorschau,fehler,el('div',{class:'reihe',style:'margin-top:10px'},[el('button',{class:'knopf voll',id:'preise-erhoehen',text:'Preise übernehmen',onclick:function(){
+    var l=betroffen();
+    frage(l.length+' Preise ändern ('+(art==='betrag'?'+'+txt(wert)+' €':'+'+wert+' %')+')? Der heutige Stand wird vorher gesichert.','Ja, übernehmen').then(function(j){if(!j)return;
+      var d=heute(),p2=d.split('-'),name='Vor Änderung '+p2[2]+'.'+p2[1]+'.'+p2[0];
+      if((ANP.staende||[]).length<3&&!(ANP.staende||[]).some(function(s2){return s2.name===name;})){var st={name:name,datum:d,preise:{}};
+        gerichte().forEach(function(x){if(!x.geloescht)st.preise[schl(x)]=x.preise.slice();});ANP.staende=(ANP.staende||[]).concat([st]);}
+      l.forEach(function(x){preisSetzen(x,x.preise.map(function(p){return txt(neuPreis(p));}));});
+      zeichnen();status(l.length+' Preise geändert – bitte prüfen und speichern.','ok',5000);});}})])].forEach(function(n){k.appendChild(n);});
+  app.appendChild(k);
+}
+function seiteAnsehenKarte(){
+  app.appendChild(el('div',{class:'karte'},[el('h3',{text:'Seite ansehen'}),el('p',{class:'hinweis',text:'Änderungen sind nach dem Speichern in ca. 2–3 Minuten online.'}),
+    el('div',{class:'reihe'},[el('a',{class:'knopf voll',href:'../',target:'_blank',rel:'noopener',style:'display:inline-flex;align-items:center;text-decoration:none',text:'Website öffnen'})])]));
+}
+function staendeKarte(){
+  /* Preis-Stände */
+  var sk=el('div',{class:'karte'},[el('h3',{text:'Preis-Stände'}),el('p',{class:'hinweis',text:'Den Stand '+STD.grundstand+' (gedruckte Karte) gibt es immer. Dazu bis zu drei eigene Stände, z. B. vor einer Preiserhöhung. Einzelne Preise holen Sie beim Gericht unter „Frühere Preise“ zurück.'})]);
+  staende().forEach(function(st,i){
+    var n=0;gerichte().forEach(function(x){var p=st.preise[schl(x)];if(p&&JSON.stringify(p)!==JSON.stringify(x.preise))n++;});
+    var kn=[el('button',{class:'knopf klein',text:'Alle Preise so',disabled:!n,onclick:function(){frage('Alle Preise auf „'+st.name+'“ setzen? ('+n+' Preise ändern sich)','Ja, übernehmen').then(function(j){if(!j)return;
+      gerichte().forEach(function(x){var p=st.preise[schl(x)];if(p&&p.length===x.preise.length)preisSetzen(x,p);});zeichnen();});}})];
+    if(!st.grund)kn.push(el('button',{class:'knopf klein rot',text:'Löschen',onclick:function(){frage('„'+st.name+'“ löschen?','Löschen').then(function(j){if(j){ANP.staende.splice(i-1,1);zeichnen();}});}}));
+    sk.appendChild(el('div',{class:'tag'},[el('span',{style:'flex:1;font-weight:700',text:st.name+(n?' · '+n+' Preise anders als jetzt':' · wie jetzt')})].concat(kn)));
+  });
+  var eigene=(ANP.staende||[]).length;
+  sk.appendChild(el('div',{class:'reihe',style:'margin-top:10px'},[el('button',{class:'knopf voll',text:'Heutige Preise als Stand festlegen',disabled:eigene>=3,onclick:function(){
+    var d=heute(),p=d.split('-'),st={name:'Stand '+p[2]+'.'+p[1]+'.'+p[0],datum:d,preise:{}};
+    gerichte().forEach(function(x){if(!x.geloescht)st.preise[schl(x)]=x.preise.slice();});
+    ANP.staende=(ANP.staende||[]).filter(function(s){return s.name!==st.name;}).concat([st]);zeichnen();}})]));
+  if(eigene>=3)sk.appendChild(el('p',{class:'hinweis',text:'Höchstens drei eigene Stände – zum Festlegen bitte erst einen löschen.'}));
+  app.appendChild(sk);
+}
+function druckKarte(){
+  /* Drucken */
+  app.appendChild(el('div',{class:'karte'},[el('h3',{text:'Drucken'}),el('p',{class:'hinweis',text:'Immer mit den aktuellen Preisen (nach dem Speichern ca. 3 Minuten warten). Für die Druckerei oder den eigenen Drucker.'}),
+    el('div',{class:'reihe'},[['../druck/flyer.pdf','Flyer (A4, Wickelfalz)']].concat(STD.laeden.map(function(l){return ['../druck/aufsteller-'+l.id+'.pdf','Aufsteller '+l.name+' (A5)'];}),
+      [['../druck/flyer-gruppen.pdf','Flyer Firmen, Vereine, Feiern (A5)'],['../druck/allergenmappe.pdf','Allergenmappe für die Theke'],['../druck/aufkleber.pdf','Tüten-Aufkleber (24 × 70×37 mm)'],['../druck/preisschilder.pdf','Preisschilder Getränke (8 je A4)'],['../druck/aushang-a3.pdf','Aushang A3 (ganze Karte)'],['../druck/aushang-vorbestellen.pdf','Aushang A5 „Hier vorbestellen“ (6 Sprachen)'],['../druck/aushang-fenster.pdf','Fenster-Aushang A4 quer (großer QR, nach außen)'],['../druck/status-empfehlung.png','WhatsApp-Status: Empfehlungen']],
+      [].concat.apply([],(JSON.parse(ALT).aktionen||[]).filter(function(a){return a.bis>=heute();}).map(function(a){return [['../druck/'+slug(a.name,a.von)+'.pdf','Plakat: '+a.name+' (A4)'],
+        ['../druck/'+slug(a.name,a.von)+'.png','Bild zum Posten: '+a.name],['../druck/status-'+slug(a.name,a.von)+'.png','WhatsApp-Status: '+a.name]];})))
+      .map(function(d){return el('a',{class:'knopf',href:d[0],target:'_blank',rel:'noopener',style:'display:inline-flex;align-items:center;text-decoration:none',text:d[1]});}))]));
+}
+function rueckKarte(){
+  app.appendChild(el('div',{class:'karte'},[el('h3',{text:'Letzte Änderung rückgängig'}),
+    el('p',{class:'hinweis',text:'Holt den Stand vor dem letzten Speichern zurück.'}),
+    el('div',{class:'reihe'},[el('button',{class:'knopf',text:'Rückgängig machen …',onclick:rueckgaengig})])]));
+}
+function gefahrKarte(){
+  /* Gefahrenbereich: Aktionen, die sich nicht so einfach zurücknehmen lassen */
+  app.appendChild(el('h2',{class:'gefahr-titel',text:'⚠️ Gefahrenbereich'}));
+  app.appendChild(el('div',{class:'karte gefahr'},[
+    el('p',{class:'hinweis',style:'margin:0 0 6px',text:'Nur benutzen, wenn Sie sicher sind.'}),
+    el('h3',{text:'Standard wiederherstellen'}),
+    el('p',{class:'hinweis',text:'Setzt Preise, Gerichte, Öffnungszeiten, Sperren, Zutaten, Aktionen und Hinweise auf den ursprünglichen Stand zurück. Die Checkliste „Vor dem Freischalten“, Gutscheine, Firmen-Codes und der Preis-Verlauf bleiben erhalten.'}),
+    el('div',{class:'reihe'},[el('button',{class:'knopf rot voll',text:'Alles auf Standard zurücksetzen',onclick:function(){
+      frage('Wirklich alle Änderungen löschen und den Standard wiederherstellen?','Ja, zurücksetzen').then(function(j){if(!j)return;
+        var cl=ANP.checkliste,gs=ANP.gutscheine,cd=ANP.codes,pv=ANP.preisverlauf;ANP={};if(cl)ANP.checkliste=cl;if(gs)ANP.gutscheine=gs;if(cd)ANP.codes=cd;if(pv)ANP.preisverlauf=pv;speichern('Chef-App: Standard wiederhergestellt');});}})]),
+    el('h3',{style:'margin-top:18px',text:'Zugang auf diesem Gerät'}),
+    el('p',{class:'hinweis',text:'Der Zugang ist nur auf diesem Gerät gespeichert. Nach dem Abmelden braucht es einen neuen Zugangslink von Michael.'}),
+    el('div',{class:'reihe'},[el('button',{class:'knopf rot',text:'Auf diesem Gerät abmelden',onclick:function(){frage('Zugang auf diesem Gerät löschen?','Abmelden').then(function(j){if(j){try{localStorage.removeItem(TK);}catch(e){}location.reload();}});}})])]));
+}
+
+/* Checkliste vor dem Freischalten – gespeichert in anpassungen.json („checkliste“), für die Seite ohne Wirkung */
+var CHECKLISTE=[["Beispiel-Laden", [["echt", "Erfundener Laden", "Diese Seite zeigt nur, was die Vorlage kann. Für einen echten Laden alles in laeden/pirna/ ersetzen.", 0], ["impressum", "Impressum und Datenschutz", "Angaben des Inhabers eintragen und vom Anwalt prüfen lassen.", 1], ["whatsapp", "WhatsApp-Nummer", "Bestellungen gehen an eine Testnummer.", 1]]]];
+function checklisteKarte(){
+  var cl=ANP.checkliste||{},alle=[];CHECKLISTE.forEach(function(g){alle=alle.concat(g[1]);});
+  var offen=alle.filter(function(x){return !(cl[x[0]]&&cl[x[0]].ok);}).length;
+  var d=el('details',{class:'karte checkliste',open:offen?true:null},[el('summary',{},[el('b',{text:'Vor dem Freischalten'}),' · ',
+    el('span',{text:offen?offen+' von '+alle.length+' offen':'alles erledigt ✓'})])]);
+  CHECKLISTE.forEach(function(g){
+    d.appendChild(el('p',{class:'abschnitt',text:g[0]}));
+    g[1].forEach(function(x){var e=cl[x[0]]||{},id='cl-'+x[0];
+      var cb=el('input',{type:'checkbox',id:id});cb.checked=!!e.ok;
+      var no=el('input',{type:'text',id:id+'-n',placeholder:'Antwort / Notiz','aria-label':'Notiz: '+x[1],value:e.notiz||''});
+      function setzen(){ANP.checkliste=ANP.checkliste||{};var w={};if(cb.checked)w.ok=true;if(no.value.trim())w.notiz=no.value.trim();
+        if(Object.keys(w).length)ANP.checkliste[x[0]]=w;else delete ANP.checkliste[x[0]];leiste();}
+      cb.addEventListener('change',function(){setzen();zeichnen();});no.addEventListener('change',setzen);
+      d.appendChild(el('div',{class:'cl-punkt'+(e.ok?' erledigt':'')},[el('label',{class:'schalter',for:id},[cb,el('span',{},[x[1],x[3]?el('span',{class:'marke weg',text:'muss'}):null])]),
+        x[2]?el('p',{class:'hinweis',style:'margin:2px 0 4px 32px',text:x[2]}):null,no]));});
+  });
+  app.appendChild(d);
+}
+
+function rueckgaengig(){
+  if(geaendert()){status('Bitte zuerst speichern oder verwerfen.','rot',4000);return;}
+  status('Sucht die letzte Änderung …');
+  api('/commits?path='+encodeURIComponent(DATEI)+'&sha=main&per_page=2',{cache:'no-store'}).then(function(r){
+    if(!r.ok)throw new Error('GitHub antwortet nicht ('+r.status+')');return r.json();
+  }).then(function(c){
+    if(!c.length)throw new Error('Es gibt noch keine gespeicherte Änderung');
+    var letzte=c[0],davor=c[1],wann=new Date(letzte.commit.author.date).toLocaleString('de-DE',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});
+    var inhalt=davor?api('/contents/'+DATEI+'?ref='+davor.sha,{cache:'no-store'}).then(function(r){if(!r.ok)throw new Error('Alter Stand nicht lesbar ('+r.status+')');return r.json();})
+      .then(function(d){return JSON.parse(b64dec(d.content)||'{}');}):Promise.resolve({});
+    return inhalt.then(function(alt){document.getElementById('status').hidden=true;
+      return frage('Letzte Änderung vom '+wann+' rückgängig machen? („'+letzte.commit.message.split('\n')[0]+'“)','Ja, rückgängig').then(function(j){
+        if(!j)return;ANP=alt&&typeof alt==='object'?alt:{};speichern('Chef-App: Rückgängig ('+wann+')');});});
+  }).catch(function(e){status(e.message,'rot',6000);});
+}
+
+/* ---------- Einrichten ---------- */
+function einrichten(meldung){
+  document.getElementById('stand').textContent='Einrichten';
+  var f=el('input',{type:'text',id:'tk',autocomplete:'off',placeholder:'github_pat_…'});
+  app.textContent='';app.appendChild(el('div',{class:'karte'},[el('h3',{text:'Zugang einrichten'}),
+    meldung?el('p',{class:'fehler',text:meldung}):null,
+    el('p',{class:'hinweis',text:'Michael richtet den Zugang einmal pro Gerät ein. Danach diese Seite zum Home-Bildschirm hinzufügen.'}),
+    el('label',{for:'tk',text:'Zugangsschlüssel'}),f,
+    el('div',{class:'reihe'},[el('button',{class:'knopf voll',text:'Speichern',onclick:function(){try{localStorage.setItem(TK,f.value.replace(/\s+/g,''));}catch(e){}start();}})])]));
+}
+function start(){
+  if(!token()){einrichten();return;}
+  laden().catch(function(e){document.getElementById('status').hidden=true;
+    einrichten(e.message==='zugang'?'Der Zugang ist ungültig oder abgelaufen.':'Laden fehlgeschlagen: '+e.message);});
+}
+
+document.getElementById('tabs').addEventListener('click',function(ev){var b=ev.target.closest('[data-tab]');if(!b)return;
+  if(b.dataset.tab==='mehr'&&TAB==='mehr')SEITE='';zuTab(b.dataset.tab);});
+document.getElementById('speichern-knopf').addEventListener('click',function(){speichern();});
+document.getElementById('hilfe').addEventListener('click',function(){if(STD&&!document.getElementById('tour'))tourStarten();});
+document.getElementById('verwerfen').addEventListener('click',function(){frage('Ungespeicherte Änderungen verwerfen?','Verwerfen').then(function(j){if(j){ANP=JSON.parse(ALT);zeichnen();}});});
+window.addEventListener('beforeunload',function(e){if(STD&&geaendert()){e.preventDefault();e.returnValue='';}});
+var m=/[#&]token=([^&]+)/.exec(location.hash);
+if(m){try{localStorage.setItem(TK,decodeURIComponent(m[1]).replace(/\s+/g,''));}catch(e){}history.replaceState(null,'',location.pathname);}
+start();
+})();
+</script>
+</body>
+</html>
